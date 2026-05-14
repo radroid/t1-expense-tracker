@@ -15,24 +15,39 @@ describe('createCategory', () => {
     expect(c.name).toBe('Transport')
   })
 
+  it('accepts uppercase hex colors and preserves case', () => {
+    const c = createCategory({ name: 'Food', color: '#AbCdEf' })
+    expect(c.color).toBe('#AbCdEf')
+  })
+
   it('throws on blank name', () => {
-    expect(() => createCategory({ name: '', color: '#ff0000' })).toThrow()
+    expect(() => createCategory({ name: '', color: '#ff0000' })).toThrow(
+      'Invalid name: must be non-empty',
+    )
   })
 
   it('throws on whitespace-only name', () => {
-    expect(() => createCategory({ name: '   ', color: '#ff0000' })).toThrow()
+    expect(() => createCategory({ name: '   ', color: '#ff0000' })).toThrow(
+      'Invalid name: must be non-empty',
+    )
   })
 
   it('throws on color missing #', () => {
-    expect(() => createCategory({ name: 'Food', color: 'ff0000' })).toThrow()
+    expect(() => createCategory({ name: 'Food', color: 'ff0000' })).toThrow(
+      'Invalid color: must be a hex color like #rrggbb',
+    )
   })
 
   it('throws on color of wrong length', () => {
-    expect(() => createCategory({ name: 'Food', color: '#fff' })).toThrow()
+    expect(() => createCategory({ name: 'Food', color: '#fff' })).toThrow(
+      'Invalid color: must be a hex color like #rrggbb',
+    )
   })
 
   it('throws on non-hex color', () => {
-    expect(() => createCategory({ name: 'Food', color: '#gggggg' })).toThrow()
+    expect(() => createCategory({ name: 'Food', color: '#gggggg' })).toThrow(
+      'Invalid color: must be a hex color like #rrggbb',
+    )
   })
 
   it('generates unique ids', () => {
