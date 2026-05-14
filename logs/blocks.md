@@ -41,4 +41,41 @@ with full type coverage; CodeRabbit marked it trivial/optional. No blocking issu
 → added to GOALS.md as a tech-debt item; not fixed this iter (would cross the
 P1.E/P1.G allowlist boundary).
 
+## iter-003 — Class A peer review
+
+**Source:** peer-review (P1.F edit expense)
+**Verdict:** APPROVE — contract-faithful; `createExpense` validation refactor verified
+semantics-preserving; `applyExpenseEdit` keeps id + does not mutate.
+**Follow-ups:**
+- `handleUpdate` error path was untested + `updateExpense` rejection unhandled (unlike
+  `handleDelete`). → FIXED this iter: wrapped store ops in try/catch + added an
+  invalid-edit App test.
+- `applyExpenseEdit` carries through only `input` fields — drops `existing.categoryId` /
+  `recurring`. Harmless today (no category edit UI). → GOALS TD.2 for when P2.C lands.
+
+## iter-003 — Phase 1→2 boundary architecture pass
+
+**Source:** arch-pass (`improve-codebase-architecture` skill)
+Phase 1 complete (P1.A–P1.G). Three deepening opportunities surfaced — all logged as
+GOALS tech-debt items, to be executed as dedicated refactor iters (not done here — a
+phase-boundary arch pass logs; it doesn't fat-iter a refactor).
+
+- **TD.1 (existing)** — extract `formatCurrency` into `src/lib/`. `currencyFormatter`
+  duplicated verbatim in `ExpenseList.tsx` + `RunningTotal.tsx`. Small, low-risk.
+- **TD.3 (new)** — deepen `AddExpenseForm` + `EditExpenseForm` into one `ExpenseForm`
+  module. They are ~90% identical (controlled amount/description/date inputs + blank-field
+  guards + error state); differ only in initial values, submit label, Cancel, post-submit
+  clear. Deletion test passes hard. Biggest win: validation-guard logic in ONE place
+  (CodeRabbit has flagged the form-validation split twice). Medium risk — touches both
+  components + App wiring.
+- **TD.4 (new)** — deepen expense orchestration into a `useExpenses` hook. `App.tsx`
+  repeats `try → store op → getAllExpenses() refresh → setState` 3× across
+  handleAdd/Delete/Update, untestable without rendering App, and couples App directly to
+  `expenseStore`. A `useExpenses()` hook concentrates the orchestration behind a small
+  interface (the seam: IndexedDB today, swappable later) and is testable via `renderHook`.
+  Medium risk.
+
+Recommendation: slot TD.1 (cheap) into an early Phase 2 iter; TD.3 + TD.4 as a dedicated
+refactor iter once Phase 2 categories reveal whether the form/hook need to flex anyway.
+
 
