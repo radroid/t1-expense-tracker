@@ -25,7 +25,7 @@ export function ExpenseForm({
     initial ? String(initial.amount) : '',
   )
   const [description, setDescription] = useState(initial?.description ?? '')
-  const [date, setDate] = useState(initial ? initial.date : todayISO)
+  const [date, setDate] = useState(initial?.date ?? todayISO())
   const [error, setError] = useState('')
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
