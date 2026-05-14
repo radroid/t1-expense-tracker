@@ -32,4 +32,13 @@ allows a Class A sub-agent as the M1 super-reviewer floor.
 receiving-code-review: project CLAUDE.md defaults to no comments; function is small
 with full type coverage; CodeRabbit marked it trivial/optional. No blocking issues.
 
+## iter-002 — Class A integrated peer review
+
+**Source:** peer-review (fat-iter Phase 4, 2 features: P1.E + P1.G)
+**Verdict:** APPROVE — both match plans, tests complete (50/50), tsc + lint clean.
+**Follow-up:** `currencyFormatter` is duplicated in `ExpenseList.tsx` and
+`RunningTotal.tsx` (identical en-US/USD config). Non-blocking DRY smell.
+→ added to GOALS.md as a tech-debt item; not fixed this iter (would cross the
+P1.E/P1.G allowlist boundary).
+
 
