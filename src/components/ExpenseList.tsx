@@ -4,6 +4,7 @@ import './ExpenseList.css';
 interface ExpenseListProps {
   expenses: Expense[];
   onDelete?: (id: string) => void;
+  onEdit?: (expense: Expense) => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -13,7 +14,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 });
 
-export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
+export function ExpenseList({ expenses, onDelete, onEdit }: ExpenseListProps) {
   if (expenses.length === 0) {
     return <p className="expense-list__empty">No expenses yet.</p>;
   }
@@ -31,6 +32,16 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
           </span>
           <span className="expense-list__description">{expense.description}</span>
           <span className="expense-list__date">{expense.date}</span>
+          {onEdit && (
+            <button
+              type="button"
+              className="expense-list__edit"
+              aria-label={`Edit ${expense.description}`}
+              onClick={() => onEdit(expense)}
+            >
+              Edit
+            </button>
+          )}
           {onDelete && (
             <button
               type="button"

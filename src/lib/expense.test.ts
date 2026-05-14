@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createExpense } from './expense';
-import type { ExpenseInput } from './expense';
+import { createExpense, applyExpenseEdit } from './expense';
+import type { Expense, ExpenseInput } from './expense';
 
 const validInput: ExpenseInput = {
   amount: 12.5,
@@ -83,5 +83,107 @@ describe('createExpense', () => {
 
   it('throws when date is a non-existent calendar date (2026-02-30)', () => {
     expect(() => createExpense({ ...validInput, date: '2026-02-30' })).toThrow();
+  });
+});
+
+describe('applyExpenseEdit', () => {
+  const existing: Expense = {
+    id: 'expense-1',
+    amount: 12.5,
+    description: 'Coffee',
+    date: '2026-05-14',
+  };
+
+  it('keeps the existing id', () => {
+    const updated = applyExpenseEdit(existing, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+    });
+    expect(updated.id).toBe('expense-1');
+  });
+
+  it('updates the editable fields', () => {
+    const updated = applyExpenseEdit(existing, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+    });
+    expect(updated.amount).toBe(20);
+    expect(updated.description).toBe('Tea');
+    expect(updated.date).toBe('2026-05-15');
+  });
+
+  it('trims the description', () => {
+    const updated = applyExpenseEdit(existing, {
+      amount: 20,
+      description: '  Tea  ',
+      date: '2026-05-15',
+    });
+    expect(updated.description).toBe('Tea');
+  });
+
+  it('passes through optional categoryId and recurring when present', () => {
+    const updated = applyExpenseEdit(existing, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+      categoryId: 'cat-2',
+      recurring: true,
+    });
+    expect(updated.categoryId).toBe('cat-2');
+    expect(updated.recurring).toBe(true);
+  });
+
+  it('does not mutate the existing expense', () => {
+    const snapshot: Expense = { ...existing };
+    applyExpenseEdit(existing, {
+      amount: 99,
+      description: 'Changed',
+      date: '2026-12-31',
+    });
+    expect(existing).toEqual(snapshot);
+  });
+
+  it('throws when amount is zero', () => {
+    expect(() =>
+      applyExpenseEdit(existing, { amount: 0, description: 'Tea', date: '2026-05-15' }),
+    ).toThrow();
+  });
+
+  it('throws when amount is negative', () => {
+    expect(() =>
+      applyExpenseEdit(existing, { amount: -5, description: 'Tea', date: '2026-05-15' }),
+    ).toThrow();
+  });
+
+  it('throws when amount is NaN', () => {
+    expect(() =>
+      applyExpenseEdit(existing, { amount: NaN, description: 'Tea', date: '2026-05-15' }),
+    ).toThrow();
+  });
+
+  it('throws when description is empty', () => {
+    expect(() =>
+      applyExpenseEdit(existing, { amount: 20, description: '', date: '2026-05-15' }),
+    ).toThrow();
+  });
+
+  it('throws when description is whitespace-only', () => {
+    expect(() =>
+      applyExpenseEdit(existing, { amount: 20, description: '   ', date: '2026-05-15' }),
+    ).toThrow();
+  });
+
+  it('throws when date is malformed', () => {
+    expect(() =>
+      applyExpenseEdit(existing, { amount: 20, description: 'Tea', date: '2026-13-40' }),
+    ).toThrow();
+  });
+
+  it('throws when date is empty', () => {
+    expect(() =>
+      applyExpenseEdit(existing, { amount: 20, description: 'Tea', date: '' }),
+    ).toThrow();
   });
 });

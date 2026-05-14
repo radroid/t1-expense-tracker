@@ -27,7 +27,9 @@ function isRealCalendarDate(date: string): boolean {
   );
 }
 
-export function createExpense(input: ExpenseInput): Expense {
+// Validates input (amount > 0 finite, non-empty trimmed description, real
+// YYYY-MM-DD date); returns the cleaned fields. Throws on invalid.
+function validateExpenseInput(input: ExpenseInput): ExpenseInput {
   const { amount, description, date, categoryId, recurring } = input;
 
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -43,15 +45,24 @@ export function createExpense(input: ExpenseInput): Expense {
     throw new Error(`Invalid date: must be a real calendar date in YYYY-MM-DD format`);
   }
 
-  const expense: Expense = {
-    id: crypto.randomUUID(),
+  const cleaned: ExpenseInput = {
     amount,
     description: trimmedDescription,
     date,
   };
 
-  if (categoryId !== undefined) expense.categoryId = categoryId;
-  if (recurring !== undefined) expense.recurring = recurring;
+  if (categoryId !== undefined) cleaned.categoryId = categoryId;
+  if (recurring !== undefined) cleaned.recurring = recurring;
 
-  return expense;
+  return cleaned;
+}
+
+export function createExpense(input: ExpenseInput): Expense {
+  const cleaned = validateExpenseInput(input);
+  return { id: crypto.randomUUID(), ...cleaned };
+}
+
+export function applyExpenseEdit(existing: Expense, input: ExpenseInput): Expense {
+  const cleaned = validateExpenseInput(input);
+  return { id: existing.id, ...cleaned };
 }

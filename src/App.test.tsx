@@ -70,6 +70,51 @@ describe('App', () => {
     expect(screen.getByText('$25.50')).toBeInTheDocument()
   })
 
+  it('edits an existing expense via the edit form', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+    await addExpenseViaForm('10', 'Coffee')
+    await screen.findByText(/Coffee/)
+
+    await user.click(screen.getByRole('button', { name: /edit coffee/i }))
+    const description = screen.getByLabelText('Description')
+    await user.clear(description)
+    await user.type(description, 'Espresso')
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+    expect(await screen.findByText(/Espresso/)).toBeInTheDocument()
+    expect(screen.queryByText(/Coffee/)).not.toBeInTheDocument()
+  })
+
+  it('rejects an invalid edit and keeps the edit form open', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+    await addExpenseViaForm('10', 'Coffee')
+    await screen.findByText(/Coffee/)
+
+    await user.click(screen.getByRole('button', { name: /edit coffee/i }))
+    const amount = screen.getByLabelText('Amount')
+    await user.clear(amount)
+    await user.type(amount, '0')
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^save$/i })).toBeInTheDocument()
+  })
+
+  it('cancels an edit without changing the expense', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+    await addExpenseViaForm('10', 'Coffee')
+    await screen.findByText(/Coffee/)
+
+    await user.click(screen.getByRole('button', { name: /edit coffee/i }))
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(screen.getByText(/Coffee/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /add expense/i })).toBeInTheDocument()
+  })
+
   it('deletes an expense via its row delete button', async () => {
     const user = userEvent.setup()
     await renderApp()
