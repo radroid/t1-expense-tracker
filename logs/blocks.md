@@ -78,4 +78,17 @@ phase-boundary arch pass logs; it doesn't fat-iter a refactor).
 Recommendation: slot TD.1 (cheap) into an early Phase 2 iter; TD.3 + TD.4 as a dedicated
 refactor iter once Phase 2 categories reveal whether the form/hook need to flex anyway.
 
+## iter-004 — Class A integrated peer review
+
+**Source:** peer-review (fat-iter Phase 4, 2 features: P2.A + P2.B)
+**Verdict:** APPROVE — both match plans; the `expenseStore` refactor onto shared `db.ts`
+is behaviour-preserving (regression test untouched + passing); v1→v2 DB migration
+correctly preserves `expenses` data; `seedDefaultCategories` is genuinely idempotent.
+**Follow-ups (non-blocking):**
+- No explicit DB-migration test (open v1 with data → reopen v2 → expenses survive).
+  Coverage is adequate indirectly. → GOALS TD.5.
+- `CategoryRow` seeds its rename input from `useState(category.name)` — won't re-sync if
+  App reloads categories after a rename. Practically harmless here (rename only flows
+  through that input) → carry-forward note; fix with a `useEffect` sync if it bites.
+
 
