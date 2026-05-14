@@ -31,8 +31,13 @@ function App() {
   }
 
   async function handleDelete(id: string) {
-    await removeExpense(id)
-    setExpenses(await getAllExpenses())
+    try {
+      await removeExpense(id)
+      setExpenses(await getAllExpenses())
+      setError('')
+    } catch {
+      setError('Failed to delete expense.')
+    }
   }
 
   return (
