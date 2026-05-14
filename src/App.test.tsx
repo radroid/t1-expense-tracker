@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, it, expect } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import App from './App'
+import * as expenseStore from './db/expenseStore'
 
 beforeEach(async () => {
   await new Promise<void>((resolve, reject) => {
@@ -11,6 +12,10 @@ beforeEach(async () => {
     req.onblocked = () =>
       reject(new Error('deleteDatabase blocked — a connection was left open'))
   })
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
 })
 
 // Renders App and waits for the mount-time IndexedDB load to settle, so no
@@ -53,6 +58,32 @@ describe('App', () => {
 
     render(<App />)
     expect(await screen.findByText(/Groceries/)).toBeInTheDocument()
+  })
+
+  it('deletes an expense via its row delete button', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+    await addExpenseViaForm('15', 'Lunch')
+    await screen.findByText(/Lunch/)
+
+    await user.click(screen.getByRole('button', { name: /delete lunch/i }))
+
+    expect(await screen.findByText('No expenses yet.')).toBeInTheDocument()
+  })
+
+  it('shows an error and keeps the expense when delete fails', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+    await addExpenseViaForm('15', 'Lunch')
+    await screen.findByText(/Lunch/)
+
+    vi.spyOn(expenseStore, 'removeExpense').mockRejectedValueOnce(
+      new Error('store failure'),
+    )
+    await user.click(screen.getByRole('button', { name: /delete lunch/i }))
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.getByText(/Lunch/)).toBeInTheDocument()
   })
 
   it('rejects an invalid amount and surfaces the error without adding', async () => {

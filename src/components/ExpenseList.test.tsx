@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi } from 'vitest';
 import type { Expense } from '../lib/expense';
 import { ExpenseList } from './ExpenseList';
 
@@ -93,5 +94,42 @@ describe('ExpenseList', () => {
     render(<ExpenseList expenses={[]} />);
     expect(screen.getByText('No expenses yet.')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  });
+
+  it('renders a delete button per row when onDelete is provided', () => {
+    const expenses: Expense[] = [
+      makeExpense({ description: 'Coffee' }),
+      makeExpense({ description: 'Lunch' }),
+    ];
+    render(<ExpenseList expenses={expenses} onDelete={vi.fn()} />);
+    expect(
+      screen.getByRole('button', { name: 'Delete Coffee' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Delete Lunch' }),
+    ).toBeInTheDocument();
+  });
+
+  it('calls onDelete once with the expense id when its delete button is clicked', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    const target = makeExpense({ description: 'Coffee' });
+    const expenses: Expense[] = [
+      target,
+      makeExpense({ description: 'Lunch' }),
+    ];
+    render(<ExpenseList expenses={expenses} onDelete={onDelete} />);
+    await user.click(screen.getByRole('button', { name: 'Delete Coffee' }));
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete).toHaveBeenCalledWith(target.id);
+  });
+
+  it('renders no delete buttons when onDelete is not provided', () => {
+    const expenses: Expense[] = [
+      makeExpense({ description: 'Coffee' }),
+      makeExpense({ description: 'Lunch' }),
+    ];
+    render(<ExpenseList expenses={expenses} />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });
