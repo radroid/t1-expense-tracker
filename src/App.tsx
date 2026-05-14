@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createExpense, type Expense, type ExpenseInput } from './lib/expense'
 import { addExpense, getAllExpenses } from './db/expenseStore'
 import { AddExpenseForm } from './components/AddExpenseForm'
+import { ExpenseList } from './components/ExpenseList'
 import './App.css'
 
 function App() {
@@ -40,16 +41,8 @@ function App() {
       )}
       {loading ? (
         <p className="loading">Loading…</p>
-      ) : expenses.length === 0 ? (
-        <p className="empty">No expenses yet.</p>
       ) : (
-        <ul className="expense-list">
-          {expenses.map((e) => (
-            <li key={e.id}>
-              {e.date} — {e.description} — ${e.amount.toFixed(2)}
-            </li>
-          ))}
-        </ul>
+        <ExpenseList expenses={expenses} />
       )}
     </main>
   )
