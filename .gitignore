@@ -1,0 +1,28 @@
+# Logs — NOTE: the loop's `logs/` dir (iter-NNN.md, latest.md, blocks.md) is
+# intentionally tracked. Only stray *.log files are ignored.
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Autonomous loop — .loop/state.json IS committed; only multi-loop claim
+# ephemera is ignored.
+/.loop/claims/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
