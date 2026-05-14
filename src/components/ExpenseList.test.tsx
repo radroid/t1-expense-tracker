@@ -132,4 +132,43 @@ describe('ExpenseList', () => {
     render(<ExpenseList expenses={expenses} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
+
+  it('renders an edit button per row when onEdit is provided', () => {
+    const expenses: Expense[] = [
+      makeExpense({ description: 'Coffee' }),
+      makeExpense({ description: 'Lunch' }),
+    ];
+    render(<ExpenseList expenses={expenses} onEdit={vi.fn()} />);
+    expect(
+      screen.getByRole('button', { name: 'Edit Coffee' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Edit Lunch' }),
+    ).toBeInTheDocument();
+  });
+
+  it('calls onEdit once with the expense when its edit button is clicked', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    const target = makeExpense({ description: 'Coffee' });
+    const expenses: Expense[] = [
+      target,
+      makeExpense({ description: 'Lunch' }),
+    ];
+    render(<ExpenseList expenses={expenses} onEdit={onEdit} />);
+    await user.click(screen.getByRole('button', { name: 'Edit Coffee' }));
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(target);
+  });
+
+  it('renders no edit buttons when onEdit is not provided', () => {
+    const expenses: Expense[] = [
+      makeExpense({ description: 'Coffee' }),
+      makeExpense({ description: 'Lunch' }),
+    ];
+    render(<ExpenseList expenses={expenses} />);
+    expect(
+      screen.queryByRole('button', { name: /^Edit / }),
+    ).not.toBeInTheDocument();
+  });
 });
