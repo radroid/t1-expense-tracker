@@ -18,8 +18,8 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 
 ## Phase 2 — Categories
 
-- [ ] P2.A — Category model + store — `Category` type (id, name, color) + IndexedDB store; seed a few defaults on first run.
-- [ ] P2.B — Category management UI — Add / rename / delete categories.
+- [done] P2.A — Category model + store — `Category` type (id, name, color) + IndexedDB store; seed a few defaults on first run. — iter-004 / PR #11
+- [done] P2.B — Category management UI — Add / rename / delete categories. — iter-004 / PR #12
 - [ ] P2.C — Assign category to expense — Category picker in the add/edit form.
 - [ ] P2.D — Filter by category — Filter control above the expense list.
 - [ ] P2.E — Category badges — Colored category badge on each expense row.
@@ -59,7 +59,11 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [ ] TD.4 — Deepen expense orchestration into a `useExpenses` hook — `App.tsx`
   repeats `store op → getAllExpenses() refresh → setState` across 3 handlers and
   couples directly to `expenseStore`; a hook concentrates it + becomes testable
-  via `renderHook` (iter-003 arch pass).
+  via `renderHook` (iter-003 arch pass). Note: iter-004 added the same pattern for
+  categories (3 more handlers) — a `useCategories` hook is the parallel cleanup.
+- [ ] TD.5 — Add an explicit DB-migration test — open `expense-tracker` at v1 with
+  data, reopen at v2, assert `expenses` data survives and `categories` store exists
+  (iter-004 peer review; currently only covered indirectly).
 
 ## Open dependencies (waiting on user)
 
