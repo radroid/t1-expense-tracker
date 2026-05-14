@@ -23,7 +23,8 @@ describe('expenseStore', () => {
       const req = indexedDB.deleteDatabase('expense-tracker')
       req.onsuccess = () => resolve()
       req.onerror = () => reject(req.error)
-      req.onblocked = () => resolve()
+      req.onblocked = () =>
+        reject(new Error('deleteDatabase blocked — a connection was left open'))
     })
   })
 
