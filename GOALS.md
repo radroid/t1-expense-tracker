@@ -8,10 +8,10 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 
 ## Phase 1 — Core expense CRUD + persistence
 
-- [ ] P1.A — Expense data model — `Expense` type + `createExpense` factory with validation (amount > 0, non-empty description, valid date).
-- [ ] P1.B — IndexedDB expense store — `src/db/` wrapper: open DB, `add` / `getAll` / `update` / `remove` on an `expenses` object store keyed by id.
-- [ ] P1.C — Add-expense form — Controlled form (amount, description, date); persists via the store and clears on submit.
-- [ ] P1.D — Expense list — Render all expenses newest-first (amount, description, date).
+- [done] P1.A — Expense data model — `Expense` type + `createExpense` factory with validation (amount > 0, non-empty description, valid date). — iter-001 / PR #1
+- [done] P1.B — IndexedDB expense store — `src/db/` wrapper: open DB, `add` / `getAll` / `update` / `remove` on an `expenses` object store keyed by id. — iter-001 / PR #2
+- [done] P1.C — Add-expense form — Controlled form (amount, description, date); persists via the store and clears on submit. — iter-001 / PR #3
+- [done] P1.D — Expense list — Render all expenses newest-first (amount, description, date). — iter-001 / PR #4
 - [ ] P1.E — Delete expense — Per-row delete; removes from store + list.
 - [ ] P1.F — Edit expense — Edit an existing expense (inline or modal); persists changes.
 - [ ] P1.G — Running total — Sum of all expenses shown in the header.
