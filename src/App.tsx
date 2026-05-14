@@ -6,27 +6,44 @@ import {
   type ExpenseInput,
 } from './lib/expense'
 import {
+  createCategory,
+  type Category,
+  type CategoryInput,
+} from './lib/category'
+import {
   addExpense,
   getAllExpenses,
   removeExpense,
   updateExpense,
 } from './db/expenseStore'
+import {
+  addCategory,
+  getAllCategories,
+  removeCategory,
+  seedDefaultCategories,
+  updateCategory,
+} from './db/categoryStore'
 import { AddExpenseForm } from './components/AddExpenseForm'
 import { EditExpenseForm } from './components/EditExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
+import { CategoryManager } from './components/CategoryManager'
 import './App.css'
 
 function App() {
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [editing, setEditing] = useState<Expense | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    getAllExpenses()
-      .then(setExpenses)
-      .catch(() => setError('Failed to load expenses.'))
+    Promise.all([getAllExpenses(), seedDefaultCategories()])
+      .then(([loadedExpenses, loadedCategories]) => {
+        setExpenses(loadedExpenses)
+        setCategories(loadedCategories)
+      })
+      .catch(() => setError('Failed to load data.'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -72,6 +89,45 @@ function App() {
     }
   }
 
+  async function handleAddCategory(input: CategoryInput) {
+    let category: Category
+    try {
+      category = createCategory(input)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Invalid category.')
+      return
+    }
+    try {
+      await addCategory(category)
+      setCategories(await getAllCategories())
+      setError('')
+    } catch {
+      setError('Failed to add category.')
+    }
+  }
+
+  async function handleRenameCategory(id: string, name: string) {
+    const existing = categories.find((c) => c.id === id)
+    if (!existing) return
+    try {
+      await updateCategory({ ...existing, name })
+      setCategories(await getAllCategories())
+      setError('')
+    } catch {
+      setError('Failed to rename category.')
+    }
+  }
+
+  async function handleDeleteCategory(id: string) {
+    try {
+      await removeCategory(id)
+      setCategories(await getAllCategories())
+      setError('')
+    } catch {
+      setError('Failed to delete category.')
+    }
+  }
+
   return (
     <main className="app">
       <header className="app__header">
@@ -101,6 +157,15 @@ function App() {
           onEdit={setEditing}
         />
       )}
+      <section className="app__categories">
+        <h2>Categories</h2>
+        <CategoryManager
+          categories={categories}
+          onAdd={handleAddCategory}
+          onRename={handleRenameCategory}
+          onDelete={handleDeleteCategory}
+        />
+      </section>
     </main>
   )
 }

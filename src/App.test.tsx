@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import App from './App'
@@ -146,5 +146,32 @@ describe('App', () => {
     await addExpenseViaForm('-5', 'Bad expense')
     expect(await screen.findByRole('alert')).toBeInTheDocument()
     expect(screen.queryByText(/Bad expense/)).not.toBeInTheDocument()
+  })
+
+  it('seeds and shows the default categories on first run', async () => {
+    await renderApp()
+    expect(screen.getByText('Food')).toBeInTheDocument()
+    expect(screen.getByText('Transport')).toBeInTheDocument()
+  })
+
+  it('adds a category via the category manager', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await user.type(screen.getByLabelText('New category name'), 'Travel')
+    await user.click(screen.getByRole('button', { name: /add category/i }))
+
+    expect(await screen.findByText('Travel')).toBeInTheDocument()
+  })
+
+  it('deletes a category via the category manager', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await user.click(screen.getByRole('button', { name: /delete food/i }))
+
+    await waitFor(() =>
+      expect(screen.queryByText('Food')).not.toBeInTheDocument(),
+    )
   })
 })
