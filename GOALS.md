@@ -13,7 +13,7 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] P1.C — Add-expense form — Controlled form (amount, description, date); persists via the store and clears on submit. — iter-001 / PR #3
 - [done] P1.D — Expense list — Render all expenses newest-first (amount, description, date). — iter-001 / PR #4
 - [done] P1.E — Delete expense — Per-row delete; removes from store + list. — iter-002 / PR #6
-- [ ] P1.F — Edit expense — Edit an existing expense (inline or modal); persists changes.
+- [done] P1.F — Edit expense — Edit an existing expense (inline or modal); persists changes. — iter-003 / PR #9
 - [done] P1.G — Running total — Sum of all expenses shown in the header. — iter-002 / PR #7
 
 ## Phase 2 — Categories
@@ -50,6 +50,16 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [ ] TD.1 — Extract a shared `formatCurrency` helper into `src/lib/` — the
   `Intl.NumberFormat` USD `currencyFormatter` is duplicated verbatim in
   `ExpenseList.tsx` and `RunningTotal.tsx` (flagged in iter-002 peer review).
+- [ ] TD.2 — `applyExpenseEdit` carries through only `input` fields, dropping
+  `existing.categoryId` / `recurring`. Harmless until P2.C (category edit UI) —
+  fix when categories get an edit path (iter-003 peer review).
+- [ ] TD.3 — Deepen `AddExpenseForm` + `EditExpenseForm` into one `ExpenseForm`
+  module — ~90% identical; differ only in initial values, submit label, Cancel,
+  post-submit clear. Puts the form-validation guards in one place (iter-003 arch pass).
+- [ ] TD.4 — Deepen expense orchestration into a `useExpenses` hook — `App.tsx`
+  repeats `store op → getAllExpenses() refresh → setState` across 3 handlers and
+  couples directly to `expenseStore`; a hook concentrates it + becomes testable
+  via `renderHook` (iter-003 arch pass).
 
 ## Open dependencies (waiting on user)
 
