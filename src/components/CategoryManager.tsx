@@ -40,7 +40,7 @@ export function CategoryManager({
       <ul className="category-manager__list">
         {categories.map((category) => (
           <CategoryRow
-            key={category.id}
+            key={`${category.id}:${category.name}`}
             category={category}
             onRename={onRename}
             onDelete={onDelete}
@@ -112,8 +112,12 @@ function CategoryRow({ category, onRename, onDelete }: CategoryRowProps) {
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <button type="button" onClick={handleRename}>
-        Save {category.name}
+      <button
+        type="button"
+        aria-label={`Save ${category.name}`}
+        onClick={handleRename}
+      >
+        Save
       </button>
       <button
         type="button"

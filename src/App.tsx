@@ -108,7 +108,10 @@ function App() {
 
   async function handleRenameCategory(id: string, name: string) {
     const existing = categories.find((c) => c.id === id)
-    if (!existing) return
+    if (!existing) {
+      setError('Category not found.')
+      return
+    }
     try {
       await updateCategory({ ...existing, name })
       setCategories(await getAllCategories())
