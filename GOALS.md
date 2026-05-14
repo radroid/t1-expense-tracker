@@ -12,9 +12,9 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] P1.B — IndexedDB expense store — `src/db/` wrapper: open DB, `add` / `getAll` / `update` / `remove` on an `expenses` object store keyed by id. — iter-001 / PR #2
 - [done] P1.C — Add-expense form — Controlled form (amount, description, date); persists via the store and clears on submit. — iter-001 / PR #3
 - [done] P1.D — Expense list — Render all expenses newest-first (amount, description, date). — iter-001 / PR #4
-- [ ] P1.E — Delete expense — Per-row delete; removes from store + list.
+- [done] P1.E — Delete expense — Per-row delete; removes from store + list. — iter-002 / PR #6
 - [ ] P1.F — Edit expense — Edit an existing expense (inline or modal); persists changes.
-- [ ] P1.G — Running total — Sum of all expenses shown in the header.
+- [done] P1.G — Running total — Sum of all expenses shown in the header. — iter-002 / PR #7
 
 ## Phase 2 — Categories
 
@@ -44,6 +44,12 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [ ] P4.F — Dark mode — Theme toggle, persisted to localStorage.
 - [ ] P4.G — Empty + loading states — Polished empty and loading states across surfaces.
 - [ ] P4.H — Responsive layout — Mobile-friendly layout down to 480px.
+
+## Tech debt
+
+- [ ] TD.1 — Extract a shared `formatCurrency` helper into `src/lib/` — the
+  `Intl.NumberFormat` USD `currencyFormatter` is duplicated verbatim in
+  `ExpenseList.tsx` and `RunningTotal.tsx` (flagged in iter-002 peer review).
 
 ## Open dependencies (waiting on user)
 
