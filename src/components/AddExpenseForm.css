@@ -23,6 +23,11 @@
   font: inherit;
 }
 
+.add-expense-form__field input:focus-visible {
+  outline: 2px solid #2d6cdf;
+  outline-offset: 2px;
+}
+
 .add-expense-form__error {
   margin: 0;
   color: #c0392b;

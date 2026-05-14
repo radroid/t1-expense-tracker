@@ -69,6 +69,33 @@ describe('AddExpenseForm', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument()
   })
 
+  it('does not call onAdd and shows validation message when description is whitespace-only', async () => {
+    const user = userEvent.setup()
+    const onAdd = vi.fn()
+    render(<AddExpenseForm onAdd={onAdd} />)
+
+    await user.type(screen.getByLabelText(/amount/i), '10')
+    await user.type(screen.getByLabelText(/description/i), '   ')
+    await user.click(screen.getByRole('button', { name: /add/i }))
+
+    expect(onAdd).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
+
+  it('does not call onAdd and shows validation message when the date is cleared', async () => {
+    const user = userEvent.setup()
+    const onAdd = vi.fn()
+    render(<AddExpenseForm onAdd={onAdd} />)
+
+    await user.type(screen.getByLabelText(/amount/i), '10')
+    await user.type(screen.getByLabelText(/description/i), 'No date')
+    await user.clear(screen.getByLabelText(/date/i))
+    await user.click(screen.getByRole('button', { name: /add/i }))
+
+    expect(onAdd).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
+
   it('defaults the date input to today on mount', () => {
     render(<AddExpenseForm onAdd={vi.fn()} />)
     const date = screen.getByLabelText(/date/i) as HTMLInputElement

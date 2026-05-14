@@ -30,6 +30,10 @@ export function AddExpenseForm({ onAdd }: AddExpenseFormProps) {
       setError('Please enter a description.')
       return
     }
+    if (date === '') {
+      setError('Please enter a date.')
+      return
+    }
 
     onAdd({
       amount: parsedAmount,
