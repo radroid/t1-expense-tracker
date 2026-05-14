@@ -23,8 +23,7 @@ import {
   seedDefaultCategories,
   updateCategory,
 } from './db/categoryStore'
-import { AddExpenseForm } from './components/AddExpenseForm'
-import { EditExpenseForm } from './components/EditExpenseForm'
+import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
 import { CategoryManager } from './components/CategoryManager'
@@ -138,13 +137,24 @@ function App() {
         <RunningTotal expenses={expenses} />
       </header>
       {editing ? (
-        <EditExpenseForm
-          expense={editing}
-          onSave={handleUpdate}
+        <ExpenseForm
+          key={editing.id}
+          initial={{
+            amount: editing.amount,
+            description: editing.description,
+            date: editing.date,
+          }}
+          submitLabel="Save"
+          onSubmit={handleUpdate}
           onCancel={() => setEditing(null)}
         />
       ) : (
-        <AddExpenseForm onAdd={handleAdd} />
+        <ExpenseForm
+          key="new"
+          submitLabel="Add expense"
+          onSubmit={handleAdd}
+          clearOnSubmit
+        />
       )}
       {error && (
         <p className="app__error" role="alert">
