@@ -60,6 +60,16 @@ describe('App', () => {
     expect(await screen.findByText(/Groceries/)).toBeInTheDocument()
   })
 
+  it('shows a running total that reflects added expenses', async () => {
+    await renderApp()
+    await addExpenseViaForm('10', 'Coffee')
+    await screen.findByText(/Coffee/)
+    await addExpenseViaForm('15.50', 'Lunch')
+    await screen.findByText(/Lunch/)
+
+    expect(screen.getByText('$25.50')).toBeInTheDocument()
+  })
+
   it('deletes an expense via its row delete button', async () => {
     const user = userEvent.setup()
     await renderApp()

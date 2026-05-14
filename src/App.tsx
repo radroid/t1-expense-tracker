@@ -3,6 +3,7 @@ import { createExpense, type Expense, type ExpenseInput } from './lib/expense'
 import { addExpense, getAllExpenses, removeExpense } from './db/expenseStore'
 import { AddExpenseForm } from './components/AddExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
+import { RunningTotal } from './components/RunningTotal'
 import './App.css'
 
 function App() {
@@ -42,7 +43,10 @@ function App() {
 
   return (
     <main className="app">
-      <h1>Expense Tracker</h1>
+      <header className="app__header">
+        <h1>Expense Tracker</h1>
+        <RunningTotal expenses={expenses} />
+      </header>
       <AddExpenseForm onAdd={handleAdd} />
       {error && (
         <p className="app__error" role="alert">
