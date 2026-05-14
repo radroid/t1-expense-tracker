@@ -53,9 +53,9 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [ ] TD.2 — `applyExpenseEdit` carries through only `input` fields, dropping
   `existing.categoryId` / `recurring`. Harmless until P2.C (category edit UI) —
   fix when categories get an edit path (iter-003 peer review).
-- [ ] TD.3 — Deepen `AddExpenseForm` + `EditExpenseForm` into one `ExpenseForm`
+- [done] TD.3 — Deepen `AddExpenseForm` + `EditExpenseForm` into one `ExpenseForm`
   module — ~90% identical; differ only in initial values, submit label, Cancel,
-  post-submit clear. Puts the form-validation guards in one place (iter-003 arch pass).
+  post-submit clear. Puts the form-validation guards in one place. — iter-005 / PR #14
 - [ ] TD.4 — Deepen expense orchestration into a `useExpenses` hook — `App.tsx`
   repeats `store op → getAllExpenses() refresh → setState` across 3 handlers and
   couples directly to `expenseStore`; a hook concentrates it + becomes testable
