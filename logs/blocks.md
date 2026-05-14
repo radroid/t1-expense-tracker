@@ -91,4 +91,17 @@ correctly preserves `expenses` data; `seedDefaultCategories` is genuinely idempo
   App reloads categories after a rename. Practically harmless here (rename only flows
   through that input) → carry-forward note; fix with a `useEffect` sync if it bites.
 
+## iter-005 — Class A peer review (TD.3 refactor)
+
+**Source:** peer-review (TD.3 — ExpenseForm dedup)
+**Verdict:** APPROVE — faithful behaviour-preserving refactor; `ExpenseForm` preserves
+every behaviour of both old forms; test suite is a strict superset (17 tests vs 15);
+no dangling refs to the deleted files.
+**Note:** integration bug caught + fixed during the iter — App switched add↔edit
+`ExpenseForm` at the same tree position, so React reused the instance and `useState`
+initializers didn't re-seed from the new `initial` prop. Fixed with distinct `key`
+per mode (`key={editing.id}` / `key="new"`) — same idiomatic remount fix as iter-004's
+CategoryRow. Lesson: collapsing two component types into one removes the free remount
+that a type change gave you — the caller must supply `key` to preserve it.
+
 
