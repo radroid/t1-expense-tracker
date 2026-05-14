@@ -3,6 +3,7 @@ import './ExpenseList.css';
 
 interface ExpenseListProps {
   expenses: Expense[];
+  onDelete?: (id: string) => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -12,7 +13,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 });
 
-export function ExpenseList({ expenses }: ExpenseListProps) {
+export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
   if (expenses.length === 0) {
     return <p className="expense-list__empty">No expenses yet.</p>;
   }
@@ -30,6 +31,16 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
           </span>
           <span className="expense-list__description">{expense.description}</span>
           <span className="expense-list__date">{expense.date}</span>
+          {onDelete && (
+            <button
+              type="button"
+              className="expense-list__delete"
+              aria-label={`Delete ${expense.description}`}
+              onClick={() => onDelete(expense.id)}
+            >
+              Delete
+            </button>
+          )}
         </li>
       ))}
     </ul>

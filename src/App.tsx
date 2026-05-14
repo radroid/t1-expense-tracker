@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createExpense, type Expense, type ExpenseInput } from './lib/expense'
-import { addExpense, getAllExpenses } from './db/expenseStore'
+import { addExpense, getAllExpenses, removeExpense } from './db/expenseStore'
 import { AddExpenseForm } from './components/AddExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import './App.css'
@@ -30,6 +30,11 @@ function App() {
     setExpenses(await getAllExpenses())
   }
 
+  async function handleDelete(id: string) {
+    await removeExpense(id)
+    setExpenses(await getAllExpenses())
+  }
+
   return (
     <main className="app">
       <h1>Expense Tracker</h1>
@@ -42,7 +47,7 @@ function App() {
       {loading ? (
         <p className="loading">Loading…</p>
       ) : (
-        <ExpenseList expenses={expenses} />
+        <ExpenseList expenses={expenses} onDelete={handleDelete} />
       )}
     </main>
   )

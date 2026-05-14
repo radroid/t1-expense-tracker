@@ -55,6 +55,17 @@ describe('App', () => {
     expect(await screen.findByText(/Groceries/)).toBeInTheDocument()
   })
 
+  it('deletes an expense via its row delete button', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+    await addExpenseViaForm('15', 'Lunch')
+    await screen.findByText(/Lunch/)
+
+    await user.click(screen.getByRole('button', { name: /delete lunch/i }))
+
+    expect(await screen.findByText('No expenses yet.')).toBeInTheDocument()
+  })
+
   it('rejects an invalid amount and surfaces the error without adding', async () => {
     await renderApp()
     await addExpenseViaForm('-5', 'Bad expense')
