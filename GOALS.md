@@ -102,11 +102,13 @@ the post-arch handoff into concrete items below.
   inline `role="alert"`/`role="status"`; jsdom fallback toggles `open`
   attribute). App.tsx wires `Promise.allSettled` over the four hooks'
   `refresh()` after the DB write commits. — iter-020 / PR #52
-- [ ] P5.D — Per-category budgets — extend the budget pipeline so a
-  budget can be scoped to (month, categoryId) in addition to (month).
-  New `categoryBudgets` store + hook + UI section. Composes with
-  existing `useStoredCollection` seam. iter-020+ target (larger
-  scope; requires UI design for the per-category progress strip).
+- [done] P5.D — Per-category budgets — new `categoryBudgets` store
+  (DB v4→v5, composite string id `${month}|${categoryId}`),
+  `useCategoryBudgets` hook (binds into `useStoredCollection`),
+  `<CategoryBudgetManager>` UI section. Independent from
+  `monthlyBudgets` for v1 — no implicit "month total = sum of
+  per-category". Backup schema bumped 1→2 to include the new entity.
+  — iter-021 / PR #54
 - [ ] P5.E — Multi-currency — single-currency-per-expense field
   (`currency?: string`, ISO 4217). Display preference (`useCurrency`
   hook) defaults to USD. Updates totals/format helpers. iter-021+
