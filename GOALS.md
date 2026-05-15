@@ -158,14 +158,14 @@ local-only, adding a network dependency violates that charter.
   fix; ImportButton role parity. — iter-028 / PR #63. P1
   form-error-association cluster + a11y-004 skip-link + a11y-007
   persistent error live region deferred as follow-up TDs.
-- [ ] P6.D — Performance / bundle pass — Lighthouse-guided. Measure
-  first (current bundle: 234.21 kB / gzip 71.33 kB). Targets:
-  (a) code-split `RecurringManager`, `CategoryManager`, `BackupRestore`
-  via `React.lazy` + `<Suspense>` since they're rare-use surfaces;
-  (b) audit re-render hotspots via React DevTools profiler;
-  (c) memoize expensive aggregations (`summarizeByMonth` etc.);
-  (d) defer non-critical CSS if Lighthouse flags it. Ship measurement
-  + improvement together; report before/after numbers in the iter log.
+- [done] P6.D — Performance / bundle pass. Three rare-use management
+  surfaces (`CategoryManager`, `RecurringManager`, `BackupRestore`)
+  converted to `React.lazy()` with per-component `<Suspense>`
+  boundaries inside the existing `!loading` branch. Main JS bundle
+  242.80 → 231.67 kB (gzip 72.92 → 71.37; −1.55 kB gzip). Main
+  CSS 26.74 → 21.40 kB (gzip 4.38 → 3.84). Three new lazy chunks
+  loaded on-demand. Memoization + Vite config changes deliberately
+  deferred pending profiler evidence. — iter-029 / PR #64.
 - [done] P6.E — Category-deletion cascade UX (block-while-in-use,
   closes TD.6). New `categoryMessages.inUse(count)` pluralized factory.
   `useCategories.setError` exposed; hook stays domain-pure (no
