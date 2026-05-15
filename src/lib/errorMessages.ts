@@ -29,3 +29,10 @@ export const recurringTemplateMessages = Object.freeze({
   add: 'Failed to add recurring template.',
   remove: 'Failed to delete recurring template.',
 })
+
+export const categoryBudgetMessages = Object.freeze({
+  load: 'Failed to load category budgets.',
+  add: 'Failed to save category budget.',
+  update: 'Failed to save category budget.',
+  remove: 'Failed to delete category budget.',
+})

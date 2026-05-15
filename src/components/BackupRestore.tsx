@@ -144,14 +144,15 @@ export function BackupRestore({ onRestore }: BackupRestoreProps) {
       <dialog ref={dialogRef} className="backup-restore__dialog">
         <h2>Restore from backup?</h2>
         <p className="backup-restore__warning">
-          This replaces all data — current expenses, categories, budgets, and
-          recurring templates will be deleted.
+          This replaces all data — current expenses, categories, budgets,
+          recurring templates, and per-category budgets will be deleted.
         </p>
         {pending && (
           <p className="backup-restore__counts">
             {pending.expenses.length} expenses, {pending.categories.length}{' '}
             categories, {pending.monthlyBudgets.length} budgets,{' '}
-            {pending.recurringTemplates.length} recurring templates.
+            {pending.recurringTemplates.length} recurring templates,{' '}
+            {pending.categoryBudgets.length} per-category budgets.
           </p>
         )}
         {dialogError !== '' && (

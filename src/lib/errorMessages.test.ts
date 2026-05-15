@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   budgetMessages,
+  categoryBudgetMessages,
   categoryMessages,
   expenseMessages,
   recurringTemplateMessages,
@@ -43,10 +44,22 @@ describe('errorMessages', () => {
     )
   })
 
+  it('categoryBudgetMessages cover load/add/update/remove for per-category budgets (P5.D)', () => {
+    expect(categoryBudgetMessages.load).toBe('Failed to load category budgets.')
+    expect(categoryBudgetMessages.add).toBe('Failed to save category budget.')
+    expect(categoryBudgetMessages.update).toBe(
+      'Failed to save category budget.',
+    )
+    expect(categoryBudgetMessages.remove).toBe(
+      'Failed to delete category budget.',
+    )
+  })
+
   it('message bundles are frozen so hooks can hold them by reference safely', () => {
     expect(Object.isFrozen(expenseMessages)).toBe(true)
     expect(Object.isFrozen(categoryMessages)).toBe(true)
     expect(Object.isFrozen(budgetMessages)).toBe(true)
     expect(Object.isFrozen(recurringTemplateMessages)).toBe(true)
+    expect(Object.isFrozen(categoryBudgetMessages)).toBe(true)
   })
 })

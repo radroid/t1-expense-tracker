@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { Expense } from '../lib/expense'
 import type { RecurringTemplate } from '../lib/recurring'
+import { createCategoryBudget } from '../lib/categoryBudget'
 import { openDb } from './db'
 import { getAllExpenses } from './expenseStore'
 import { getBudget, setBudget } from './budgetStore'
@@ -9,6 +10,10 @@ import {
   addRecurringTemplate,
   getAllRecurringTemplates,
 } from './recurringTemplateStore'
+import {
+  getCategoryBudget,
+  setCategoryBudget,
+} from './categoryBudgetStore'
 
 const DB_NAME = 'expense-tracker'
 
@@ -28,6 +33,9 @@ function openAtVersion(version: number): Promise<IDBDatabase> {
       }
       if (version >= 3 && !db.objectStoreNames.contains('monthlyBudgets')) {
         db.createObjectStore('monthlyBudgets', { keyPath: 'month' })
+      }
+      if (version >= 4 && !db.objectStoreNames.contains('recurringTemplates')) {
+        db.createObjectStore('recurringTemplates', { keyPath: 'id' })
       }
     }
     req.onsuccess = () => resolve(req.result)
@@ -56,7 +64,7 @@ describe('IndexedDB migration', () => {
     })
   })
 
-  it('upgrades v2 → v4 preserving expenses and adding new stores', async () => {
+  it('upgrades v2 → v5 preserving expenses and adding new stores', async () => {
     // 1. Open at v2, seed an expense.
     const v2Db = await openAtVersion(2)
     const seeded: Expense = {
@@ -70,11 +78,12 @@ describe('IndexedDB migration', () => {
 
     // 2. Open via openDb() (which upgrades all the way to current version).
     const upgraded = await openDb()
-    expect(upgraded.version).toBe(4)
+    expect(upgraded.version).toBe(5)
     expect(upgraded.objectStoreNames.contains('expenses')).toBe(true)
     expect(upgraded.objectStoreNames.contains('categories')).toBe(true)
     expect(upgraded.objectStoreNames.contains('monthlyBudgets')).toBe(true)
     expect(upgraded.objectStoreNames.contains('recurringTemplates')).toBe(true)
+    expect(upgraded.objectStoreNames.contains('categoryBudgets')).toBe(true)
     upgraded.close()
 
     // 3. The seeded expense is still readable.
@@ -87,7 +96,7 @@ describe('IndexedDB migration', () => {
     expect(budget).toEqual({ month: '2026-05', amount: 1000 })
   })
 
-  it('upgrades v3 → v4: existing data survives + recurringTemplates store works', async () => {
+  it('upgrades v3 → v5: existing data survives + recurringTemplates store works', async () => {
     // 1. Open at v3, seed expense + budget.
     const v3Db = await openAtVersion(3)
     const seededExpense: Expense = {
@@ -108,11 +117,12 @@ describe('IndexedDB migration', () => {
     })
     v3Db.close()
 
-    // 2. Open via openDb() — upgrades v3 → v4.
-    const v4Db = await openDb()
-    expect(v4Db.version).toBe(4)
-    expect(v4Db.objectStoreNames.contains('recurringTemplates')).toBe(true)
-    v4Db.close()
+    // 2. Open via openDb() — upgrades v3 → v5 (all the way to current).
+    const v5Db = await openDb()
+    expect(v5Db.version).toBe(5)
+    expect(v5Db.objectStoreNames.contains('recurringTemplates')).toBe(true)
+    expect(v5Db.objectStoreNames.contains('categoryBudgets')).toBe(true)
+    v5Db.close()
 
     // 3. Old data survives the upgrade.
     expect(await getAllExpenses()).toEqual([seededExpense])
@@ -128,5 +138,51 @@ describe('IndexedDB migration', () => {
     }
     await addRecurringTemplate(template)
     expect(await getAllRecurringTemplates()).toEqual([template])
+  })
+
+  it('upgrades v4 → v5: existing data survives + categoryBudgets store works', async () => {
+    // 1. Open at v4 (all four pre-P5.D stores), seed an expense + template.
+    const v4Db = await openAtVersion(4)
+    const seededExpense: Expense = {
+      id: 'seed-e1',
+      amount: 12.5,
+      description: 'pre-v5 coffee',
+      date: '2026-05-14',
+    }
+    await putExpense(v4Db, seededExpense)
+    const seededTemplate: RecurringTemplate = {
+      id: 'tpl-pre',
+      description: 'Rent',
+      amount: 1500,
+      frequency: 'monthly',
+      dayOfMonth: 1,
+    }
+    await new Promise<void>((resolve, reject) => {
+      const tx = v4Db.transaction('recurringTemplates', 'readwrite')
+      tx.objectStore('recurringTemplates').put(seededTemplate)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error)
+    })
+    v4Db.close()
+
+    // 2. Open via openDb() — upgrades v4 → v5.
+    const upgraded = await openDb()
+    expect(upgraded.version).toBe(5)
+    expect(upgraded.objectStoreNames.contains('categoryBudgets')).toBe(true)
+    upgraded.close()
+
+    // 3. Old data survives the upgrade.
+    expect(await getAllExpenses()).toEqual([seededExpense])
+    expect(await getAllRecurringTemplates()).toEqual([seededTemplate])
+
+    // 4. New categoryBudgets store round-trips a row.
+    const cb = createCategoryBudget({
+      month: '2026-05',
+      categoryId: 'cat-food',
+      amount: 200,
+    })
+    await setCategoryBudget(cb)
+    expect(await getCategoryBudget('2026-05', 'cat-food')).toEqual(cb)
   })
 })

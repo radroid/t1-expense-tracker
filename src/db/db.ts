@@ -1,11 +1,12 @@
 const DB_NAME = 'expense-tracker'
-const DB_VERSION = 4
+const DB_VERSION = 5
 
 const STORES: ReadonlyArray<{ name: string; keyPath: string }> = [
   { name: 'expenses', keyPath: 'id' },
   { name: 'categories', keyPath: 'id' },
   { name: 'monthlyBudgets', keyPath: 'month' },
   { name: 'recurringTemplates', keyPath: 'id' },
+  { name: 'categoryBudgets', keyPath: 'id' },
 ]
 
 export function openDb(): Promise<IDBDatabase> {

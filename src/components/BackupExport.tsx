@@ -3,6 +3,7 @@ import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import type { MonthlyBudget } from '../lib/budget'
 import type { RecurringTemplate } from '../lib/recurring'
+import type { CategoryBudget } from '../lib/categoryBudget'
 import './BackupExport.css'
 
 interface BackupExportProps {
@@ -10,6 +11,7 @@ interface BackupExportProps {
   categories: Category[]
   monthlyBudgets: MonthlyBudget[]
   recurringTemplates: RecurringTemplate[]
+  categoryBudgets: CategoryBudget[]
 }
 
 function todayIsoDate(): string {
@@ -25,6 +27,7 @@ export function BackupExport({
   categories,
   monthlyBudgets,
   recurringTemplates,
+  categoryBudgets,
 }: BackupExportProps) {
   function handleClick() {
     const snapshot = buildBackup({
@@ -32,6 +35,7 @@ export function BackupExport({
       categories,
       monthlyBudgets,
       recurringTemplates,
+      categoryBudgets,
     })
     const text = formatBackup(snapshot)
     const blob = new Blob([text], { type: 'application/json' })

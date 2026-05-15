@@ -430,7 +430,9 @@ describe('App', () => {
     await screen.findByText(/Pre-restore expense/)
 
     const snapshot = {
-      schemaVersion: 1,
+      // schemaVersion 2 — iter-021 (P5.D) bumped the format to include
+      // categoryBudgets. v1 snapshots are rejected by parseBackup.
+      schemaVersion: 2,
       exportedAt: '2026-05-15T10:00:00.000Z',
       expenses: [
         {
@@ -446,6 +448,7 @@ describe('App', () => {
       categories: [],
       monthlyBudgets: [],
       recurringTemplates: [],
+      categoryBudgets: [],
     }
     const file = new File([JSON.stringify(snapshot)], 'backup.json', {
       type: 'application/json',
@@ -465,5 +468,20 @@ describe('App', () => {
 
     expect(await screen.findByText(/From-backup/)).toBeInTheDocument()
     expect(screen.queryByText(/Pre-restore expense/)).not.toBeInTheDocument()
+  })
+
+  it('sets a per-category budget and shows the saved amount (P5.D)', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    // The default-seeded "Food" category renders a row in the new
+    // Per-category budgets section. Set a $200 budget and assert the
+    // "Current" line updates.
+    const foodInput = screen.getByLabelText('Budget for Food')
+    await user.clear(foodInput)
+    await user.type(foodInput, '200')
+    await user.click(screen.getByLabelText('Save budget for Food'))
+
+    expect(await screen.findByText(/Current: \$200\.00/)).toBeInTheDocument()
   })
 })

@@ -6,6 +6,7 @@ import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import type { MonthlyBudget } from '../lib/budget'
 import type { RecurringTemplate } from '../lib/recurring'
+import type { CategoryBudget } from '../lib/categoryBudget'
 
 const expenses: Expense[] = [
   { id: 'e1', amount: 10, description: 'Coffee', date: '2026-05-15' },
@@ -22,6 +23,9 @@ const recurringTemplates: RecurringTemplate[] = [
     dayOfMonth: 1,
     frequency: 'monthly',
   },
+]
+const categoryBudgets: CategoryBudget[] = [
+  { id: '2026-05|c1', month: '2026-05', categoryId: 'c1', amount: 200 },
 ]
 
 beforeEach(() => {
@@ -57,6 +61,7 @@ describe('BackupExport', () => {
         categories={categories}
         monthlyBudgets={monthlyBudgets}
         recurringTemplates={recurringTemplates}
+        categoryBudgets={categoryBudgets}
       />,
     )
     expect(
@@ -73,6 +78,7 @@ describe('BackupExport', () => {
         categories={categories}
         monthlyBudgets={monthlyBudgets}
         recurringTemplates={recurringTemplates}
+        categoryBudgets={categoryBudgets}
       />,
     )
     await user.click(
@@ -108,6 +114,7 @@ describe('BackupExport', () => {
         categories={categories}
         monthlyBudgets={monthlyBudgets}
         recurringTemplates={recurringTemplates}
+        categoryBudgets={categoryBudgets}
       />,
     )
     await user.click(
@@ -117,11 +124,12 @@ describe('BackupExport', () => {
     expect(capturedBlob).toBeDefined()
     const text = await capturedBlob!.text()
     const parsed = JSON.parse(text)
-    expect(parsed.schemaVersion).toBe(1)
+    expect(parsed.schemaVersion).toBe(2)
     expect(parsed.expenses).toEqual(expenses)
     expect(parsed.categories).toEqual(categories)
     expect(parsed.monthlyBudgets).toEqual(monthlyBudgets)
     expect(parsed.recurringTemplates).toEqual(recurringTemplates)
+    expect(parsed.categoryBudgets).toEqual(categoryBudgets)
     expect(typeof parsed.exportedAt).toBe('string')
   })
 
@@ -142,6 +150,7 @@ describe('BackupExport', () => {
         categories={[]}
         monthlyBudgets={[]}
         recurringTemplates={[]}
+        categoryBudgets={[]}
       />,
     )
     await user.click(
@@ -156,5 +165,6 @@ describe('BackupExport', () => {
     expect(parsed.categories).toEqual([])
     expect(parsed.monthlyBudgets).toEqual([])
     expect(parsed.recurringTemplates).toEqual([])
+    expect(parsed.categoryBudgets).toEqual([])
   })
 })
