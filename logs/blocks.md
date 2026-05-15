@@ -288,4 +288,38 @@ deferred `useSpendingByCategory`. P4.E (recurring) is the heaviest — likely
 needs new lib for month-rollover generation, plus a `recurring: true` flag
 on the existing Expense model (already there per the schema, never used).
 
+## iter-013 — Phase 4 fat-iter (3 features, 2 PRs)
+
+**Source:** peer-review × 2 (PR-level Class A super-reviewers).
+
+- **P4.A + P4.B (PR #36, super-review APPROVE)** — bundled. Search + date-range
+  filters extend `useVisibleExpenses` cleanly through the seam from iter-012.
+  Pipeline: `expenses → byMonth → monthlyExpenses → byDateRange → byCategory
+  → bySearch → visibleExpenses`. `monthlyExpenses` deliberately bypasses
+  byDateRange to preserve the budget-coherence invariant. CodeRabbit:
+  **No findings ✔**. Super-reviewer surfaced two low-priority follow-ups:
+  (1) DateRangeFilter doesn't normalize/swap when `from > to` (silently
+  empty result); (2) DateRangeFilter draft state doesn't re-sync to external
+  `value` changes (App owns reset today, so fine).
+- **P4.F (PR #37, super-review APPROVE)** — dark mode via CSS custom
+  properties + localStorage. First-paint flash avoided by calling
+  `applyTheme(loadTheme())` in `src/main.tsx` BEFORE React renders.
+  CodeRabbit: 2 nits, both applied (added persisted-load test; imported
+  `THEME_STORAGE_KEY` constant).
+
+**Super-reviewer's load-bearing finding on P4.F**: ExpenseList, CategoryFilter,
+MonthSwitcher, ExpenseForm, BudgetForm CSS still hard-code light colors
+(`#fff`, `#ccc`, `#222`, etc.). Dark-mode shell renders but cards/inputs/buttons
+stay light — a mixed UI. **Deferred as P4.I (themability sweep)** added to
+GOALS.md. Not a correctness bug; toggle + persistence + first-paint all
+work end-to-end; it's a scope cut for P4.F.
+
+**Node 25 localStorage shim:** the test files for theme + ThemeToggle install
+a working in-memory `Storage` shim in `beforeAll` because Node 25's
+experimental built-in `localStorage` shadows jsdom's Storage in the vitest
+jsdom env (no `setItem`/`getItem`/`clear` methods). Each shim runs in its own
+file (vitest isolates per file), so it doesn't leak. Worth extracting to
+`src/test/setup.ts` if/when more localStorage-backed features land (P4.E
+recurring expense state is a likely trigger).
+
 
