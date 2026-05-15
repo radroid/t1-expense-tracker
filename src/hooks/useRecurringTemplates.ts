@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   createRecurringTemplate,
   type RecurringTemplate,
@@ -15,11 +15,20 @@ import {
   type Store,
 } from './useStoredCollection'
 
+export interface RecurringBulkAddResult {
+  added: number
+  skipped: number
+  errors: string[]
+}
+
 export interface UseRecurringTemplates {
   templates: RecurringTemplate[]
   loading: boolean
   error: string
   add: (input: RecurringTemplateInput) => Promise<boolean>
+  addMany: (
+    inputs: RecurringTemplateInput[],
+  ) => Promise<RecurringBulkAddResult>
   remove: (id: string) => Promise<boolean>
   // Re-reads the store. Used by the backup-restore flow (P5.C).
   refresh: () => Promise<void>
@@ -52,13 +61,69 @@ export function useRecurringTemplates(): UseRecurringTemplates {
     messages: recurringTemplateMessages,
   })
 
-  const { items, loading, error, add, remove, refresh } = collection
+  const { items, loading, error, add, remove, setError, refresh } = collection
+
+  // Bulk-add recurring templates. Mirrors `useExpenses.addMany`: each input
+  // is validated; failures collect their validator messages. Valid rows are
+  // persisted in input order; per-row persistence failures push a "Failed
+  // to add recurring template: <description>" entry. One refresh after all
+  // writes; refresh failure surfaces in the errors list. Never throws.
+  const addMany = useCallback(
+    async (
+      inputs: RecurringTemplateInput[],
+    ): Promise<RecurringBulkAddResult> => {
+      if (inputs.length === 0) {
+        return { added: 0, skipped: 0, errors: [] }
+      }
+
+      const errors: string[] = []
+      const valid: RecurringTemplate[] = []
+      inputs.forEach((input) => {
+        try {
+          valid.push(createRecurringTemplate(input))
+        } catch (e) {
+          errors.push(
+            e instanceof Error ? e.message : 'Invalid recurring template.',
+          )
+        }
+      })
+
+      let added = 0
+      for (const template of valid) {
+        try {
+          await addRecurringTemplate(template)
+          added++
+        } catch {
+          errors.push(
+            `Failed to add recurring template: ${template.description}`,
+          )
+        }
+      }
+      const skipped = inputs.length - added
+
+      try {
+        await refresh()
+      } catch {
+        errors.push('Failed to refresh recurring template list.')
+      }
+
+      if (errors.length > 0) {
+        setError(`Imported ${added}. Skipped ${skipped}.`)
+      } else {
+        setError('')
+      }
+
+      return { added, skipped, errors }
+    },
+    [refresh, setError],
+  )
 
   return {
     templates: items,
     loading,
     error,
     add,
+    addMany,
     remove,
     refresh,
   }

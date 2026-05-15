@@ -4,14 +4,29 @@ import type {
   RecurringTemplateInput,
 } from '../lib/recurring'
 import type { Category } from '../lib/category'
+import type { RecurringBulkAddResult } from '../hooks/useRecurringTemplates'
+import { RecurringExport } from './RecurringExport'
+import { RecurringImport } from './RecurringImport'
 import './RecurringManager.css'
 
 interface RecurringManagerProps {
   templates: RecurringTemplate[]
   categories: Category[]
   onAdd: (input: RecurringTemplateInput) => Promise<boolean>
+  // Optional so the main agent can wire this at the App level without
+  // a flag-day rename — the import control degrades to a no-op summary
+  // when omitted. Tests assert behavior when the prop IS provided.
+  onAddMany?: (
+    inputs: RecurringTemplateInput[],
+  ) => Promise<RecurringBulkAddResult>
   onDelete: (id: string) => Promise<boolean>
 }
+
+const noopAddMany = async (): Promise<RecurringBulkAddResult> => ({
+  added: 0,
+  skipped: 0,
+  errors: [],
+})
 
 // Lets the user define monthly recurring templates. Form layout mirrors
 // CategoryManager: a list above, an add form below, inline error slot. The
@@ -21,6 +36,7 @@ export function RecurringManager({
   templates,
   categories,
   onAdd,
+  onAddMany = noopAddMany,
   onDelete,
 }: RecurringManagerProps) {
   const [description, setDescription] = useState('')
@@ -75,6 +91,10 @@ export function RecurringManager({
 
   return (
     <div className="recurring-manager">
+      <div className="recurring-manager__io">
+        <RecurringExport templates={templates} />
+        <RecurringImport onImport={onAddMany} />
+      </div>
       <ul className="recurring-manager__list">
         {templates.map((t) => (
           <li key={t.id} className="recurring-manager__row">

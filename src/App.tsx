@@ -32,6 +32,7 @@ import {
 } from './lib/urlFilters'
 import { totalAmount } from './lib/totals'
 import { computeBudgetStatus } from './lib/budgetStatus'
+import { categoryMessages } from './lib/errorMessages'
 import { useExpenses } from './hooks/useExpenses'
 import { useCategories } from './hooks/useCategories'
 import { useMonthlyBudgets } from './hooks/useMonthlyBudgets'
@@ -165,6 +166,13 @@ function App() {
   }
 
   async function handleDeleteCategory(id: string) {
+    const inUseCount = expensesHook.expenses.filter(
+      (e) => e.categoryId === id,
+    ).length
+    if (inUseCount > 0) {
+      categoriesHook.setError(categoryMessages.inUse(inUseCount))
+      return
+    }
     const ok = await categoriesHook.remove(id)
     // The filter pointing at a now-deleted category would orphan the <select>
     // and silently produce an empty list + $0 totals. Snap back to 'all'.
@@ -300,6 +308,9 @@ function App() {
           onAdd={categoriesHook.add}
           onRename={categoriesHook.rename}
           onDelete={handleDeleteCategory}
+          getInUseCount={(id) =>
+            expensesHook.expenses.filter((e) => e.categoryId === id).length
+          }
         />
       </section>
       <section className="app__recurring">
@@ -308,6 +319,7 @@ function App() {
           templates={recurringHook.templates}
           categories={categoriesHook.categories}
           onAdd={recurringHook.add}
+          onAddMany={recurringHook.addMany}
           onDelete={recurringHook.remove}
         />
       </section>

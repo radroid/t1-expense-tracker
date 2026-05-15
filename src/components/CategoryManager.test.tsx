@@ -78,4 +78,56 @@ describe('CategoryManager', () => {
 
     expect(onDelete).toHaveBeenCalledWith('c2')
   })
+
+  // P6.E — category-deletion cascade UX. The block-while-in-use decision
+  // surfaces here as a disabled Delete button + an inline count next to the
+  // category name. `getInUseCount` is optional so existing tests that don't
+  // care can omit it (defaults to a no-op returning 0).
+  describe('in-use blocking (P6.E)', () => {
+    it('Delete is enabled and unannotated when getInUseCount returns 0', () => {
+      setup({ getInUseCount: () => 0 })
+
+      const deleteBtn = screen.getByRole('button', { name: /delete Groceries/i })
+      expect(deleteBtn).not.toBeDisabled()
+      // No count annotation rendered.
+      expect(screen.queryByText(/expense$/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/expenses$/i)).not.toBeInTheDocument()
+    })
+
+    it('Delete is enabled when getInUseCount prop is omitted entirely', () => {
+      setup()
+      const deleteBtn = screen.getByRole('button', { name: /delete Groceries/i })
+      expect(deleteBtn).not.toBeDisabled()
+    })
+
+    it('Delete is disabled and shows "· 1 expense" when count is 1', () => {
+      setup({ getInUseCount: (id) => (id === 'c1' ? 1 : 0) })
+
+      const deleteBtn = screen.getByRole('button', { name: /delete Groceries/i })
+      expect(deleteBtn).toBeDisabled()
+      // The count text sits next to the name. Use a flexible matcher because
+      // the "·" separator and the count share a row with the name.
+      expect(screen.getByText(/·\s*1 expense\b/)).toBeInTheDocument()
+    })
+
+    it('pluralizes the count as "· 3 expenses" (not "3 expense")', () => {
+      setup({ getInUseCount: (id) => (id === 'c2' ? 3 : 0) })
+
+      const deleteBtn = screen.getByRole('button', { name: /delete Transport/i })
+      expect(deleteBtn).toBeDisabled()
+      expect(screen.getByText(/·\s*3 expenses\b/)).toBeInTheDocument()
+    })
+
+    it('disabled delete button does not fire onDelete when clicked', async () => {
+      const user = userEvent.setup()
+      const { onDelete } = setup({ getInUseCount: () => 2 })
+
+      const deleteBtn = screen.getByRole('button', { name: /delete Groceries/i })
+      expect(deleteBtn).toBeDisabled()
+
+      // userEvent respects the `disabled` attribute and refuses to fire click.
+      await user.click(deleteBtn)
+      expect(onDelete).not.toHaveBeenCalled()
+    })
+  })
 })

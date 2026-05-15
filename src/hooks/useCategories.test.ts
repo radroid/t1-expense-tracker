@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCategories } from './useCategories'
 import * as categoryStore from '../db/categoryStore'
+import { categoryMessages } from '../lib/errorMessages'
 
 beforeEach(async () => {
   await new Promise<void>((resolve, reject) => {
@@ -78,6 +79,36 @@ describe('useCategories', () => {
     })
     expect(okBad).toBe(false)
     expect(result.current.error).not.toBe('')
+  })
+
+  // P6.E — `setError` is exposed so the App.tsx orchestration layer can
+  // surface the "category is in use" message without having to add a
+  // cross-domain check inside the hook itself. The hook stays a thin CRUD
+  // wrapper; the in-use guard lives in App.tsx.
+  it('exposes setError so the App-layer can surface cross-domain errors', async () => {
+    const { result } = renderHook(() => useCategories())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.error).toBe('')
+
+    act(() => {
+      result.current.setError('Custom message from orchestration layer')
+    })
+
+    expect(result.current.error).toBe('Custom message from orchestration layer')
+  })
+
+  // P6.E — `categoryMessages.inUse` is a factory because the count varies
+  // per call. Pluralization matters: "1 expense" vs "N expenses".
+  it('categoryMessages.inUse pluralizes 1 vs N correctly', () => {
+    expect(categoryMessages.inUse(1)).toBe(
+      'Category is used by 1 expense. Remove or recategorize it first.',
+    )
+    expect(categoryMessages.inUse(2)).toBe(
+      'Category is used by 2 expenses. Remove or recategorize them first.',
+    )
+    expect(categoryMessages.inUse(7)).toBe(
+      'Category is used by 7 expenses. Remove or recategorize them first.',
+    )
   })
 
   it('remove() deletes; returns false on store failure', async () => {

@@ -32,6 +32,23 @@
   font-weight: 500;
 }
 
+/* P6.E — inline "· N expense(s)" annotation next to a category that's
+   blocking delete. Muted to read as secondary metadata rather than as the
+   row's title. Falls back to a 60% opacity tone if the theme doesn't
+   define --app-text-muted. */
+.category-manager__count {
+  color: var(--app-text-muted, rgba(0, 0, 0, 0.6));
+  font-size: 0.875rem;
+  padding-left: 0.25rem;
+}
+
+/* The disabled Delete button gets the default browser styling. We also
+   nudge the cursor so the affordance is unambiguous on hover. */
+.category-manager button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .category-manager__add {
   display: flex;
   flex-direction: column;

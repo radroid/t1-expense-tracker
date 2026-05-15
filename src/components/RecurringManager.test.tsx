@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { RecurringManager } from './RecurringManager'
@@ -25,6 +25,9 @@ describe('RecurringManager', () => {
         templates={[template]}
         categories={categories}
         onAdd={vi.fn().mockResolvedValue(true)}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
@@ -39,6 +42,9 @@ describe('RecurringManager', () => {
         templates={[]}
         categories={categories}
         onAdd={onAdd}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
@@ -68,6 +74,9 @@ describe('RecurringManager', () => {
         templates={[]}
         categories={categories}
         onAdd={onAdd}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
@@ -85,6 +94,9 @@ describe('RecurringManager', () => {
         templates={[]}
         categories={categories}
         onAdd={onAdd}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
@@ -107,6 +119,9 @@ describe('RecurringManager', () => {
         templates={[]}
         categories={categories}
         onAdd={onAdd}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
@@ -135,6 +150,9 @@ describe('RecurringManager', () => {
         templates={[template]}
         categories={categories}
         onAdd={vi.fn().mockResolvedValue(true)}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={onDelete}
       />,
     )
@@ -151,6 +169,9 @@ describe('RecurringManager', () => {
         templates={[]}
         categories={categories}
         onAdd={onAdd}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
@@ -174,6 +195,9 @@ describe('RecurringManager', () => {
         templates={[]}
         categories={categories}
         onAdd={onAdd}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
@@ -191,6 +215,60 @@ describe('RecurringManager', () => {
     expect(desc.value).toBe('Gym')
   })
 
+  it('renders the export + import controls alongside the form', () => {
+    render(
+      <RecurringManager
+        templates={[template]}
+        categories={categories}
+        onAdd={vi.fn().mockResolvedValue(true)}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+        onDelete={vi.fn().mockResolvedValue(true)}
+      />,
+    )
+    // Both new buttons are present, and the existing form is still here.
+    expect(
+      screen.getByRole('button', { name: /export.*template/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/import.*template/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /add recurring/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('wires the import file-picker to onAddMany', async () => {
+    const onAddMany = vi
+      .fn()
+      .mockResolvedValue({ added: 1, skipped: 0, errors: [] })
+    const user = userEvent.setup()
+    render(
+      <RecurringManager
+        templates={[]}
+        categories={categories}
+        onAdd={vi.fn().mockResolvedValue(true)}
+        onAddMany={onAddMany}
+        onDelete={vi.fn().mockResolvedValue(true)}
+      />,
+    )
+
+    const fileInput = screen.getByLabelText(
+      /import.*template/i,
+    ) as HTMLInputElement
+    const text = 'description,amount,dayOfMonth,categoryId\nRent,1500,1,\n'
+    await user.upload(fileInput, new File([text], 'r.csv', { type: 'text/csv' }))
+
+    await waitFor(() => expect(onAddMany).toHaveBeenCalledTimes(1))
+    expect(onAddMany.mock.calls[0][0]).toEqual([
+      {
+        description: 'Rent',
+        amount: 1500,
+        frequency: 'monthly',
+        dayOfMonth: 1,
+      },
+    ])
+  })
+
   it('shows an inline validation error for non-positive amount', async () => {
     const user = userEvent.setup()
     const onAdd = vi.fn().mockResolvedValue(true)
@@ -199,6 +277,9 @@ describe('RecurringManager', () => {
         templates={[]}
         categories={categories}
         onAdd={onAdd}
+        onAddMany={vi
+          .fn()
+          .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
         onDelete={vi.fn().mockResolvedValue(true)}
       />,
     )
