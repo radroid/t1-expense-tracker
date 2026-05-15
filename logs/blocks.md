@@ -152,4 +152,33 @@ with the category list; current order is fine).
 **Verdict:** No findings ✔ (both passes — first on the original commit, second after
 the super-reviewer WARNING fix landed).
 
+## iter-009 — phase-boundary arch pass (Phase 2 → Phase 3)
+
+**Source:** arch-pass (Skill `improve-codebase-architecture`)
+**Surfaced 4 deepening opportunities:** TD.1 (currency formatter dedup), TD.2 (apply-
+ExpenseEdit field preservation — long-standing carry-forward), TD.4 (useExpenses +
+useCategories orchestration hooks), TD.6 (category-deletion cascade — declined as
+product decision; orphan-via-Uncategorized policy is already coherent across surfaces).
+**Executed in this iter (3 sequential PRs):**
+- **TD.1 (PR #23)** — `src/lib/currency.ts` extracted; 3 components import `formatUSD`.
+  CodeRabbit: 1 nit (pin rounding behaviour) applied; declined negative/NaN/Infinity
+  tests because `createExpense` validates `finite > 0` upstream. Super-reviewer APPROVE.
+- **TD.2 (PR #24)** — `applyExpenseEdit` now merges `categoryId` / `recurring` from
+  existing when the input doesn't supply them. Documented contract: omit OR explicit-
+  undefined → preserve. CodeRabbit nit (misleading test title) applied. Super-reviewer
+  APPROVE. Locked one Phase-3 footgun before it bit.
+- **TD.4 (PR #25)** — `useExpenses` + `useCategories` extracted. App.tsx loses 60 lines
+  and no longer imports the store layer. Methods return `Promise<boolean>` for
+  view-state chaining (close edit form on success, reset filter on category delete).
+  CodeRabbit nit (update() error coverage) applied. Super-reviewer APPROVE with 2
+  WARNING-level behaviour-shift notes (both *better*, not bugs): error UX is now
+  domain-scoped (each hook owns its error); mount-load is two independent loads
+  instead of `Promise.all`. Documented inline.
+
+**Phase 2 → 3 readiness:** Phase 3 will add `MonthlyBudget` CRUD, month-scoping,
+budget-vs-actual, and charts. With hooks in place a `useMonthlyBudgets` is one more
+`use*` module rather than 4 more handlers in App. With `formatUSD` extracted, P3.D
+chart + P3.E summary import a helper instead of pasting the formatter for the 4th
+and 5th time. TD.2 makes a `Partial<ExpenseInput>` edit flow (P3 or P4 recurring) safe.
+
 
