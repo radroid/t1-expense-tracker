@@ -1,22 +1,13 @@
 import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import { spendingByCategory } from '../lib/categoryTotals'
+import { formatUSD } from '../lib/currency'
 import './SpendingByCategory.css'
 
 interface SpendingByCategoryProps {
   expenses: Expense[]
   categories: Category[]
 }
-
-// TD.1: this Intl.NumberFormat instance is now duplicated across
-// RunningTotal, ExpenseList, and here. A shared currency helper is a
-// planned follow-up refactor; deliberately not extracted in this feature.
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
 
 const UNCATEGORIZED_COLOR = '#9ca3af'
 
@@ -48,7 +39,7 @@ export function SpendingByCategory({
             />
             <span className="spending-by-category__name">{name}</span>
             <span className="spending-by-category__total">
-              {currencyFormatter.format(row.total)}
+              {formatUSD(row.total)}
             </span>
           </li>
         )

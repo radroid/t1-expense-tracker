@@ -1,5 +1,6 @@
 import type { Expense } from '../lib/expense';
 import type { Category } from '../lib/category';
+import { formatUSD } from '../lib/currency';
 import './ExpenseList.css';
 
 interface ExpenseListProps {
@@ -8,13 +9,6 @@ interface ExpenseListProps {
   onDelete?: (id: string) => void;
   onEdit?: (expense: Expense) => void;
 }
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 
 export function ExpenseList({ expenses, categories, onDelete, onEdit }: ExpenseListProps) {
   if (expenses.length === 0) {
@@ -36,7 +30,7 @@ export function ExpenseList({ expenses, categories, onDelete, onEdit }: ExpenseL
         return (
           <li key={expense.id} className="expense-list__item">
             <span className="expense-list__amount">
-              {currencyFormatter.format(expense.amount)}
+              {formatUSD(expense.amount)}
             </span>
             <span className="expense-list__description">{expense.description}</span>
             {category ? (
