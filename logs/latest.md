@@ -1,77 +1,72 @@
 # Latest
 
-Latest: iter-016 — P4.E (recurring expenses) shipped (PR #45). **Phase 4
-CLOSED**: all 9 items (P4.A through P4.I) are done.
+Latest: iter-017 — mandatory phase-boundary arch pass. `Skill` tool
+invoked with `improve-codebase-architecture`. 5 deepening candidates
+surfaced; iter-018 picks up TD.7 (`useStoredCollection<T>`).
 
-Stage: S3 (feature dev — phase boundary) — see `.loop/state.json`
-  (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-017 — **MANDATORY PHASE-BOUNDARY ARCH PASS**. Hard rule
-  from the loop protocol: before any Phase 5 feature work, invoke the
-  `improve-codebase-architecture` skill (an actual tool call, not a
-  concept), surface deepening opportunities, and log results to
-  `logs/blocks.md` with `**Source:** arch-pass`. The arch pass output
-  drives any pre-Phase-5 refactor and shapes the Phase 5 backlog in
-  `GOALS.md` (currently a stub awaiting triage).
-Open first: `GOALS.md` (Phase 5 stub), `logs/iter-016.md` (P4.E adds a
-  new seam — recurring/sourceTemplateId — worth considering in the arch
-  scan). The seam most likely to surface as a deepening candidate: the
-  four hook-shape duplications (`useExpenses`, `useCategories`,
-  `useMonthlyBudgets`, `useRecurringTemplates` all share the
-  `{ loading, error, add/remove, last-error-clears-on-success }` shape).
-Open blocks: none open — see `logs/blocks.md` for iter-016 super-reviewer
-  notes (APPROVE with 3 nits — 1 declined as wrong, 1 applied, 1
-  deferred as theoretical).
-Carry-forward: TD.6 (category-deletion cascade — product decision still
-  pending); deferred `useSpendingByCategory` typing pair-up; P3.D chart
-  text aria-hidden follow-up; centralise localStorage test shim in
-  `src/test/setup.ts` when 2nd consumer lands; DateRangeFilter from>to
-  normalize (low priority); CSV-injection prefix-escape on export (low
-  priority for local-only app); empty-state trailing-period normalize;
-  P4.G follow-up: spinner covers insights section during initial hook
-  resolution; CSV export/import of recurring templates.
-Test gate: 373 tests pass; `npm run build` + `npm run lint` clean.
+Stage: S3 (Phase 5 starting) — see `.loop/state.json` (`pr_mode: true`,
+  `pr_size_policy: fat`)
+Next step: iter-018 — single-feature impl iter for **TD.7
+  (`useStoredCollection<T, TInput>` generic hook)**, bundling **TD.8
+  (errorMessages.ts constants map)** if scope allows. Refactor the four
+  existing hooks (`useExpenses`, `useCategories`, `useMonthlyBudgets`,
+  `useRecurringTemplates`) to thin domain wrappers around the generic.
+  All ~50 existing hook tests + 373 total tests must stay green — that
+  IS the contract the generic must satisfy.
+Open first: `src/hooks/useExpenses.ts` (largest hook; best reference
+  for the contract), `src/hooks/useCategories.ts` (has domain-specific
+  methods — `rename` + seed), the four hook test files (contract
+  surface), the planned `src/lib/errorMessages.ts` (new — bundle in if
+  TD.8 fits).
+Open blocks: none open — see `logs/blocks.md` for iter-017 arch-pass
+  output (5 candidates with deletion-test analysis + sequencing
+  recommendations).
+Carry-forward: TD.6 (category-deletion cascade — product decision
+  pending); TD.7 (picked for iter-018); TD.8 (bundle target); TD.9
+  (makeStore<T> factory — post-iter-018); TD.10 (expenseVisibility.ts
+  pipeline — deferred); TD.11 (drop vestigial Expense.recurring —
+  deferred to DB cleanup); deferred `useSpendingByCategory` typing
+  pair-up; P3.D chart text aria-hidden follow-up; centralise
+  localStorage test shim in src/test/setup.ts when a 2nd consumer
+  lands; DateRangeFilter from>to normalize (low priority);
+  CSV-injection prefix-escape on export (low priority); empty-state
+  trailing-period normalize; P4.G follow-up: spinner covers insights
+  section; CSV export/import of recurring templates.
+Test gate: 373 tests pass (this iter ships no code changes).
 Push: n/a — pr_mode, all work merged via PRs.
 
 Last-iter shipped:
-- P4.E (#45): `src/db/db.ts` DB v3→v4 + `recurringTemplates` store;
-  `src/db/recurringTemplateStore.{ts,test.ts}`;
-  `src/lib/recurring.{ts,test.ts}` (pure: createRecurringTemplate,
-  dueTemplatesForMonth, generateDueExpenses; frequency: monthly,
-  dayOfMonth 1..28); `src/hooks/useRecurringTemplates.{ts,test.ts}`
-  (mirrors useMonthlyBudgets shape); `src/components/RecurringManager.{tsx,
-  test.tsx,css}` (add/list/delete, awaits onAdd → only clears form on
-  success); `src/lib/expense.ts` (+sourceTemplateId field, carried
-  through validate + applyExpenseEdit); `src/App.tsx` (useEffect
-  rollover wiring); App.test.tsx (rollover integration). +57 tests
-  (316 → 373).
+- arch-pass output (no code) — `logs/blocks.md` ## iter-017 — Phase-4
+  → Phase-5 arch pass section; `GOALS.md` adds TD.7-TD.11 with
+  iter-targets / deferral rationale; `logs/iter-017.md`;
+  `.loop/state.json` bumped to 17.
 
-Operational notes for iter-017:
-  - **PHASE BOUNDARY** — Hard rule. Invoke `Skill` tool with
-    `skill: "improve-codebase-architecture"` as the FIRST action. This
-    is an actual tool call, NOT just reading the doc and improvising.
-  - **Cadence:** arch pass is plan-iter, schedule 1500s for the next
-    wake-up after closeout (impl pace returns once Phase 5 starts).
+Operational notes for iter-018:
+  - **Contract preservation is the gate.** The four existing hook test
+    suites are the test surface. The generic must produce hooks that
+    pass all those tests unchanged (or with only label-equivalent
+    changes if test text references hook-specific error strings).
+  - **Cadence:** 600s (impl iter — refactor with a concrete shape).
   - **Process-fix held**: explicit-path staging on every commit.
-    Five-iter streak. Keep it up.
+    Six-iter streak. Keep it up.
   - `vite.config.ts` `fileParallelism: false` still load-bearing — keep.
-  - Node 25 localStorage shim hack still per-test-file. Centralise when
-    2nd consumer lands.
-  - **DB version is now 4**. Future schema changes bump to 5+.
-  - **`Expense.recurring?: boolean` field is vestigial** since P4.E. Do
-    NOT remove without a planned breaking-change iter — it's still in
-    the persisted shape of historical expenses.
+  - Node 25 localStorage shim hack still per-test-file. The hook
+    generic might be a natural moment to revisit shim placement.
+  - **DB version is 4**. Vestigial `Expense.recurring?: boolean`
+    intentionally retained (TD.11).
 
-Open questions for iter-017 (arch pass should triage):
-  (1) Hook shape duplication — `useExpenses`, `useCategories`,
-      `useMonthlyBudgets`, `useRecurringTemplates`. Generic
-      `useStoredCollection<T>` candidate? Apply the deletion test:
-      would extracting it concentrate complexity or just move it across
-      4 thin call sites?
-  (2) Filter-pipeline composition — `useVisibleExpenses` chains 4
-      filter steps with budget-coherence carveout. Is the seam right,
-      or is it ripe for a `filter-pipeline.ts` lib that returns
-      `{ monthlyExpenses, visibleExpenses }` without React?
-  (3) Phase 5 themes to triage in arch pass output:
-      per-category budgets; multi-currency; JSON backup/restore; URL
-      filter persistence; account/sync (would break local-only — needs
-      product decision before scoping).
+Open questions for iter-018 (note in plan):
+  (1) Generic surface: validator + store config, or richer options bag?
+      Lean: minimal — `(validator, store)` + optional onLoad/onChange
+      callbacks if any hook needs them.
+  (2) Method names on the generic: store-named (`add`, `getAll`,
+      `update`, `remove`) or domain-renameable in the wrapper? Lean:
+      generic exposes generic names; domain hooks rename (e.g.
+      `useCategories.rename` wraps `useStoredCollection.update`).
+  (3) `Promise<boolean>` return shape: generic-owned or wrapper-owned?
+      Lean: generic-owned — universal across all four consumers.
+  (4) Error string ownership: does the generic set the error string
+      (which means TD.8 errorMessages map is a precondition), or does
+      the wrapper handle error messaging? Lean: bundle TD.7 + TD.8 in
+      one PR; the wrapper passes its messages map to the generic
+      during binding.
