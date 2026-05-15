@@ -3,6 +3,7 @@ import type { RecurringTemplate } from '../lib/recurring'
 import {
   addRecurringTemplate,
   getAllRecurringTemplates,
+  putRecurringTemplate,
   removeRecurringTemplate,
 } from './recurringTemplateStore'
 
@@ -65,5 +66,23 @@ describe('recurringTemplateStore', () => {
     await addRecurringTemplate(t)
     const all = await getAllRecurringTemplates()
     expect(all[0].categoryId).toBe('cat-1')
+  })
+
+  it('putRecurringTemplate overwrites an existing template with the same id', async () => {
+    const original = makeTemplate({ id: 't1', description: 'Rent', amount: 1500 })
+    await addRecurringTemplate(original)
+
+    const edited = makeTemplate({
+      id: 't1',
+      description: 'Rent (updated)',
+      amount: 1800,
+      dayOfMonth: 5,
+      categoryId: 'cat-new',
+    })
+    await putRecurringTemplate(edited)
+
+    const all = await getAllRecurringTemplates()
+    expect(all).toHaveLength(1)
+    expect(all[0]).toEqual(edited)
   })
 })

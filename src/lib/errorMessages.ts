@@ -34,6 +34,7 @@ export const budgetMessages = Object.freeze({
 export const recurringTemplateMessages = Object.freeze({
   load: 'Failed to load recurring templates.',
   add: 'Failed to add recurring template.',
+  update: 'Failed to update recurring template.',
   remove: 'Failed to delete recurring template.',
 })
 

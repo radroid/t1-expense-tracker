@@ -357,6 +357,198 @@ describe('RecurringManager', () => {
     })
   })
 
+  // P7.A — inline edit affordance
+  describe('inline edit mode', () => {
+    it('renders an Edit button per row when not editing', () => {
+      render(
+        <RecurringManager
+          templates={[template]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      expect(
+        screen.getByRole('button', { name: /edit rent/i }),
+      ).toBeInTheDocument()
+    })
+
+    it('clicking Edit opens an inline edit form prefilled with row values', async () => {
+      const user = userEvent.setup()
+      render(
+        <RecurringManager
+          templates={[template]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      await user.click(screen.getByRole('button', { name: /edit rent/i }))
+      // Edit form inputs are present (use label-based getters scoped to the edit form).
+      const descInput = screen.getByLabelText(
+        /edit description/i,
+      ) as HTMLInputElement
+      const amountInput = screen.getByLabelText(
+        /edit amount/i,
+      ) as HTMLInputElement
+      const dayInput = screen.getByLabelText(
+        /edit day of month/i,
+      ) as HTMLInputElement
+      expect(descInput.value).toBe('Rent')
+      expect(amountInput.value).toBe('1500')
+      expect(dayInput.value).toBe('1')
+      // Save + Cancel render; Edit + Delete buttons for this row are gone.
+      expect(
+        screen.getByRole('button', { name: /save/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /cancel/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /edit rent/i }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /delete rent/i }),
+      ).not.toBeInTheDocument()
+    })
+
+    it('Save calls onUpdate with existing + cleaned input then exits edit mode', async () => {
+      const user = userEvent.setup()
+      const onUpdate = vi.fn().mockResolvedValue(true)
+      render(
+        <RecurringManager
+          templates={[template]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onUpdate={onUpdate}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      await user.click(screen.getByRole('button', { name: /edit rent/i }))
+      const descInput = screen.getByLabelText(/edit description/i)
+      await user.clear(descInput)
+      await user.type(descInput, 'Rent (new)')
+      const amountInput = screen.getByLabelText(/edit amount/i)
+      await user.clear(amountInput)
+      await user.type(amountInput, '1600')
+      const dayInput = screen.getByLabelText(/edit day of month/i)
+      await user.clear(dayInput)
+      await user.type(dayInput, '5')
+      await user.click(screen.getByRole('button', { name: /save/i }))
+
+      expect(onUpdate).toHaveBeenCalledTimes(1)
+      expect(onUpdate.mock.calls[0][0]).toEqual(template)
+      expect(onUpdate.mock.calls[0][1]).toEqual(
+        expect.objectContaining({
+          description: 'Rent (new)',
+          amount: 1600,
+          frequency: 'monthly',
+          dayOfMonth: 5,
+        }),
+      )
+      // Exits edit mode — Edit button is back.
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: /edit rent/i }),
+        ).toBeInTheDocument(),
+      )
+    })
+
+    it('Cancel discards changes and exits edit mode without calling onUpdate', async () => {
+      const user = userEvent.setup()
+      const onUpdate = vi.fn().mockResolvedValue(true)
+      render(
+        <RecurringManager
+          templates={[template]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onUpdate={onUpdate}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      await user.click(screen.getByRole('button', { name: /edit rent/i }))
+      const descInput = screen.getByLabelText(/edit description/i)
+      await user.clear(descInput)
+      await user.type(descInput, 'Discarded')
+      await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+      expect(onUpdate).not.toHaveBeenCalled()
+      expect(
+        screen.getByRole('button', { name: /edit rent/i }),
+      ).toBeInTheDocument()
+      // Re-entering edit mode shows the original value, not the cancelled draft.
+      await user.click(screen.getByRole('button', { name: /edit rent/i }))
+      expect(
+        (screen.getByLabelText(/edit description/i) as HTMLInputElement).value,
+      ).toBe('Rent')
+    })
+
+    it('validation failure during edit keeps edit mode open and marks the bad input aria-invalid', async () => {
+      const user = userEvent.setup()
+      const onUpdate = vi.fn().mockResolvedValue(true)
+      render(
+        <RecurringManager
+          templates={[template]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onUpdate={onUpdate}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      await user.click(screen.getByRole('button', { name: /edit rent/i }))
+      const descInput = screen.getByLabelText(/edit description/i)
+      await user.clear(descInput)
+      await user.click(screen.getByRole('button', { name: /save/i }))
+
+      expect(onUpdate).not.toHaveBeenCalled()
+      // Still in edit mode (Save button still visible).
+      expect(
+        screen.getByRole('button', { name: /save/i }),
+      ).toBeInTheDocument()
+      expect(descInput).toHaveAttribute('aria-invalid', 'true')
+    })
+
+    it('keeps edit mode open when onUpdate resolves false', async () => {
+      const user = userEvent.setup()
+      const onUpdate = vi.fn().mockResolvedValue(false)
+      render(
+        <RecurringManager
+          templates={[template]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onUpdate={onUpdate}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      await user.click(screen.getByRole('button', { name: /edit rent/i }))
+      await user.click(screen.getByRole('button', { name: /save/i }))
+
+      expect(onUpdate).toHaveBeenCalledTimes(1)
+      // Still in edit mode — user can adjust and try again.
+      expect(
+        screen.getByRole('button', { name: /save/i }),
+      ).toBeInTheDocument()
+    })
+  })
+
   it('shows an inline validation error for non-positive amount', async () => {
     const user = userEvent.setup()
     const onAdd = vi.fn().mockResolvedValue(true)
