@@ -272,6 +272,30 @@ describe('App', () => {
     expect(alert).toBeInTheDocument()
   })
 
+  it('searches expense descriptions and narrows the list (P4.A)', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await addExpenseViaForm('10', 'Coffee')
+    await screen.findByText(/Coffee/)
+    await addExpenseViaForm('25', 'Taxi')
+    await screen.findByText(/Taxi/)
+
+    // Both visible by default.
+    expect(screen.getByText(/Coffee/)).toBeInTheDocument()
+    expect(screen.getByText(/Taxi/)).toBeInTheDocument()
+
+    // Search "coff" — Coffee remains, Taxi disappears.
+    await user.type(screen.getByLabelText('Search'), 'coff')
+    expect(screen.getByText(/Coffee/)).toBeInTheDocument()
+    expect(screen.queryByText(/Taxi/)).not.toBeInTheDocument()
+
+    // Clear → both visible again.
+    await user.click(screen.getByRole('button', { name: /clear search/i }))
+    expect(screen.getByText(/Coffee/)).toBeInTheDocument()
+    expect(screen.getByText(/Taxi/)).toBeInTheDocument()
+  })
+
   it('renders MonthlySummary that scopes with the visible expenses (P3.E)', async () => {
     await renderApp()
     await addExpenseViaForm('20', 'Lunch')

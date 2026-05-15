@@ -43,3 +43,37 @@ export function filterExpensesByMonth(
 ): Expense[] {
   return expenses.filter((e) => monthOf(e.date) === month)
 }
+
+/**
+ * Filters expenses whose `description` contains `searchTerm` (case-insensitive
+ * substring match). The term is trimmed before comparison.
+ *
+ * - Empty / whitespace-only `searchTerm` → returns input array (no copy),
+ *   matching the `filterExpensesByCategory('all', …)` pass-through pattern.
+ * - Pure. Does not mutate inputs.
+ */
+export function filterExpensesBySearch(
+  expenses: Expense[],
+  searchTerm: string,
+): Expense[] {
+  const trimmed = searchTerm.trim()
+  if (trimmed === '') return expenses
+  const needle = trimmed.toLowerCase()
+  return expenses.filter((e) => e.description.toLowerCase().includes(needle))
+}
+
+/**
+ * Filters expenses whose `date` falls within the inclusive range
+ * `[range.from, range.to]`. Date strings are 'YYYY-MM-DD' so lexicographic
+ * compare is correct.
+ *
+ * - `null` range → returns input array (no copy).
+ * - Pure. Does not mutate inputs.
+ */
+export function filterExpensesByDateRange(
+  expenses: Expense[],
+  range: { from: string; to: string } | null,
+): Expense[] {
+  if (range === null) return expenses
+  return expenses.filter((e) => e.date >= range.from && e.date <= range.to)
+}

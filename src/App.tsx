@@ -11,6 +11,8 @@ import { MonthSwitcher } from './components/MonthSwitcher'
 import { MonthlySummary } from './components/MonthlySummary'
 import { BudgetForm } from './components/BudgetForm'
 import { BudgetVsActual } from './components/BudgetVsActual'
+import { SearchBox } from './components/SearchBox'
+import { DateRangeFilter } from './components/DateRangeFilter'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
 import { totalAmount } from './lib/totals'
@@ -30,6 +32,10 @@ function App() {
   // Lazy initializer: useState calls `currentMonth` once on mount, so
   // selectedMonth is a 'YYYY-MM' string — not a function reference.
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(
+    null,
+  )
 
   // Filter pipeline lives in useVisibleExpenses. New view-state (P4.A search,
   // P4.B date-range) will plug into that hook's signature rather than scattering
@@ -41,6 +47,8 @@ function App() {
     selectedMonth,
     categoryFilter: filter,
     categories: categoriesHook.categories,
+    searchTerm,
+    dateRange,
   })
   // Budget vs actual is scoped to the month, NOT the category filter — the
   // budget covers all spending for the month, regardless of which categories
@@ -116,6 +124,8 @@ function App() {
             categories={categoriesHook.categories}
             onChange={setFilter}
           />
+          <SearchBox value={searchTerm} onChange={setSearchTerm} />
+          <DateRangeFilter value={dateRange} onChange={setDateRange} />
           <ExpenseList
             expenses={visibleExpenses}
             categories={categoriesHook.categories}

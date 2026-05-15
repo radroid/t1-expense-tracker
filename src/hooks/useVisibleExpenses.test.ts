@@ -11,10 +11,15 @@ const transport: Category = {
   color: '#0088ff',
 }
 
-const e = (id: string, date: string, categoryId?: string): Expense => ({
+const e = (
+  id: string,
+  date: string,
+  categoryId?: string,
+  description?: string,
+): Expense => ({
   id,
   amount: 10,
-  description: `expense ${id}`,
+  description: description ?? `expense ${id}`,
   date,
   categoryId,
 })
@@ -101,5 +106,141 @@ describe('useVisibleExpenses', () => {
     rerender({ filter: food.id })
     expect(result.current.monthlyExpenses).toBe(firstMonthly)
     expect(result.current.visibleExpenses).not.toBe(firstVisible)
+  })
+
+  it('narrows visibleExpenses by searchTerm (case-insensitive substring)', () => {
+    const expenses = [
+      e('1', '2026-05-10', food.id, 'Morning Coffee'),
+      e('2', '2026-05-15', food.id, 'Lunch'),
+      e('3', '2026-05-20', transport.id, 'Iced COFFEE'),
+    ]
+    const { result } = renderHook(() =>
+      useVisibleExpenses({
+        expenses,
+        selectedMonth: '2026-05',
+        categoryFilter: 'all',
+        categories: [food, transport],
+        searchTerm: 'coffee',
+        dateRange: null,
+      }),
+    )
+
+    expect(result.current.monthlyExpenses).toEqual([
+      expenses[0],
+      expenses[1],
+      expenses[2],
+    ])
+    expect(result.current.visibleExpenses).toEqual([expenses[0], expenses[2]])
+  })
+
+  it('passes through unchanged when searchTerm is empty and dateRange is null', () => {
+    const expenses = [
+      e('1', '2026-05-10', food.id),
+      e('2', '2026-05-20', transport.id),
+    ]
+    const { result } = renderHook(() =>
+      useVisibleExpenses({
+        expenses,
+        selectedMonth: '2026-05',
+        categoryFilter: 'all',
+        categories: [food, transport],
+        searchTerm: '',
+        dateRange: null,
+      }),
+    )
+    expect(result.current.visibleExpenses).toEqual([expenses[0], expenses[1]])
+  })
+
+  it('narrows visibleExpenses by dateRange but does NOT narrow monthlyExpenses (budget-coherence)', () => {
+    const expenses = [
+      e('1', '2026-05-05', food.id),
+      e('2', '2026-05-10', food.id),
+      e('3', '2026-05-20', transport.id),
+      e('4', '2026-05-25', transport.id),
+    ]
+    const { result } = renderHook(() =>
+      useVisibleExpenses({
+        expenses,
+        selectedMonth: '2026-05',
+        categoryFilter: 'all',
+        categories: [food, transport],
+        searchTerm: '',
+        dateRange: { from: '2026-05-10', to: '2026-05-20' },
+      }),
+    )
+
+    // monthlyExpenses MUST stay month-scoped (drives budget actual).
+    expect(result.current.monthlyExpenses).toEqual([
+      expenses[0],
+      expenses[1],
+      expenses[2],
+      expenses[3],
+    ])
+    // visibleExpenses is range-narrowed.
+    expect(result.current.visibleExpenses).toEqual([expenses[1], expenses[2]])
+  })
+
+  it('does not recompute monthlyExpenses when only searchTerm changes', () => {
+    const expenses = [
+      e('1', '2026-05-10', food.id, 'Coffee'),
+      e('2', '2026-05-20', transport.id, 'Bus'),
+    ]
+    const { result, rerender } = renderHook(
+      ({ searchTerm }: { searchTerm: string }) =>
+        useVisibleExpenses({
+          expenses,
+          selectedMonth: '2026-05',
+          categoryFilter: 'all',
+          categories: [food, transport],
+          searchTerm,
+          dateRange: null,
+        }),
+      { initialProps: { searchTerm: '' } },
+    )
+    const firstMonthly = result.current.monthlyExpenses
+
+    rerender({ searchTerm: 'coffee' })
+    expect(result.current.monthlyExpenses).toBe(firstMonthly)
+    expect(result.current.visibleExpenses).toEqual([expenses[0]])
+  })
+
+  it('does not recompute monthlyExpenses when only dateRange changes', () => {
+    const expenses = [
+      e('1', '2026-05-10', food.id),
+      e('2', '2026-05-20', transport.id),
+    ]
+    const { result, rerender } = renderHook(
+      ({ dateRange }: { dateRange: { from: string; to: string } | null }) =>
+        useVisibleExpenses({
+          expenses,
+          selectedMonth: '2026-05',
+          categoryFilter: 'all',
+          categories: [food, transport],
+          searchTerm: '',
+          dateRange,
+        }),
+      { initialProps: { dateRange: null as { from: string; to: string } | null } },
+    )
+    const firstMonthly = result.current.monthlyExpenses
+
+    rerender({ dateRange: { from: '2026-05-15', to: '2026-05-25' } })
+    expect(result.current.monthlyExpenses).toBe(firstMonthly)
+    expect(result.current.visibleExpenses).toEqual([expenses[1]])
+  })
+
+  it('omitting searchTerm and dateRange defaults to no-op filters', () => {
+    const expenses = [
+      e('1', '2026-05-10', food.id),
+      e('2', '2026-05-20', transport.id),
+    ]
+    const { result } = renderHook(() =>
+      useVisibleExpenses({
+        expenses,
+        selectedMonth: '2026-05',
+        categoryFilter: 'all',
+        categories: [food, transport],
+      }),
+    )
+    expect(result.current.visibleExpenses).toEqual([expenses[0], expenses[1]])
   })
 })
