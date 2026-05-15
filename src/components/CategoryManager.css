@@ -58,4 +58,19 @@
     min-width: 0;
     flex: 1 1 auto;
   }
+
+  /* Touch targets — match the ≥44px rule applied across other interactive
+     clusters (forms, filters, CSV row). Inputs + buttons stretch to the
+     row so they're tappable on a phone. */
+  .category-manager button,
+  .category-manager input[type='text'],
+  .category-manager input[type='color'] {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .category-manager__add button,
+  .category-manager__add input[type='text'] {
+    width: 100%;
+  }
 }
