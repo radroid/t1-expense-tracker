@@ -7,6 +7,7 @@ import { RunningTotal } from './components/RunningTotal'
 import { SpendingByCategory } from './components/SpendingByCategory'
 import { SpendingChart } from './components/SpendingChart'
 import { CategoryManager } from './components/CategoryManager'
+import { CategoryBudgetManager } from './components/CategoryBudgetManager'
 import { RecurringManager } from './components/RecurringManager'
 import { CategoryFilter } from './components/CategoryFilter'
 import { MonthSwitcher } from './components/MonthSwitcher'
@@ -33,6 +34,7 @@ import { computeBudgetStatus } from './lib/budgetStatus'
 import { useExpenses } from './hooks/useExpenses'
 import { useCategories } from './hooks/useCategories'
 import { useMonthlyBudgets } from './hooks/useMonthlyBudgets'
+import { useCategoryBudgets } from './hooks/useCategoryBudgets'
 import { useRecurringTemplates } from './hooks/useRecurringTemplates'
 import { useVisibleExpenses } from './hooks/useVisibleExpenses'
 import './App.css'
@@ -41,6 +43,7 @@ function App() {
   const expensesHook = useExpenses()
   const categoriesHook = useCategories()
   const budgetsHook = useMonthlyBudgets()
+  const categoryBudgetsHook = useCategoryBudgets()
   const recurringHook = useRecurringTemplates()
   const [editing, setEditing] = useState<Expense | null>(null)
   // Lazy-init filter state from the URL hash so a bookmarked / reloaded
@@ -111,6 +114,7 @@ function App() {
     expensesHook.loading ||
     categoriesHook.loading ||
     budgetsHook.loading ||
+    categoryBudgetsHook.loading ||
     recurringHook.loading
   // Each hook owns its own error string; we surface whichever is non-empty
   // (expense first). Note this is a small UX shift from the pre-hooks code,
@@ -121,6 +125,7 @@ function App() {
     expensesHook.error ||
     categoriesHook.error ||
     budgetsHook.error ||
+    categoryBudgetsHook.error ||
     recurringHook.error
 
   // P4.E: rollover recurring templates into actual expenses for the selected
@@ -218,6 +223,7 @@ function App() {
               categories={categoriesHook.categories}
               monthlyBudgets={budgetsHook.budgets}
               recurringTemplates={recurringHook.templates}
+              categoryBudgets={categoryBudgetsHook.categoryBudgets}
             />
             <BackupRestore
               onRestore={async () => {
@@ -232,6 +238,7 @@ function App() {
                   categoriesHook.refresh(),
                   budgetsHook.refresh(),
                   recurringHook.refresh(),
+                  categoryBudgetsHook.refresh(),
                 ])
                 return true
               }}
@@ -267,6 +274,16 @@ function App() {
           month={selectedMonth}
           currentAmount={budgetsHook.getFor(selectedMonth)?.amount}
           onSubmit={budgetsHook.set}
+        />
+      </section>
+      <section className="app__category-budgets">
+        <h2>Per-category budgets</h2>
+        <CategoryBudgetManager
+          month={selectedMonth}
+          categories={categoriesHook.categories}
+          categoryBudgets={categoryBudgetsHook.categoryBudgets}
+          onSet={categoryBudgetsHook.set}
+          onRemove={categoryBudgetsHook.remove}
         />
       </section>
       <section className="app__categories">

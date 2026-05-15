@@ -22,6 +22,7 @@ const ARRAY_FIELDS = [
   'categories',
   'monthlyBudgets',
   'recurringTemplates',
+  'categoryBudgets',
 ] as const
 
 // Parses a backup JSON string into a BackupSnapshot. Throws BackupParseError

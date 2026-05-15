@@ -2,11 +2,15 @@ import type { BackupSnapshot } from '../lib/backup'
 import { openDb } from './db'
 
 // Order is stable + the tuple drives the multi-store transaction scope.
+// P5.D extends with categoryBudgets so clear+add includes the new store
+// inside the same atomic IDB transaction — partial restores remain
+// impossible across all five entities.
 const STORES = [
   'expenses',
   'categories',
   'monthlyBudgets',
   'recurringTemplates',
+  'categoryBudgets',
 ] as const
 
 // Replaces all four stores with the snapshot content in a single
@@ -46,6 +50,9 @@ export async function restoreBackup(snapshot: BackupSnapshot): Promise<void> {
         }
         for (const template of snapshot.recurringTemplates) {
           tx.objectStore('recurringTemplates').add(template)
+        }
+        for (const cb of snapshot.categoryBudgets) {
+          tx.objectStore('categoryBudgets').add(cb)
         }
       } catch (err) {
         // Synchronous throw inside the tx (e.g. add() rejecting a null

@@ -9,6 +9,7 @@ import type { Expense } from './expense'
 import type { Category } from './category'
 import type { MonthlyBudget } from './budget'
 import type { RecurringTemplate } from './recurring'
+import type { CategoryBudget } from './categoryBudget'
 
 const sampleExpenses: Expense[] = [
   { id: 'e1', amount: 10, description: 'Coffee', date: '2026-05-15' },
@@ -39,6 +40,10 @@ const sampleTemplates: RecurringTemplate[] = [
   },
 ]
 
+const sampleCategoryBudgets: CategoryBudget[] = [
+  { id: '2026-05|c1', month: '2026-05', categoryId: 'c1', amount: 200 },
+]
+
 const fixedNow = new Date('2026-05-15T12:34:56.000Z')
 const fixedNowIso = fixedNow.toISOString()
 
@@ -47,6 +52,7 @@ const fullInput: BackupInput = {
   categories: sampleCategories,
   monthlyBudgets: sampleBudgets,
   recurringTemplates: sampleTemplates,
+  categoryBudgets: sampleCategoryBudgets,
 }
 
 const emptyInput: BackupInput = {
@@ -54,11 +60,12 @@ const emptyInput: BackupInput = {
   categories: [],
   monthlyBudgets: [],
   recurringTemplates: [],
+  categoryBudgets: [],
 }
 
 describe('BACKUP_SCHEMA_VERSION', () => {
-  it('is exported and pinned at 1', () => {
-    expect(BACKUP_SCHEMA_VERSION).toBe(1)
+  it('is exported and pinned at 2 (P5.D — adds categoryBudgets)', () => {
+    expect(BACKUP_SCHEMA_VERSION).toBe(2)
   })
 })
 
@@ -66,12 +73,13 @@ describe('buildBackup', () => {
   it('builds an empty snapshot with schemaVersion + exportedAt', () => {
     const snap = buildBackup(emptyInput, () => fixedNow)
     expect(snap).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: fixedNowIso,
       expenses: [],
       categories: [],
       monthlyBudgets: [],
       recurringTemplates: [],
+      categoryBudgets: [],
     })
   })
 
@@ -81,6 +89,7 @@ describe('buildBackup', () => {
     expect(snap.categories).toEqual(sampleCategories)
     expect(snap.monthlyBudgets).toEqual(sampleBudgets)
     expect(snap.recurringTemplates).toEqual(sampleTemplates)
+    expect(snap.categoryBudgets).toEqual(sampleCategoryBudgets)
     expect(snap.schemaVersion).toBe(BACKUP_SCHEMA_VERSION)
     expect(snap.exportedAt).toBe(fixedNowIso)
   })
@@ -100,7 +109,7 @@ describe('formatBackup', () => {
     const snap = buildBackup(fullInput, () => fixedNow)
     const text = formatBackup(snap)
     // Key order: schemaVersion, exportedAt, expenses, categories,
-    // monthlyBudgets, recurringTemplates.
+    // monthlyBudgets, recurringTemplates, categoryBudgets.
     const expectedOrder = [
       'schemaVersion',
       'exportedAt',
@@ -108,6 +117,7 @@ describe('formatBackup', () => {
       'categories',
       'monthlyBudgets',
       'recurringTemplates',
+      'categoryBudgets',
     ]
     const positions = expectedOrder.map((k) => text.indexOf(`"${k}"`))
     for (const p of positions) expect(p).toBeGreaterThan(-1)
@@ -120,12 +130,13 @@ describe('formatBackup', () => {
     const text = formatBackup(snap)
     const parsed = JSON.parse(text)
     expect(parsed).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: fixedNowIso,
       expenses: sampleExpenses,
       categories: sampleCategories,
       monthlyBudgets: sampleBudgets,
       recurringTemplates: sampleTemplates,
+      categoryBudgets: sampleCategoryBudgets,
     })
   })
 

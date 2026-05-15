@@ -13,6 +13,7 @@ function snapshot(partial: Partial<BackupSnapshot> = {}): BackupSnapshot {
     categories: [],
     monthlyBudgets: [],
     recurringTemplates: [],
+    categoryBudgets: [],
     ...partial,
   }
 }

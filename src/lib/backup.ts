@@ -2,11 +2,15 @@ import type { Expense } from './expense'
 import type { Category } from './category'
 import type { MonthlyBudget } from './budget'
 import type { RecurringTemplate } from './recurring'
+import type { CategoryBudget } from './categoryBudget'
 
 // Bump this when the backup JSON shape changes in a non-backwards-compat
 // way. Restore (P5.C) will refuse to load a snapshot whose schemaVersion
 // it doesn't understand.
-export const BACKUP_SCHEMA_VERSION = 1
+//
+// v2 (iter-021, P5.D): added `categoryBudgets` array. v1 snapshots are
+// refused — silently loading v1 would drop the new entity on restore.
+export const BACKUP_SCHEMA_VERSION = 2
 
 export interface BackupSnapshot {
   schemaVersion: number
@@ -15,6 +19,7 @@ export interface BackupSnapshot {
   categories: Category[]
   monthlyBudgets: MonthlyBudget[]
   recurringTemplates: RecurringTemplate[]
+  categoryBudgets: CategoryBudget[]
 }
 
 export interface BackupInput {
@@ -22,9 +27,10 @@ export interface BackupInput {
   categories: Category[]
   monthlyBudgets: MonthlyBudget[]
   recurringTemplates: RecurringTemplate[]
+  categoryBudgets: CategoryBudget[]
 }
 
-// Pure builder. Caller supplies entity arrays from the four
+// Pure builder. Caller supplies entity arrays from the five
 // useStoredCollection hooks; we don't re-validate (they're already
 // validated on write). `now` is injectable for deterministic tests.
 export function buildBackup(
@@ -38,6 +44,7 @@ export function buildBackup(
     categories: input.categories,
     monthlyBudgets: input.monthlyBudgets,
     recurringTemplates: input.recurringTemplates,
+    categoryBudgets: input.categoryBudgets,
   }
 }
 
@@ -54,6 +61,7 @@ export function formatBackup(snapshot: BackupSnapshot): string {
     categories: snapshot.categories,
     monthlyBudgets: snapshot.monthlyBudgets,
     recurringTemplates: snapshot.recurringTemplates,
+    categoryBudgets: snapshot.categoryBudgets,
   }
   return JSON.stringify(ordered, null, 2)
 }
