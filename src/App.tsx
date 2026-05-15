@@ -169,6 +169,7 @@ function App() {
       ) : (
         <ExpenseList
           expenses={expenses}
+          categories={categories}
           onDelete={handleDelete}
           onEdit={setEditing}
         />
