@@ -1,6 +1,7 @@
 import type { Expense } from '../lib/expense';
 import type { Category } from '../lib/category';
 import { formatUSD } from '../lib/currency';
+import { EmptyState } from './EmptyState';
 import './ExpenseList.css';
 
 interface ExpenseListProps {
@@ -12,7 +13,14 @@ interface ExpenseListProps {
 
 export function ExpenseList({ expenses, categories, onDelete, onEdit }: ExpenseListProps) {
   if (expenses.length === 0) {
-    return <p className="expense-list__empty">No expenses yet.</p>;
+    // Title keeps the existing "No expenses yet." copy so App-level integration
+    // tests (which findByText that string) keep working.
+    return (
+      <EmptyState
+        title="No expenses yet."
+        hint="Add one with the form above"
+      />
+    );
   }
 
   // Copy before sorting — never mutate the prop array.

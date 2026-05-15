@@ -1,0 +1,80 @@
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  color: var(--app-muted-fg);
+}
+
+.spinner__ring {
+  display: inline-block;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: var(--app-border);
+  border-top-color: var(--app-accent);
+  animation: spinner-rotate 0.9s linear infinite;
+}
+
+.spinner--sm .spinner__ring {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.spinner--md .spinner__ring {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+.spinner--lg .spinner__ring {
+  width: 40px;
+  height: 40px;
+  border-width: 4px;
+}
+
+/* Visually hidden but readable by screen readers — exposes the label text. */
+.spinner__label-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Respect reduced-motion: render a static dot rather than spinning, keeping
+   the dimensions stable so layout doesn't jump. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner__ring {
+    animation: none;
+    border-top-color: var(--app-border);
+    background: var(--app-muted-fg);
+    opacity: 0.4;
+  }
+
+  /* Expose the label visually when motion is disabled — keeps "Loading…"
+     visible without animation as a fallback signal. */
+  .spinner__label-sr {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    color: var(--app-muted-fg);
+    font-size: 14px;
+  }
+}

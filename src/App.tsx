@@ -16,6 +16,7 @@ import { DateRangeFilter } from './components/DateRangeFilter'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ExportButton } from './components/ExportButton'
 import { ImportButton } from './components/ImportButton'
+import { Spinner } from './components/Spinner'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
 import { totalAmount } from './lib/totals'
@@ -120,7 +121,7 @@ function App() {
         </p>
       )}
       {loading ? (
-        <p className="loading">Loading…</p>
+        <Spinner size="lg" />
       ) : (
         <>
           <CategoryFilter
