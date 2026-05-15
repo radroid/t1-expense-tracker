@@ -8,19 +8,25 @@ import { CategoryManager } from './components/CategoryManager'
 import { CategoryFilter } from './components/CategoryFilter'
 import { MonthSwitcher } from './components/MonthSwitcher'
 import { MonthlySummary } from './components/MonthlySummary'
+import { BudgetForm } from './components/BudgetForm'
+import { BudgetVsActual } from './components/BudgetVsActual'
 import {
   filterExpensesByCategory,
   filterExpensesByMonth,
   type CategoryFilterValue,
 } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
+import { totalAmount } from './lib/totals'
+import { computeBudgetStatus } from './lib/budgetStatus'
 import { useExpenses } from './hooks/useExpenses'
 import { useCategories } from './hooks/useCategories'
+import { useMonthlyBudgets } from './hooks/useMonthlyBudgets'
 import './App.css'
 
 function App() {
   const expensesHook = useExpenses()
   const categoriesHook = useCategories()
+  const budgetsHook = useMonthlyBudgets()
   const [editing, setEditing] = useState<Expense | null>(null)
   const [filter, setFilter] = useState<CategoryFilterValue>('all')
   // Lazy initializer: useState calls `currentMonth` once on mount, so
@@ -39,13 +45,22 @@ function App() {
     filter,
     categoriesHook.categories,
   )
-  const loading = expensesHook.loading || categoriesHook.loading
+  // Budget vs actual is scoped to the month, NOT the category filter — the
+  // budget covers all spending for the month, regardless of which categories
+  // the user is currently filtering by in the list.
+  const budgetStatus = computeBudgetStatus(
+    budgetsHook.getFor(selectedMonth)?.amount,
+    totalAmount(monthlyExpenses),
+  )
+  const loading =
+    expensesHook.loading || categoriesHook.loading || budgetsHook.loading
   // Each hook owns its own error string; we surface whichever is non-empty
   // (expense first). Note this is a small UX shift from the pre-hooks code,
   // where a single shared error slot was cleared by ANY successful op — now
   // an expense success only clears the expense error, leaving any outstanding
   // category error visible (and vice versa). Errors are domain-scoped.
-  const error = expensesHook.error || categoriesHook.error
+  const error =
+    expensesHook.error || categoriesHook.error || budgetsHook.error
 
   async function handleUpdate(input: ExpenseInput) {
     if (!editing) return
@@ -113,12 +128,23 @@ function App() {
         </>
       )}
       <section className="app__insights">
+        <h2>Budget vs actual</h2>
+        <BudgetVsActual status={budgetStatus} />
         <h2>Monthly summary</h2>
         <MonthlySummary expenses={visibleExpenses} />
         <h2>Spending by category</h2>
         <SpendingByCategory
           expenses={visibleExpenses}
           categories={categoriesHook.categories}
+        />
+      </section>
+      <section className="app__budget">
+        <h2>Monthly budget</h2>
+        <BudgetForm
+          key={selectedMonth}
+          month={selectedMonth}
+          currentAmount={budgetsHook.getFor(selectedMonth)?.amount}
+          onSubmit={budgetsHook.set}
         />
       </section>
       <section className="app__categories">

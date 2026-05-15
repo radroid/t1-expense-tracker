@@ -246,6 +246,32 @@ describe('App', () => {
     expect(await screen.findByText(/This-month coffee/)).toBeInTheDocument()
   })
 
+  it('shows budget vs actual + over-budget warning when spend exceeds budget (P3.B + P3.F)', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    // Before setting a budget: empty-state copy in BudgetVsActual.
+    expect(
+      screen.getByText('No budget set for this month.'),
+    ).toBeInTheDocument()
+
+    // Set a $50 budget for the current month.
+    await user.clear(screen.getByLabelText('Budget amount'))
+    await user.type(screen.getByLabelText('Budget amount'), '50')
+    await user.click(screen.getByRole('button', { name: /set budget/i }))
+
+    // Budget-vs-actual now shows numbers; no warning yet (no expenses).
+    expect(
+      screen.queryByText(/over budget by/i),
+    ).not.toBeInTheDocument()
+
+    // Spend $75 — past the budget — and the over-budget alert appears.
+    await addExpenseViaForm('75', 'Splurge')
+    await screen.findByText(/Splurge/)
+    const alert = await screen.findByText(/over budget by/i)
+    expect(alert).toBeInTheDocument()
+  })
+
   it('renders MonthlySummary that scopes with the visible expenses (P3.E)', async () => {
     await renderApp()
     await addExpenseViaForm('20', 'Lunch')
