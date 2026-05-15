@@ -26,6 +26,11 @@ function App() {
     categoriesHook.categories,
   )
   const loading = expensesHook.loading || categoriesHook.loading
+  // Each hook owns its own error string; we surface whichever is non-empty
+  // (expense first). Note this is a small UX shift from the pre-hooks code,
+  // where a single shared error slot was cleared by ANY successful op — now
+  // an expense success only clears the expense error, leaving any outstanding
+  // category error visible (and vice versa). Errors are domain-scoped.
   const error = expensesHook.error || categoriesHook.error
 
   async function handleUpdate(input: ExpenseInput) {
