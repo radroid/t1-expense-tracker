@@ -7,11 +7,13 @@ interface SpinnerProps {
   size?: SpinnerSize
 }
 
-// Pure-CSS loading indicator. The animated ring is decorative (aria-hidden)
-// while the label is exposed via aria-label AND a visually-hidden text node
-// so screen readers always have something to read. Under
-// prefers-reduced-motion the CSS short-circuits the keyframes — the static
-// label remains the source of truth for users.
+// Pure-CSS loading indicator. role="status" is a live region (live=polite),
+// but per WAI-ARIA `status` is NOT a name-from-content role — without an
+// explicit aria-label the element has no accessible *name*, only an
+// accessible *description* via its text. Both are kept on purpose:
+// aria-label gives assistive tech a name; the visually-hidden span gives
+// a visible/printable label that survives `prefers-reduced-motion` (when
+// the ring stops animating it remains the cue for users).
 export function Spinner({ label = 'Loading…', size = 'md' }: SpinnerProps) {
   return (
     <div
