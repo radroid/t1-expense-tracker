@@ -266,6 +266,9 @@ describe('useStoredCollection', () => {
       ok = await result.current.update({ id: 'x', name: 'x' }, { name: 'y' })
     })
     expect(ok).toBe(false)
-    expect(result.current.error).not.toBe('')
+    // messages.update is preferred when supplied (this test's bundle
+    // supplies both); falls back to messages.add otherwise — documented
+    // in useStoredCollection's update() implementation.
+    expect(result.current.error).toBe(messages.update)
   })
 })
