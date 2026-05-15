@@ -38,6 +38,6 @@
 @media (max-width: 480px) {
   .spending-chart__label,
   .spending-chart__value {
-    font-size: 11px;
+    font-size: 0.75rem;
   }
 }
