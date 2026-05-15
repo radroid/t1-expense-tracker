@@ -1,0 +1,40 @@
+.spending-by-category {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.spending-by-category__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.spending-by-category__swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.spending-by-category__name {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.spending-by-category__total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #111827;
+}
+
+.spending-by-category__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}

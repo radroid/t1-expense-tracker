@@ -26,6 +26,7 @@ import {
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
+import { SpendingByCategory } from './components/SpendingByCategory'
 import { CategoryManager } from './components/CategoryManager'
 import './App.css'
 
@@ -174,6 +175,10 @@ function App() {
           onEdit={setEditing}
         />
       )}
+      <section className="app__insights">
+        <h2>Spending by category</h2>
+        <SpendingByCategory expenses={expenses} categories={categories} />
+      </section>
       <section className="app__categories">
         <h2>Categories</h2>
         <CategoryManager

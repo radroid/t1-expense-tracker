@@ -67,7 +67,9 @@ describe('App', () => {
     await addExpenseViaForm('15.50', 'Lunch')
     await screen.findByText(/Lunch/)
 
-    expect(screen.getByText('$25.50')).toBeInTheDocument()
+    expect(
+      screen.getByText('$25.50', { selector: '.running-total__amount' }),
+    ).toBeInTheDocument()
   })
 
   it('edits an existing expense via the edit form', async () => {
