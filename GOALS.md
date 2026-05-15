@@ -134,6 +134,17 @@ Candidate themes (to be triaged in the arch pass):
   function. `useVisibleExpenses` collapses to a single `useMemo`.
   **Deferred** — no non-React consumer demands it yet. Revisit if one
   appears. (iter-017 arch pass)
+- [ ] TD.12 — `useStoredCollection` refresh-after-mutation error isolation
+  — CR-flagged latent issue (iter-018, but preserves pre-iter-018
+  behavior of every domain hook). Today, if `store.add/update/remove`
+  succeeds but the post-mutation `store.getAll()` throws, the outer
+  try-catch fires `setError(messages.add)` and returns `false` — but
+  the mutation actually persisted. User sees "Failed to..." and may
+  retry → potential duplicate. Fix: nest the refresh in its own
+  try-catch, return `true` (mutation succeeded), and surface
+  `messages.load` instead. Will change the `Promise<boolean>` contract
+  for the storage-flaky case; coordinate with test updates across all
+  four hooks before flipping.
 - [ ] TD.11 — Drop vestigial `Expense.recurring?: boolean` — field
   superseded by `sourceTemplateId` in iter-016 P4.E. Schema-less IDB
   means leaving the type narrows is safe; first edit on a historical

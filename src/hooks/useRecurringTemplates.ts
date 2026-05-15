@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import {
   createRecurringTemplate,
   type RecurringTemplate,
@@ -9,6 +9,11 @@ import {
   getAllRecurringTemplates,
   removeRecurringTemplate,
 } from '../db/recurringTemplateStore'
+import { recurringTemplateMessages } from '../lib/errorMessages'
+import {
+  useStoredCollection,
+  type Store,
+} from './useStoredCollection'
 
 export interface UseRecurringTemplates {
   templates: RecurringTemplate[]
@@ -18,55 +23,40 @@ export interface UseRecurringTemplates {
   remove: (id: string) => Promise<boolean>
 }
 
-// Persistence-layer hook for recurring templates. Mirrors useCategories shape:
-// boolean-success returns let callers chain follow-ups (e.g. closing a form);
-// errors are last-error strings the consumer surfaces in its own alert slot.
-//
-// Rollover orchestration is NOT here — it sits in App.tsx where the expense
-// hook is also available. The hook stays pure CRUD so it composes cleanly
-// regardless of whether rollover is wired in.
+// Persistence-layer hook for recurring templates. Simplest of the four —
+// no update path, just add + remove. Rollover orchestration is NOT here —
+// it sits in App.tsx where the expense hook is also available. The hook
+// stays pure CRUD so it composes cleanly regardless of whether rollover
+// is wired in.
 export function useRecurringTemplates(): UseRecurringTemplates {
-  const [templates, setTemplates] = useState<RecurringTemplate[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  // Closures rather than direct references so vi.spyOn on the store module
+  // works in tests (the spy mutates the namespace; our closures re-resolve
+  // through the live ESM binding on each call).
+  const store = useMemo<Store<RecurringTemplate>>(
+    () => ({
+      add: (t) => addRecurringTemplate(t),
+      getAll: () => getAllRecurringTemplates(),
+      remove: (id) => removeRecurringTemplate(id),
+    }),
+    [],
+  )
 
-  useEffect(() => {
-    getAllRecurringTemplates()
-      .then(setTemplates)
-      .catch(() => setError('Failed to load recurring templates.'))
-      .finally(() => setLoading(false))
-  }, [])
+  const collection = useStoredCollection<
+    RecurringTemplate,
+    RecurringTemplateInput
+  >({
+    store,
+    validateAdd: createRecurringTemplate,
+    messages: recurringTemplateMessages,
+  })
 
-  async function add(input: RecurringTemplateInput): Promise<boolean> {
-    let template: RecurringTemplate
-    try {
-      template = createRecurringTemplate(input)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid template.')
-      return false
-    }
-    try {
-      await addRecurringTemplate(template)
-      setTemplates(await getAllRecurringTemplates())
-      setError('')
-      return true
-    } catch {
-      setError('Failed to add recurring template.')
-      return false
-    }
+  const { items, loading, error, add, remove } = collection
+
+  return {
+    templates: items,
+    loading,
+    error,
+    add,
+    remove,
   }
-
-  async function remove(id: string): Promise<boolean> {
-    try {
-      await removeRecurringTemplate(id)
-      setTemplates(await getAllRecurringTemplates())
-      setError('')
-      return true
-    } catch {
-      setError('Failed to delete recurring template.')
-      return false
-    }
-  }
-
-  return { templates, loading, error, add, remove }
 }
