@@ -16,17 +16,17 @@
 
 .monthly-summary__label {
   font-size: 0.95rem;
-  color: #6b7280;
+  color: var(--app-muted-fg);
 }
 
 .monthly-summary__value {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: #111827;
+  color: var(--app-fg);
 }
 
 .monthly-summary__empty {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--app-muted-fg);
 }

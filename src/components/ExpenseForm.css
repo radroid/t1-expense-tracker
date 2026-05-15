@@ -19,20 +19,22 @@
 .expense-form__field input,
 .expense-form__field select {
   padding: 0.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--app-border);
   border-radius: 4px;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
   font: inherit;
 }
 
 .expense-form__field input:focus-visible,
 .expense-form__field select:focus-visible {
-  outline: 2px solid #2d6cdf;
+  outline: 2px solid var(--app-accent);
   outline-offset: 2px;
 }
 
 .expense-form__error {
   margin: 0;
-  color: #c0392b;
+  color: var(--app-error);
   font-size: 0.875rem;
 }
 
@@ -50,19 +52,19 @@
 }
 
 .expense-form__actions button[type='submit'] {
-  background: #2d6cdf;
-  color: #fff;
+  background: var(--app-accent);
+  color: var(--app-accent-fg);
 }
 
 .expense-form__actions button[type='submit']:hover {
-  background: #2457b8;
+  filter: brightness(0.92);
 }
 
 .expense-form__actions button[type='button'] {
-  background: #e7e7e7;
-  color: #222;
+  background: var(--app-surface-2);
+  color: var(--app-fg);
 }
 
 .expense-form__actions button[type='button']:hover {
-  background: #d8d8d8;
+  background: var(--app-surface-hover);
 }

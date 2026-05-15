@@ -13,45 +13,45 @@
 
 .budget-vs-actual__label {
   font-size: 0.95rem;
-  color: #6b7280;
+  color: var(--app-muted-fg);
 }
 
 .budget-vs-actual__value {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: #111827;
+  color: var(--app-fg);
 }
 
 .budget-vs-actual__bar-track {
   position: relative;
   width: 100%;
   height: 0.75rem;
-  background: #e5e7eb;
+  background: var(--app-surface-2);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .budget-vs-actual__bar {
   height: 100%;
-  background: #2d6cdf;
+  background: var(--app-accent);
   border-radius: inherit;
   transition: width 200ms ease-out;
 }
 
 .budget-vs-actual__bar--over {
-  background: #dc2626;
+  background: var(--app-error);
 }
 
 .budget-vs-actual__remaining {
   margin: 0;
   font-size: 0.9rem;
-  color: #374151;
+  color: var(--app-muted-fg);
   font-variant-numeric: tabular-nums;
 }
 
 .budget-vs-actual__warning {
   margin: 0;
-  color: #dc2626;
+  color: var(--app-error);
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -59,5 +59,5 @@
 .budget-vs-actual__empty {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--app-muted-fg);
 }
