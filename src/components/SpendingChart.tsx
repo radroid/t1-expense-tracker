@@ -1,13 +1,14 @@
 import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import { spendingByCategory } from '../lib/categoryTotals'
-import { formatUSD } from '../lib/currency'
+import { formatCurrency, type CurrencyCode } from '../lib/currency'
 import { EmptyState } from './EmptyState'
 import './SpendingChart.css'
 
 interface SpendingChartProps {
   expenses: Expense[]
   categories: Category[]
+  currency: CurrencyCode
 }
 
 const UNCATEGORIZED_COLOR = '#9ca3af'
@@ -22,7 +23,7 @@ const VIEWBOX_WIDTH = 480
 const BAR_TRACK_X = LABEL_WIDTH
 const BAR_TRACK_WIDTH = VIEWBOX_WIDTH - LABEL_WIDTH - VALUE_WIDTH
 
-export function SpendingChart({ expenses, categories }: SpendingChartProps) {
+export function SpendingChart({ expenses, categories, currency }: SpendingChartProps) {
   const rows = spendingByCategory(expenses, categories)
     .slice()
     .sort((a, b) => b.total - a.total)
@@ -47,7 +48,7 @@ export function SpendingChart({ expenses, categories }: SpendingChartProps) {
         const key = isNull ? '__uncategorized__' : row.category!.id
         const name = isNull ? 'Uncategorized' : row.category!.name
         const color = isNull ? UNCATEGORIZED_COLOR : row.category!.color
-        const formatted = formatUSD(row.total)
+        const formatted = formatCurrency(row.total, currency)
         const y = i * ROW_HEIGHT
         const barWidth =
           maxTotal > 0 ? (row.total / maxTotal) * BAR_TRACK_WIDTH : 0

@@ -12,6 +12,7 @@ describe('MonthlySummary', () => {
     render(
       <MonthlySummary
         expenses={[expense(10, 'a'), expense(20, 'b'), expense(30, 'c')]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('Total')).toBeInTheDocument()
@@ -20,7 +21,7 @@ describe('MonthlySummary', () => {
   })
 
   it('renders the empty state when expenses is []', () => {
-    render(<MonthlySummary expenses={[]} />)
+    render(<MonthlySummary expenses={[]} currency="USD" />)
     expect(screen.getByText('No expenses this period.')).toBeInTheDocument()
     expect(screen.queryByText('Total')).not.toBeInTheDocument()
     expect(screen.queryByText('Average')).not.toBeInTheDocument()
@@ -31,6 +32,7 @@ describe('MonthlySummary', () => {
     render(
       <MonthlySummary
         expenses={[expense(20, 'a'), expense(30, 'b')]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('$50.00')).toBeInTheDocument()
@@ -41,6 +43,7 @@ describe('MonthlySummary', () => {
     render(
       <MonthlySummary
         expenses={[expense(20, 'a'), expense(30, 'b')]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('2')).toBeInTheDocument()

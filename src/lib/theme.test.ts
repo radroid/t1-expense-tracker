@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   applyTheme,
   loadTheme,
@@ -7,38 +7,8 @@ import {
   toggleTheme,
 } from './theme'
 
-// Node 25 ships an experimental webstorage built-in that shadows jsdom's
-// Storage and is missing setItem/getItem/clear in the vitest jsdom env.
-// Install a working in-memory Storage so theme code can be exercised.
-beforeAll(() => {
-  const store = new Map<string, string>()
-  const storage: Storage = {
-    getItem: (k) => (store.has(k) ? store.get(k)! : null),
-    setItem: (k, v) => {
-      store.set(k, String(v))
-    },
-    removeItem: (k) => {
-      store.delete(k)
-    },
-    clear: () => {
-      store.clear()
-    },
-    key: (i) => Array.from(store.keys())[i] ?? null,
-    get length() {
-      return store.size
-    },
-  }
-  Object.defineProperty(globalThis, 'localStorage', {
-    value: storage,
-    configurable: true,
-    writable: true,
-  })
-  Object.defineProperty(window, 'localStorage', {
-    value: storage,
-    configurable: true,
-    writable: true,
-  })
-})
+// The in-memory localStorage shim is installed in src/test/setup.ts so every
+// test file can rely on it without the Node-25 ritual.
 
 describe('theme storage', () => {
   beforeEach(() => {

@@ -5,12 +5,16 @@ import App from './App'
 import * as expenseStore from './db/expenseStore'
 import { addRecurringTemplate } from './db/recurringTemplateStore'
 import { createRecurringTemplate } from './lib/recurring'
+import { CURRENCY_STORAGE_KEY } from './lib/currency'
 
 beforeEach(async () => {
   // Reset URL hash — P5.A persists filter state there, and jsdom's
   // location object outlives a single test (`window.history.replaceState`
   // in one test leaks into the next).
   window.location.hash = ''
+  // localStorage now persists currency (P5.E) and theme. Clear so each test
+  // starts on the USD/light defaults unless it explicitly seeds otherwise.
+  localStorage.clear()
   await new Promise<void>((resolve, reject) => {
     const req = indexedDB.deleteDatabase('expense-tracker')
     req.onsuccess = () => resolve()
@@ -468,6 +472,37 @@ describe('App', () => {
 
     expect(await screen.findByText(/From-backup/)).toBeInTheDocument()
     expect(screen.queryByText(/Pre-restore expense/)).not.toBeInTheDocument()
+  })
+
+  it('renders RunningTotal in EUR when localStorage seeds currency=EUR (P5.E)', async () => {
+    localStorage.setItem(CURRENCY_STORAGE_KEY, 'EUR')
+    await renderApp()
+    await addExpenseViaForm('10', 'Coffee')
+    await screen.findByText(/Coffee/)
+
+    expect(
+      screen.getByText('€10.00', { selector: '.running-total__amount' }),
+    ).toBeInTheDocument()
+  })
+
+  it('changing the currency selector re-renders totals in the new currency (P5.E)', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+    await addExpenseViaForm('100', 'Coffee')
+    await screen.findByText(/Coffee/)
+
+    // Starts in USD by default.
+    expect(
+      screen.getByText('$100.00', { selector: '.running-total__amount' }),
+    ).toBeInTheDocument()
+
+    // Switch to JPY — RunningTotal updates to ¥ prefix, no decimals.
+    await user.selectOptions(screen.getByLabelText('Currency'), 'JPY')
+    expect(
+      screen.getByText('¥100', { selector: '.running-total__amount' }),
+    ).toBeInTheDocument()
+    // And the choice is persisted.
+    expect(localStorage.getItem(CURRENCY_STORAGE_KEY)).toBe('JPY')
   })
 
   it('sets a per-category budget and shows the saved amount (P5.D)', async () => {

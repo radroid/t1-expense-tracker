@@ -1,13 +1,14 @@
 import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import { spendingByCategory } from '../lib/categoryTotals'
-import { formatUSD } from '../lib/currency'
+import { formatCurrency, type CurrencyCode } from '../lib/currency'
 import { EmptyState } from './EmptyState'
 import './SpendingByCategory.css'
 
 interface SpendingByCategoryProps {
   expenses: Expense[]
   categories: Category[]
+  currency: CurrencyCode
 }
 
 const UNCATEGORIZED_COLOR = '#9ca3af'
@@ -15,6 +16,7 @@ const UNCATEGORIZED_COLOR = '#9ca3af'
 export function SpendingByCategory({
   expenses,
   categories,
+  currency,
 }: SpendingByCategoryProps) {
   if (expenses.length === 0) {
     return <EmptyState title="No spending yet." />
@@ -40,7 +42,7 @@ export function SpendingByCategory({
             />
             <span className="spending-by-category__name">{name}</span>
             <span className="spending-by-category__total">
-              {formatUSD(row.total)}
+              {formatCurrency(row.total, currency)}
             </span>
           </li>
         )

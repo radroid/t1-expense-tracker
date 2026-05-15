@@ -1,9 +1,10 @@
 import type { BudgetStatus } from '../lib/budgetStatus'
-import { formatUSD } from '../lib/currency'
+import { formatCurrency, type CurrencyCode } from '../lib/currency'
 import './BudgetVsActual.css'
 
 interface BudgetVsActualProps {
   status: BudgetStatus
+  currency: CurrencyCode
 }
 
 // Pure renderer. Two visual modes:
@@ -11,7 +12,7 @@ interface BudgetVsActualProps {
 //  - hasBudget  → budget/actual amounts, a progress bar (clamped to 100% for
 //                 width, red when over), a remaining/over readout, and a
 //                 role="alert" warning when over budget.
-export function BudgetVsActual({ status }: BudgetVsActualProps) {
+export function BudgetVsActual({ status, currency }: BudgetVsActualProps) {
   if (!status.hasBudget) {
     return (
       <p className="budget-vs-actual__empty">No budget set for this month.</p>
@@ -26,13 +27,13 @@ export function BudgetVsActual({ status }: BudgetVsActualProps) {
       <div className="budget-vs-actual__row">
         <span className="budget-vs-actual__label">Budget</span>
         <span className="budget-vs-actual__value">
-          {formatUSD(status.budget)}
+          {formatCurrency(status.budget, currency)}
         </span>
       </div>
       <div className="budget-vs-actual__row">
         <span className="budget-vs-actual__label">Spent</span>
         <span className="budget-vs-actual__value">
-          {formatUSD(status.actual)}
+          {formatCurrency(status.actual, currency)}
         </span>
       </div>
 
@@ -49,13 +50,13 @@ export function BudgetVsActual({ status }: BudgetVsActualProps) {
 
       <p className="budget-vs-actual__remaining">
         {status.isOver
-          ? `${formatUSD(remainingAbs)} over`
-          : `${formatUSD(status.remaining)} left`}
+          ? `${formatCurrency(remainingAbs, currency)} over`
+          : `${formatCurrency(status.remaining, currency)} left`}
       </p>
 
       {status.isOver && (
         <p className="budget-vs-actual__warning" role="alert">
-          Over budget by {formatUSD(remainingAbs)}
+          Over budget by {formatCurrency(remainingAbs, currency)}
         </p>
       )}
     </div>

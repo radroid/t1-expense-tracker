@@ -27,7 +27,7 @@ describe('ExpenseList', () => {
       makeExpense({ description: 'Lunch', date: '2026-01-02' }),
       makeExpense({ description: 'Books', date: '2026-01-03' }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     expect(screen.getByText('Coffee')).toBeInTheDocument();
     expect(screen.getByText('Lunch')).toBeInTheDocument();
     expect(screen.getByText('Books')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('ExpenseList', () => {
       makeExpense({ description: 'Newest', date: '2026-03-01' }),
       makeExpense({ description: 'Middle', date: '2026-02-01' }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(3);
     expect(within(items[0]).getByText('Newest')).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe('ExpenseList', () => {
       makeExpense({ description: 'Second', date: '2026-01-01' }),
       makeExpense({ description: 'Third', date: '2026-01-01' }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     const items = screen.getAllByRole('listitem');
     expect(within(items[0]).getByText('First')).toBeInTheDocument();
     expect(within(items[1]).getByText('Second')).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('ExpenseList', () => {
       makeExpense({ description: 'Newest', date: '2026-03-01' }),
     ];
     const snapshot = [...expenses];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     expect(expenses).toEqual(snapshot);
     expect(expenses[0].description).toBe('Oldest');
     expect(expenses[1].description).toBe('Newest');
@@ -76,7 +76,7 @@ describe('ExpenseList', () => {
     const expenses: Expense[] = [
       makeExpense({ description: 'Big', amount: 1234.5 }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     expect(screen.getByText('$1,234.50')).toBeInTheDocument();
   });
 
@@ -84,7 +84,7 @@ describe('ExpenseList', () => {
     const expenses: Expense[] = [
       makeExpense({ description: 'Small', amount: 5 }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     expect(screen.getByText('$5.00')).toBeInTheDocument();
   });
 
@@ -92,12 +92,12 @@ describe('ExpenseList', () => {
     const expenses: Expense[] = [
       makeExpense({ description: 'Dated', date: '2026-02-15' }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     expect(screen.getByText('2026-02-15')).toBeInTheDocument();
   });
 
   it('shows an empty-state message when expenses is empty', () => {
-    render(<ExpenseList expenses={[]} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={[]} categories={CATEGORIES} currency="USD" />);
     expect(screen.getByText('No expenses yet.')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
   });
@@ -111,6 +111,7 @@ describe('ExpenseList', () => {
       <ExpenseList
         expenses={expenses}
         categories={CATEGORIES}
+        currency="USD"
         onDelete={vi.fn()}
       />,
     );
@@ -134,6 +135,7 @@ describe('ExpenseList', () => {
       <ExpenseList
         expenses={expenses}
         categories={CATEGORIES}
+        currency="USD"
         onDelete={onDelete}
       />,
     );
@@ -147,7 +149,7 @@ describe('ExpenseList', () => {
       makeExpense({ description: 'Coffee' }),
       makeExpense({ description: 'Lunch' }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
@@ -160,6 +162,7 @@ describe('ExpenseList', () => {
       <ExpenseList
         expenses={expenses}
         categories={CATEGORIES}
+        currency="USD"
         onEdit={vi.fn()}
       />,
     );
@@ -183,6 +186,7 @@ describe('ExpenseList', () => {
       <ExpenseList
         expenses={expenses}
         categories={CATEGORIES}
+        currency="USD"
         onEdit={onEdit}
       />,
     );
@@ -196,7 +200,7 @@ describe('ExpenseList', () => {
       makeExpense({ description: 'Coffee' }),
       makeExpense({ description: 'Lunch' }),
     ];
-    render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+    render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
     expect(
       screen.queryByRole('button', { name: /^Edit / }),
     ).not.toBeInTheDocument();
@@ -207,7 +211,7 @@ describe('ExpenseList', () => {
       const expenses: Expense[] = [
         makeExpense({ description: 'Coffee', categoryId: 'cat-food' }),
       ];
-      render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+      render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
       const badge = screen.getByLabelText('Category: Food');
       expect(badge).toBeInTheDocument();
       expect(within(badge).getByText('Food')).toBeInTheDocument();
@@ -223,7 +227,7 @@ describe('ExpenseList', () => {
       const expenses: Expense[] = [
         makeExpense({ description: 'Coffee' }),
       ];
-      render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+      render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
       expect(screen.queryByLabelText(/^Category: /)).not.toBeInTheDocument();
     });
 
@@ -231,7 +235,7 @@ describe('ExpenseList', () => {
       const expenses: Expense[] = [
         makeExpense({ description: 'Coffee', categoryId: 'cat-deleted' }),
       ];
-      render(<ExpenseList expenses={expenses} categories={CATEGORIES} />);
+      render(<ExpenseList expenses={expenses} categories={CATEGORIES} currency="USD" />);
       expect(screen.queryByLabelText(/^Category: /)).not.toBeInTheDocument();
     });
   });

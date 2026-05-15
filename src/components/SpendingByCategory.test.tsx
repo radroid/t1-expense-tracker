@@ -20,7 +20,7 @@ function category(id: string, name: string, color = '#000000'): Category {
 
 describe('SpendingByCategory', () => {
   it('renders an empty-state message when there are no expenses', () => {
-    render(<SpendingByCategory expenses={[]} categories={[]} />)
+    render(<SpendingByCategory expenses={[]} categories={[]} currency="USD" />)
     expect(screen.getByText('No spending yet.')).toBeInTheDocument()
   })
 
@@ -35,6 +35,7 @@ describe('SpendingByCategory', () => {
           expense(5, 'e3', 'c2'),
         ]}
         categories={[food, transport]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('Food')).toBeInTheDocument()
@@ -50,6 +51,7 @@ describe('SpendingByCategory', () => {
       <SpendingByCategory
         expenses={[expense(10, 'e1', 'c1')]}
         categories={[food, transport]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('Food')).toBeInTheDocument()
@@ -68,6 +70,7 @@ describe('SpendingByCategory', () => {
           expense(50, 'e3', 'c2'),
         ]}
         categories={[food, transport, housing]}
+        currency="USD"
       />,
     )
     const rows = screen.getAllByRole('listitem')
@@ -90,6 +93,7 @@ describe('SpendingByCategory', () => {
           expense(2, 'e3', 'missing-cat'),
         ]}
         categories={[food]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('Uncategorized')).toBeInTheDocument()
@@ -105,6 +109,7 @@ describe('SpendingByCategory', () => {
       <SpendingByCategory
         expenses={[expense(4, 'e1'), expense(6, 'e2')]}
         categories={[]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('Uncategorized')).toBeInTheDocument()
