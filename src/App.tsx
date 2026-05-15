@@ -143,7 +143,9 @@ function App() {
             amount: editing.amount,
             description: editing.description,
             date: editing.date,
+            categoryId: editing.categoryId,
           }}
+          categories={categories}
           submitLabel="Save"
           onSubmit={handleUpdate}
           onCancel={() => setEditing(null)}
@@ -151,6 +153,7 @@ function App() {
       ) : (
         <ExpenseForm
           key="new"
+          categories={categories}
           submitLabel="Add expense"
           onSubmit={handleAdd}
           clearOnSubmit

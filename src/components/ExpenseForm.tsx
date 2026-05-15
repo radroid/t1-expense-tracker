@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { ExpenseInput } from '../lib/expense'
+import type { Category } from '../lib/category'
 import './ExpenseForm.css'
 
 interface ExpenseFormProps {
   initial?: ExpenseInput
+  categories: Category[]
   submitLabel: string
   onSubmit: (input: ExpenseInput) => void
   onCancel?: () => void
@@ -16,6 +18,7 @@ function todayISO(): string {
 
 export function ExpenseForm({
   initial,
+  categories,
   submitLabel,
   onSubmit,
   onCancel,
@@ -26,6 +29,7 @@ export function ExpenseForm({
   )
   const [description, setDescription] = useState(initial?.description ?? '')
   const [date, setDate] = useState(initial?.date ?? todayISO())
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
   const [error, setError] = useState('')
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -51,6 +55,7 @@ export function ExpenseForm({
       amount: parsedAmount,
       description: trimmedDescription,
       date,
+      categoryId: categoryId || undefined,
     })
 
     setError('')
@@ -92,6 +97,22 @@ export function ExpenseForm({
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
+      </div>
+
+      <div className="expense-form__field">
+        <label htmlFor="expense-form-category">Category</label>
+        <select
+          id="expense-form-category"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+        >
+          <option value="">Uncategorized</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {error && (

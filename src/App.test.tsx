@@ -148,10 +148,14 @@ describe('App', () => {
     expect(screen.queryByText(/Bad expense/)).not.toBeInTheDocument()
   })
 
+  // Category names also appear as <option>s in the expense form's category
+  // picker — scope these assertions to the CategoryManager's name spans.
+  const inManager = { selector: '.category-manager__name' } as const
+
   it('seeds and shows the default categories on first run', async () => {
     await renderApp()
-    expect(screen.getByText('Food')).toBeInTheDocument()
-    expect(screen.getByText('Transport')).toBeInTheDocument()
+    expect(screen.getByText('Food', inManager)).toBeInTheDocument()
+    expect(screen.getByText('Transport', inManager)).toBeInTheDocument()
   })
 
   it('adds a category via the category manager', async () => {
@@ -161,7 +165,7 @@ describe('App', () => {
     await user.type(screen.getByLabelText('New category name'), 'Travel')
     await user.click(screen.getByRole('button', { name: /add category/i }))
 
-    expect(await screen.findByText('Travel')).toBeInTheDocument()
+    expect(await screen.findByText('Travel', inManager)).toBeInTheDocument()
   })
 
   it('deletes a category via the category manager', async () => {
@@ -171,7 +175,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /delete food/i }))
 
     await waitFor(() =>
-      expect(screen.queryByText('Food')).not.toBeInTheDocument(),
+      expect(screen.queryByText('Food', inManager)).not.toBeInTheDocument(),
     )
   })
 })
