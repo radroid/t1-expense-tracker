@@ -42,14 +42,24 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 
 ## Phase 4 — Polish & power features
 
-- [ ] P4.A — Search — Text search across expense descriptions.
-- [ ] P4.B — Date-range filter — From/to date filter on the list.
+- [done] P4.A — Search — Case-insensitive substring on description via
+  `SearchBox` + `filterExpensesBySearch` plugged into useVisibleExpenses.
+  — iter-013 / PR #36
+- [done] P4.B — Date-range filter — `DateRangeFilter` + `filterExpensesByDateRange`
+  (inclusive YYYY-MM-DD compare). Narrows visibleExpenses but NOT
+  monthlyExpenses (budget-coherence). — iter-013 / PR #36
 - [ ] P4.C — CSV export — Export the currently-filtered expenses to a CSV download.
 - [ ] P4.D — CSV import — Import expenses from a CSV file (with validation + error report).
 - [ ] P4.E — Recurring expenses — Mark an expense recurring; auto-generate it on month rollover.
-- [ ] P4.F — Dark mode — Theme toggle, persisted to localStorage.
+- [done] P4.F — Dark mode — `ThemeToggle` + `src/lib/theme.ts` + CSS custom
+  properties; persisted to localStorage; first-paint applied in `main.tsx`.
+  Component CSS not yet themable — see P4.I follow-up. — iter-013 / PR #37
 - [ ] P4.G — Empty + loading states — Polished empty and loading states across surfaces.
 - [ ] P4.H — Responsive layout — Mobile-friendly layout down to 480px.
+- [ ] P4.I — Themability sweep — Migrate per-component CSS (ExpenseList,
+  CategoryFilter, MonthSwitcher, ExpenseForm, BudgetForm, etc.) to use the
+  CSS custom properties introduced by P4.F so dark mode renders coherently.
+  Surfaced in iter-013 super-review.
 
 ## Tech debt
 
