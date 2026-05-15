@@ -165,4 +165,49 @@ describe('RecurringManager', () => {
 
     expect(desc.value).toBe('')
   })
+
+  it('does NOT clear the form when onAdd resolves false', async () => {
+    const user = userEvent.setup()
+    const onAdd = vi.fn().mockResolvedValue(false)
+    render(
+      <RecurringManager
+        templates={[]}
+        categories={categories}
+        onAdd={onAdd}
+        onDelete={vi.fn().mockResolvedValue(true)}
+      />,
+    )
+
+    const desc = screen.getByLabelText('Template description') as HTMLInputElement
+    await user.type(desc, 'Gym')
+    await user.clear(screen.getByLabelText('Template amount'))
+    await user.type(screen.getByLabelText('Template amount'), '50')
+    await user.clear(screen.getByLabelText('Day of month'))
+    await user.type(screen.getByLabelText('Day of month'), '15')
+    await user.click(screen.getByRole('button', { name: /add recurring/i }))
+
+    // Form input is preserved so the user can fix any upstream-surfaced
+    // problem and re-submit without retyping.
+    expect(desc.value).toBe('Gym')
+  })
+
+  it('shows an inline validation error for non-positive amount', async () => {
+    const user = userEvent.setup()
+    const onAdd = vi.fn().mockResolvedValue(true)
+    render(
+      <RecurringManager
+        templates={[]}
+        categories={categories}
+        onAdd={onAdd}
+        onDelete={vi.fn().mockResolvedValue(true)}
+      />,
+    )
+    await user.type(screen.getByLabelText('Template description'), 'Bad')
+    await user.clear(screen.getByLabelText('Template amount'))
+    await user.type(screen.getByLabelText('Template amount'), '0')
+    await user.click(screen.getByRole('button', { name: /add recurring/i }))
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(onAdd).not.toHaveBeenCalled()
+  })
 })

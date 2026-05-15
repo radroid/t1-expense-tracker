@@ -335,11 +335,17 @@ describe('App', () => {
     // The auto-generated expense should appear in the list (no manual add).
     expect(await screen.findByText(/Rent/)).toBeInTheDocument()
     // Settle: idempotent — the post-addMany rollover re-fire must observe
-    // Rent and bail. Multiple Rents here would mean the dedupe is broken.
+    // Rent and bail. We scope to the expense list because RecurringManager
+    // also renders "Rent" as a template; the unscoped match would always
+    // see ≥2 elements regardless of dedupe correctness.
     await waitFor(() => {
-      expect(screen.getAllByText(/Rent/)).toHaveLength(1)
+      const list = document.querySelector('.expense-list')
+      expect(list).not.toBeNull()
+      expect(
+        list!.querySelectorAll('.expense-list__description'),
+      ).toHaveLength(1)
     })
-    // Explicit unmount + microtask flush so the trailing IndexedDB close()
+    // Explicit unmount + macrotask flush so the trailing IndexedDB close()
     // settles before the next test's deleteDatabase tries to evict it.
     unmount()
     await new Promise<void>((r) => setTimeout(r, 0))

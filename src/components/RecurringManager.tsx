@@ -9,7 +9,7 @@ import './RecurringManager.css'
 interface RecurringManagerProps {
   templates: RecurringTemplate[]
   categories: Category[]
-  onAdd: (input: RecurringTemplateInput) => void | Promise<unknown>
+  onAdd: (input: RecurringTemplateInput) => Promise<boolean>
   onDelete: (id: string) => void | Promise<unknown>
 }
 
@@ -29,7 +29,7 @@ export function RecurringManager({
   const [categoryId, setCategoryId] = useState<string>('')
   const [error, setError] = useState('')
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     const trimmed = description.trim()
@@ -58,12 +58,19 @@ export function RecurringManager({
     }
     if (categoryId !== '') input.categoryId = categoryId
 
-    onAdd(input)
-    setError('')
-    setDescription('')
-    setAmount('')
-    setDayOfMonth('1')
-    setCategoryId('')
+    // Await the upstream add — only clear the form on success so a
+    // persistence failure doesn't lose the user's input. The upstream
+    // hook surfaces its own error string; we just clear our local
+    // validation error so the inline alert disappears once the network
+    // request is in flight.
+    const ok = await onAdd(input)
+    if (ok) {
+      setError('')
+      setDescription('')
+      setAmount('')
+      setDayOfMonth('1')
+      setCategoryId('')
+    }
   }
 
   return (

@@ -95,6 +95,9 @@ describe('useRecurringTemplates', () => {
     })
     expect(okOk).toBe(true)
     expect(result.current.templates).toHaveLength(0)
+    // Hook clears the error after a successful remove (matches the
+    // contract on add()).
+    expect(result.current.error).toBe('')
   })
 
   it('surfaces a load error if the initial fetch fails', async () => {

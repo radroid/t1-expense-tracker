@@ -12,8 +12,9 @@ import {
 
 const DB_NAME = 'expense-tracker'
 
-// Opens at the given version, replicating the v3 schema (expenses, categories,
-// monthlyBudgets). This is the legacy shape the v4 upgrade must extend.
+// Opens at the given version, replicating the historic schema for that
+// version. v2: expenses + categories. v3: + monthlyBudgets (the legacy
+// shape v4 must extend by adding the recurringTemplates store).
 function openAtVersion(version: number): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, version)
