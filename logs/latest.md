@@ -1,42 +1,48 @@
 # Latest
 
-Latest: iter-010 — Phase 3 fat-iter shipped 3 PRs (P3.A #27, P3.E #28, P3.C #29).
-MonthlyBudget data layer + DB v3 + MonthSwitcher + MonthlySummary + month filter
-all live. **TD.5 closed**. Filter composition: `byMonth → byCategory → visible`.
+Latest: iter-011 — Phase 3 closed. P3.B + P3.F (PR #31) and P3.D (PR #32)
+shipped. All six Phase-3 features (P3.A–P3.F) merged across iters 10 and 11.
 
 Stage: S3 (feature dev) — see `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-011 — Phase 3 fat-iter, remaining features: **P3.B** (budget vs
-  actual with progress bar) + **P3.D** (spending bar chart) + **P3.F** (over-budget
-  warning). P3.B + P3.F share the budget data path; pair them or sequence
-  B → F. P3.D is independent (chart of spendingByCategory for the visible slice).
-Open first: `GOALS.md`, `src/hooks/useExpenses.ts` (template for `useMonthlyBudgets`),
-  `src/App.tsx`, `src/lib/categoryTotals.ts` (chart's data source), `src/lib/budget.ts`.
-Open blocks: none open — see `logs/blocks.md` for iter-010 super-reviewer notes
-  and the parallel-dispatch process-fix note.
-Carry-forward: TD.6 (category-deletion cascade — product decision still pending).
-Test gate: 206 tests pass; `npm run build` + `npm run lint` clean.
+Next step: iter-012 — **phase-boundary arch pass before Phase 4** (Polish & power
+  features). Hard rule from the loop protocol: invoke `Skill` tool
+  `skill: "improve-codebase-architecture"`. Likely surfaces: TD.6 (category-
+  deletion cascade — still pending product decision), the App.tsx
+  loading/error derivation across 3 hooks, the filter pipeline
+  composition (would a `useVisibleExpenses` deepening pay off?), and dedup
+  candidates between SpendingByCategory + SpendingChart.
+Open first: `GOALS.md` (Phase 4 backlog), `ARCHITECTURE.md`, `src/App.tsx`
+  (the orchestration center is growing), `src/hooks/`, `logs/blocks.md`.
+Open blocks: none open — see `logs/blocks.md` for iter-011 super-reviewer
+  notes + the recurring `-A` process miss.
+Carry-forward: TD.6 (product decision; pending); P3.D low-priority follow-up
+  (consider `aria-hidden` on chart `<text>` to avoid screen-reader
+  double-announce alongside bar aria-labels).
+Test gate: 239 tests pass; `npm run build` + `npm run lint` clean.
 Push: n/a — pr_mode, all work merged via PRs.
 
 Last-iter shipped:
-- P3.A (#27): `src/lib/budget.ts` + `src/db/budgetStore.ts` + DB v3 (per-store
-  keyPath) + TD.5 migration test.
-- P3.E (#28): `src/lib/monthlyTotals.ts::summarizeExpenses` + `<MonthlySummary>`
-  (Total / Average / Count; empty path → zero-summary, no NaN).
-- P3.C (#29): `src/lib/month.ts` (currentMonth, monthOf, prev/next, formatMonthLabel)
-  + `<MonthSwitcher>` (prev/label/next, 44px targets) + `filterExpensesByMonth`.
-  App wires selectedMonth state (lazy-init via `useState(currentMonth)`) and
-  renders both MonthSwitcher + MonthlySummary.
+- P3.B + P3.F (#31): `useMonthlyBudgets` hook, `computeBudgetStatus` lib,
+  `BudgetForm`, `BudgetVsActual` (progress bar + over-budget warning).
+  Budget is month-scoped, not category-filtered.
+- P3.D (#32): pure SVG `SpendingChart` sharing `spendingByCategory` data with
+  the existing text list (both under the "Spending by category" heading).
 
-Operational notes for iter-011:
-  - `vite.config.ts` has `fileParallelism: false` — fake-indexeddb scales poorly
-    under parallel vitest workers. Don't remove without a perf check.
-  - When staging sub-agent fat-iter output, use explicit file paths in `git add`
-    (not `-A`) so untracked files from other features don't sweep onto the wrong
-    branch. Process-fix lesson from this iter's recovery.
+Operational notes for iter-012:
+  - **Recurring miss**: I logged a "use explicit file paths in `git add`" lesson
+    after iter-010, then repeated the mistake on this iter. Branch recovery
+    pattern works but is friction. Next iter: stage by path on the FIRST commit
+    after a sub-agent fat-iter. Consider promoting to CLAUDE.md if it happens a
+    third time.
+  - **Arch-pass mandatory:** Phase 3 → Phase 4 boundary. Don't skip the
+    `improve-codebase-architecture` skill invocation; it must be a real tool
+    call, not a manual refactor.
+  - `vite.config.ts` `fileParallelism: false` is load-bearing — keep.
 
-Open questions for iter-011 (note in plan):
-  (1) P3.D chart — pure SVG vs a tiny chart dep? Lean pure SVG.
-  (2) P3.B BudgetForm — inline near the MonthSwitcher, or its own section?
-      Lean inline + read-only display first.
-  (3) Should RunningTotal surface 'vs budget' once P3.B lands? Probably yes,
-      but P3.F is the natural carrier.
+Open questions for iter-012 (arch pass will surface its own):
+  (1) Does App.tsx warrant deepening into a `useVisibleExpenses` (filter pipeline)
+      or `useAppState` (loading/error derivation across 3 hooks)?
+  (2) SpendingByCategory + SpendingChart share `spendingByCategory(...)` calls.
+      Wrap in a hook? Or live with the duplication (deletion test before doing).
+  (3) TD.6 needs a product decision — orphan-via-Uncategorized is currently
+      coherent across all surfaces, but the data-side hasn't been ratified.

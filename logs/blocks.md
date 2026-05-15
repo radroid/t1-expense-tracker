@@ -216,4 +216,37 @@ delete the stale remote one — no destructive history rewrite. **Process fix:**
 when staging sub-agent output in fat-iter, use explicit file paths in `git add`,
 not `-A`, until all features are on their own branches.
 
+## iter-011 — Phase 3 fat-iter (3 features, 2 PRs)
+
+**Source:** peer-review × 2 (PR-level Class A super-reviewers).
+
+- **P3.B + P3.F (PR #31, super-review APPROVE)** — bundled (P3.F is the over-
+  budget visual variant of P3.B). New `useMonthlyBudgets` hook + `budgetStatus`
+  lib + `BudgetForm` + `BudgetVsActual`. Wire-in note: BudgetVsActual is scoped
+  to **monthly** expenses (not category-filtered) — budget covers the whole
+  month regardless of view filter; comment in App.tsx explains. CR raised 5
+  nits; 1 applied (brittle innerHTML purity test → no-throw assertion), 4
+  declined with reasons logged in the PR body (negative actual gated upstream;
+  error-detail capture would diverge from useExpenses/useCategories pattern).
+- **P3.D (PR #32, super-review APPROVE)** — Pure SVG bar chart sharing the
+  `spendingByCategory` data with the existing text list. Both live under one
+  "Spending by category" heading. CR raised 1 nit (separate heading) — declined
+  because the chart has its own SVG aria-label; would duplicate. Super-reviewer
+  flagged a follow-up: `<text>` labels + bar `aria-label` may double-announce
+  to screen readers — consider `aria-hidden` on the `<text>` later.
+
+**Phase 3 closed.** All 6 features (P3.A–P3.F) shipped across iters 10 and 11.
+
+**Process-fix RE-applied (and FAILED) this iter:** I logged "use explicit file
+paths in `git add`, not `-A`" after iter-010's mishap — and immediately repeated
+the mistake on the P3.B+F branch. Recovered via the same fresh-branch route
+(`loop/iter-011-p3bf-budgets` replaces `loop/iter-011-p3bf-budget-vs-actual`).
+**The lesson is real but the rule wasn't enforced**; next iter's first CR-nit
+commit will deliberately stage by path. Consider adding a CLAUDE.md note if it
+happens a third time.
+
+**iter-012 trigger:** Phase 3 → Phase 4 is a phase boundary. The mandatory
+arch-pass via the `improve-codebase-architecture` skill fires next iter before
+Phase 4 (Polish & power features) starts.
+
 

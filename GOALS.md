@@ -29,13 +29,16 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 
 - [done] P3.A — Monthly budget model — `MonthlyBudget` + IndexedDB store (DB v3),
   upsert semantics keyed by month. — iter-010 / PR #27
-- [ ] P3.B — Budget vs actual — This month's spend against budget with a progress bar.
+- [done] P3.B — Budget vs actual — Progress bar of monthly spend vs budget;
+  budget is scoped to the month (not the category filter). — iter-011 / PR #31
 - [done] P3.C — Month switcher — `MonthSwitcher` + `selectedMonth` state in App;
   filter pipeline composes `byMonth → byCategory`. — iter-010 / PR #29
-- [ ] P3.D — Spending chart — Simple bar chart of spend per category for the selected month.
+- [done] P3.D — Spending chart — Pure SVG bar chart of spend per category for
+  the visible slice. — iter-011 / PR #32
 - [done] P3.E — Monthly summary — `summarizeExpenses` + `MonthlySummary`
   (total / average / count) wired to the visible slice. — iter-010 / PRs #28 & #29
-- [ ] P3.F — Over-budget warning — Visual warning when spend exceeds the month's budget.
+- [done] P3.F — Over-budget warning — `--over` modifier on progress bar +
+  `role="alert"` text when actual > budget. Bundled with P3.B. — iter-011 / PR #31
 
 ## Phase 4 — Polish & power features
 
