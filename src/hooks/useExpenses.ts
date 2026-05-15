@@ -12,11 +12,18 @@ import {
   updateExpense,
 } from '../db/expenseStore'
 
+export interface BulkAddResult {
+  added: number
+  skipped: number
+  errors: string[]
+}
+
 export interface UseExpenses {
   expenses: Expense[]
   loading: boolean
   error: string
   add: (input: ExpenseInput) => Promise<boolean>
+  addMany: (inputs: ExpenseInput[]) => Promise<BulkAddResult>
   update: (existing: Expense, input: ExpenseInput) => Promise<boolean>
   remove: (id: string) => Promise<boolean>
 }
@@ -56,6 +63,55 @@ export function useExpenses(): UseExpenses {
     }
   }
 
+  // Bulk-add many expenses. Each input is validated; failures are collected
+  // in `errors` (with the same messages createExpense throws). Valid rows are
+  // persisted in input order via addExpense; state is refreshed once after
+  // all writes complete. Never throws — the result tells you what happened.
+  async function addMany(inputs: ExpenseInput[]): Promise<BulkAddResult> {
+    if (inputs.length === 0) {
+      return { added: 0, skipped: 0, errors: [] }
+    }
+
+    const errors: string[] = []
+    const valid: Expense[] = []
+    // Errors are message-only — addMany has no notion of source row numbers
+    // (the caller maps inputs to CSV/UI lines). Adding "Row N:" here would
+    // be off-by-N once a CSV parser has already dropped invalid rows.
+    inputs.forEach((input) => {
+      try {
+        valid.push(createExpense(input))
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : 'Invalid expense.')
+      }
+    })
+
+    let added = 0
+    for (const expense of valid) {
+      try {
+        await addExpense(expense)
+        added++
+      } catch {
+        errors.push(`Failed to add expense: ${expense.description}`)
+      }
+    }
+    const skipped = inputs.length - added
+
+    try {
+      setExpenses(await getAllExpenses())
+    } catch {
+      // Best-effort refresh; surface as part of error summary below.
+      errors.push('Failed to refresh expense list.')
+    }
+
+    if (errors.length > 0) {
+      setError(`Imported ${added}. Skipped ${skipped}.`)
+    } else {
+      setError('')
+    }
+
+    return { added, skipped, errors }
+  }
+
   async function update(
     existing: Expense,
     input: ExpenseInput,
@@ -90,5 +146,5 @@ export function useExpenses(): UseExpenses {
     }
   }
 
-  return { expenses, loading, error, add, update, remove }
+  return { expenses, loading, error, add, addMany, update, remove }
 }

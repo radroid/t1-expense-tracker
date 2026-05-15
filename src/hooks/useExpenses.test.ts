@@ -131,6 +131,57 @@ describe('useExpenses', () => {
     expect(result.current.expenses[0].description).toBe('Coffee')
   })
 
+  it('addMany([]) returns { added: 0, skipped: 0, errors: [] } and does not touch state', async () => {
+    const { result } = renderHook(() => useExpenses())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const before = result.current.expenses
+    let res!: Awaited<ReturnType<typeof result.current.addMany>>
+    await act(async () => {
+      res = await result.current.addMany([])
+    })
+    expect(res).toEqual({ added: 0, skipped: 0, errors: [] })
+    expect(result.current.expenses).toBe(before)
+    expect(result.current.error).toBe('')
+  })
+
+  it('addMany() with all-valid inputs persists each and reports added count', async () => {
+    const { result } = renderHook(() => useExpenses())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    let res!: Awaited<ReturnType<typeof result.current.addMany>>
+    await act(async () => {
+      res = await result.current.addMany([
+        { amount: 10, description: 'Coffee', date: '2026-05-15' },
+        { amount: 12, description: 'Lunch', date: '2026-05-15' },
+      ])
+    })
+    expect(res.added).toBe(2)
+    expect(res.skipped).toBe(0)
+    expect(res.errors).toEqual([])
+    expect(result.current.expenses).toHaveLength(2)
+    expect(result.current.error).toBe('')
+  })
+
+  it('addMany() with mixed validity persists the valid rows and reports skipped + errors', async () => {
+    const { result } = renderHook(() => useExpenses())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    let res!: Awaited<ReturnType<typeof result.current.addMany>>
+    await act(async () => {
+      res = await result.current.addMany([
+        { amount: 10, description: 'Coffee', date: '2026-05-15' },
+        { amount: -1, description: 'Bad', date: '2026-05-15' },
+        { amount: 12, description: 'Lunch', date: '2026-05-15' },
+      ])
+    })
+    expect(res.added).toBe(2)
+    expect(res.skipped).toBe(1)
+    expect(res.errors).toHaveLength(1)
+    expect(result.current.expenses).toHaveLength(2)
+    expect(result.current.error).not.toBe('')
+  })
+
   it('remove() deletes and returns true; sets error + returns false on store failure', async () => {
     const { result } = renderHook(() => useExpenses())
     await waitFor(() => expect(result.current.loading).toBe(false))

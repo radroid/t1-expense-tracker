@@ -15,3 +15,11 @@
 .empty {
   color: var(--app-muted-fg);
 }
+
+.app__csv {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}

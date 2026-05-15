@@ -14,6 +14,8 @@ import { BudgetVsActual } from './components/BudgetVsActual'
 import { SearchBox } from './components/SearchBox'
 import { DateRangeFilter } from './components/DateRangeFilter'
 import { ThemeToggle } from './components/ThemeToggle'
+import { ExportButton } from './components/ExportButton'
+import { ImportButton } from './components/ImportButton'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
 import { totalAmount } from './lib/totals'
@@ -128,6 +130,10 @@ function App() {
           />
           <SearchBox value={searchTerm} onChange={setSearchTerm} />
           <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <div className="app__csv">
+            <ExportButton expenses={visibleExpenses} />
+            <ImportButton onImport={expensesHook.addMany} />
+          </div>
           <ExpenseList
             expenses={visibleExpenses}
             categories={categoriesHook.categories}
