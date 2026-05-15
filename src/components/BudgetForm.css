@@ -55,3 +55,26 @@
 .budget-form__actions button:hover {
   filter: brightness(0.92);
 }
+
+@media (max-width: 768px) {
+  .budget-form {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .budget-form__field input {
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .budget-form__actions {
+    flex-direction: column;
+  }
+
+  .budget-form__actions button {
+    width: 100%;
+  }
+}

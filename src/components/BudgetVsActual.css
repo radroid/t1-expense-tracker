@@ -61,3 +61,14 @@
   font-size: 0.9rem;
   color: var(--app-muted-fg);
 }
+
+@media (max-width: 480px) {
+  .budget-vs-actual__row {
+    gap: 0.5rem;
+  }
+
+  .budget-vs-actual__label,
+  .budget-vs-actual__value {
+    font-size: 0.9rem;
+  }
+}

@@ -18,3 +18,13 @@
   font-weight: 700;
   color: var(--app-fg);
 }
+
+@media (max-width: 480px) {
+  .running-total__label {
+    font-size: 0.8125rem;
+  }
+
+  .running-total__amount {
+    font-size: 1.25rem;
+  }
+}

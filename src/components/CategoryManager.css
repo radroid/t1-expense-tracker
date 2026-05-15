@@ -48,3 +48,14 @@
   color: var(--app-error);
   margin: 0;
 }
+
+@media (max-width: 480px) {
+  .category-manager__row {
+    flex-wrap: wrap;
+  }
+
+  .category-manager__name {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+}

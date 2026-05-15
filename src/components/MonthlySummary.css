@@ -30,3 +30,14 @@
   font-size: 0.9rem;
   color: var(--app-muted-fg);
 }
+
+@media (max-width: 480px) {
+  .monthly-summary__row {
+    gap: 0.5rem;
+  }
+
+  .monthly-summary__label,
+  .monthly-summary__value {
+    font-size: 0.9rem;
+  }
+}

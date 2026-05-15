@@ -57,3 +57,17 @@
   margin: 0.25rem 0 0 1rem;
   padding: 0;
 }
+
+@media (max-width: 480px) {
+  .import-button {
+    width: 100%;
+  }
+
+  .import-button__label,
+  .import-button__cta {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+}

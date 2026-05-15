@@ -16,10 +16,51 @@
   color: var(--app-muted-fg);
 }
 
+.app__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .app__csv {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
   margin: 0.75rem 0;
+}
+
+@media (max-width: 768px) {
+  .app {
+    padding: 1.5rem 1rem;
+  }
+
+  .app__header {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 1rem 0.75rem;
+  }
+
+  .app h1 {
+    font-size: 1.5rem;
+  }
+
+  .app__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .app__csv {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .app__csv > * {
+    width: 100%;
+  }
 }

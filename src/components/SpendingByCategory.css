@@ -38,3 +38,14 @@
   font-size: 0.9rem;
   color: var(--app-muted-fg);
 }
+
+@media (max-width: 480px) {
+  .spending-by-category__row {
+    gap: 0.5rem;
+  }
+
+  .spending-by-category__name,
+  .spending-by-category__total {
+    font-size: 0.9rem;
+  }
+}
