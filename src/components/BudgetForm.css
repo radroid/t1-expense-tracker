@@ -1,0 +1,55 @@
+.budget-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 24rem;
+}
+
+.budget-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.budget-form__field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.budget-form__field input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.budget-form__field input:focus-visible {
+  outline: 2px solid #2d6cdf;
+  outline-offset: 2px;
+}
+
+.budget-form__error {
+  margin: 0;
+  color: #c0392b;
+  font-size: 0.875rem;
+}
+
+.budget-form__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.budget-form__actions button {
+  padding: 0.5rem 1rem;
+  min-height: 2.75rem;
+  border: none;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+  background: #2d6cdf;
+  color: #fff;
+}
+
+.budget-form__actions button:hover {
+  background: #2457b8;
+}

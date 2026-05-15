@@ -1,0 +1,63 @@
+.budget-vs-actual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.budget-vs-actual__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.budget-vs-actual__label {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.budget-vs-actual__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #111827;
+}
+
+.budget-vs-actual__bar-track {
+  position: relative;
+  width: 100%;
+  height: 0.75rem;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.budget-vs-actual__bar {
+  height: 100%;
+  background: #2d6cdf;
+  border-radius: inherit;
+  transition: width 200ms ease-out;
+}
+
+.budget-vs-actual__bar--over {
+  background: #dc2626;
+}
+
+.budget-vs-actual__remaining {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-vs-actual__warning {
+  margin: 0;
+  color: #dc2626;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.budget-vs-actual__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
