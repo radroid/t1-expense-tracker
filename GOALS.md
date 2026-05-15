@@ -117,29 +117,86 @@ the post-arch handoff into concrete items below.
   rendering components. NOT per-expense for v1 (per-expense without
   conversion rates would mislead totals). — iter-022 / PR #56
 
-## Phase 7 — TBD (themes triaged; concrete items defined at iter-033 planning)
+## Phase 7 — Power-user productivity & import flexibility
 
-iter-030 Phase-6 → Phase-7 arch pass triaged candidates. iter-031 +
-iter-032 are arch-driven refactors (TD.13 + TD.14, then a11y-P1
-bundle) before Phase 7 feature work starts. Phase 7 themes from
-the arch pass:
+iter-033 planning iter triaged the 5 themes from the iter-030
+Phase-6 → Phase-7 arch pass. Four feature items + one cleanup
+bundle picked; calendar-view deferred to Phase 8 (cosmetic, low
+locality leverage).
 
-1. **Recurring-template EDIT** — currently add+remove only;
-   reuses ExpenseForm consolidation pattern (TD.3).
-2. **Undo stack for mutations** — local-only UX; `useStoredCollection`
-   seam already invested.
-3. **Bank-CSV import format presets** — concrete user value; unlocks
-   TD.21 (CSV core).
-4. **Local-only categorization heuristics** — rule-based ("description
-   contains STARBUCKS → Coffee"); pure-function lib; well within
-   the local-only charter.
-5. **Calendar-view tab** — pure-render on existing data; concentrates
-   date-axis logic.
+- [ ] P7.A — Recurring-template EDIT. RecurringManager today
+  supports add + remove only. Add inline Edit/Save/Cancel per row,
+  mirroring the ExpenseForm edit pattern (TD.3 consolidation
+  template). New `<RecurringForm>` (or inline editor in
+  RecurringManager) reusing the existing add-form validation
+  (`validateRecurringTemplateInput`). `useRecurringTemplates.update`
+  exists via `useStoredCollection`; verify it surfaces correctly.
+  No schema change. Estimate: 1 iter (small/medium fat-iter slot).
 
-Recommendation: pick 2-3 feature items + the iter-032 a11y-P1
-polish bundle for Phase 7. Concrete `P7.A`...`P7.E` items written
-by iter-033 planning iter. Phase 7 is OPEN; iter-031 + iter-032
-ship pre-Phase-7 refactors.
+- [ ] P7.B — Undo stack (single-step last-mutation). Local-only
+  UX win that touches every mutation surface. Pattern: new
+  `useUndoStack` hook holds last `UndoAction = {label, inverse:
+  () => Promise<void>}`; every mutation pushes its inverse. New
+  `<UndoToast>` component (snackbar with "Undo" button +
+  auto-dismiss after ~6s). Scope: expense add/delete/edit,
+  category add/delete/rename, budget set, categoryBudget set,
+  recurring-template add/delete/edit. RESTORE is intentionally
+  NOT undoable (already destructive-with-dialog confirmation).
+  No schema change. Decision pending iter-034: per-domain
+  (each hook owns its inverse) vs centralized (App threads
+  `undo.push` into every handler) — lean: centralized push,
+  per-domain inverse closures.
+
+- [ ] P7.C — Bank-CSV import presets. ImportButton currently
+  requires the app's 4-column CSV format. Add a preset selector
+  for common bank formats (Chase, Citibank, generic). New
+  `src/lib/csvCore.ts` (promotes TD.21 — 3rd consumer arrives).
+  New `src/lib/bankPresets.ts` exporting declarative
+  `BankPreset = {id, label, headerSig: string[], columnMap, signConvention}`
+  records and a `detectPreset(headerRow): BankPreset | null`.
+  UI: preset selector inside ImportButton — auto-detect by
+  header match, manual-select fallback. No schema change.
+
+- [ ] P7.D — Local categorization heuristics. Rule-based,
+  local-only — "description contains STARBUCKS → Coffee" — fits
+  the charter exactly. New `src/lib/categorize.ts` exporting
+  pure `suggestCategory(description: string, rules:
+  CategorizationRule[]): CategoryId | null`. New
+  `categorizationRules` IDB store (**DB v5 → v6**;
+  **BACKUP_SCHEMA_VERSION 2 → 3** so backup round-trip
+  preserves rules). New `<CategorizationRules>` manager UI
+  (lazy-loaded, mirrors `<CategoryBudgetManager>`). Apply at
+  TWO points: ExpenseForm pre-fills `categoryId` when
+  description is typed; ImportButton bulk-import applies
+  suggestions before persisting. Estimate: 1 iter solo
+  (schema bump + new entity + UI + 2 integration points is
+  too much to fat-iter with other features).
+
+- [ ] P7.E — Polish/cleanup-bundle. Coherent sweep of the
+  deferred tech-debt nits that have accumulated:
+  - TD.12 (useStoredCollection refresh-after-mutation error
+    isolation — flip the `Promise<boolean>` contract);
+  - TD.17 (App-level category-delete guard test);
+  - TD.24 (`bindStore<T, K>` helper to remove the spy-friendly
+    closure boilerplate from 5 hooks);
+  - iter-032 super-reviewer nits (2 captured in blocks.md).
+  Defer to end-of-phase. Skip if Phase 7 stretches and
+  carry-forward to Phase 8.
+
+### Deferred to Phase 8
+
+- **Calendar-view tab** — concentrates date-axis logic but is
+  pure-render polish over data the app already exposes
+  (ExpenseList + filters). Visually compelling, low locality
+  leverage. Revisit after the productivity features (A..D) land.
+
+### Phase 7 iter cadence
+
+Target 3 iters: iter-034 = P7.A + P7.B fat-iter (independent
+file allowlists — RecurringManager vs new useUndoStack +
+UndoToast); iter-035 = P7.C solo (CSV core promotion +
+preset UI); iter-036 = P7.D solo (schema bump + entity + UI).
+P7.E end-of-phase polish iter or carry-forward.
 
 ## Phase 6 — Analytics, data portability, polish
 

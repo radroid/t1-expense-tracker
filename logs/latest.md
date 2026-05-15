@@ -1,87 +1,77 @@
 # Latest
 
-Latest: iter-032 — **a11y-P1 fat-iter shipped (PR #68).**
-Four sibling a11y refactors landed in one coherent sweep across
-the error/feedback surface. TD.18 (form-error-association across
-5 forms via new `<FieldError>` + `errorField` discriminator);
-TD.19 (skip-link as first child of `<main>`); TD.20 (persistent
-live region always in DOM); TD.23 (multi-error consolidation —
-errors collector replaces `||` cascade). 628 tests pass (+22).
-Main bundle 233.07 kB / gzip 71.94.
+Latest: iter-033 — **Phase 7 planning iter (bookkeeping).**
+Phase 7 titled "Power-user productivity & import flexibility";
+4 concrete items + 1 polish bundle written into GOALS.md:
+P7.A (Recurring EDIT), P7.B (Undo stack single-step), P7.C
+(Bank-CSV presets + TD.21 CSV core promotion), P7.D (local
+categorization heuristics, DB v5→v6 + backup schema 2→3), P7.E
+(polish/cleanup-bundle, optional). Calendar-view tab deferred
+to Phase 8.
 
-Stage: S3 (pre-Phase-7 refactors complete) — see
-  `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-033 — **Phase 7 PLANNING**. Triage the 5 themes
-  (recurring-template EDIT, undo stack, bank-CSV presets, local
-  categorization heuristics, calendar-view tab) into concrete
-  `P7.A`...`P7.E` items in GOALS.md. Pick 2–3 feature items
-  based on user value × independence. NO code this iter — pure
-  planning.
-Open first (for iter-033):
-  - `GOALS.md` — append `## Phase 7 — <title>` with concrete
-    `P7.A`...`P7.E` items; promote whichever themes earn their
-    keep.
-  - `ARCHITECTURE.md` — verify the seams the chosen themes
-    will need (`useStoredCollection.update` for recurring EDIT;
-    `tokenizeCsv` for bank-CSV presets; `month.ts` for
-    calendar-view).
-  - `logs/iter-032.md` — open questions (1)..(5) above are the
-    triage spine.
-Open blocks: none. iter-032 super-reviewer logged under
-  `## iter-032 — super-reviewer (a11y-P1 bundle: TD.18 +
-  TD.19 + TD.20 + TD.23)` with APPROVE-WITH-NITS high-
-  confidence. Two minor nits captured for carry-forward.
+Stage: S3 (Phase 7 OPEN) — see `.loop/state.json`
+  (`pr_mode: true`, `pr_size_policy: fat`)
+Next step: iter-034 — **P7.A + P7.B fat-iter**. Two parallel
+  Class B sub-agents with disjoint file allowlists:
+    - P7.A owns RecurringManager (+ optional new RecurringForm)
+    - P7.B owns new useUndoStack hook + UndoToast component +
+      App.tsx mutation-handler wiring.
+  App.tsx may need main-agent integration if P7.A and P7.B
+  collide there (established pattern).
+Open first (for iter-034):
+  - P7.A: `src/components/RecurringManager.{tsx,test.tsx,css}`,
+    potentially new `src/components/RecurringForm.{tsx,test.tsx,css}`.
+  - P7.B: new `src/hooks/useUndoStack.{ts,test.ts}`, new
+    `src/components/UndoToast.{tsx,test.tsx,css}`, `src/App.tsx`
+    (push inverses into every mutation handler).
+Open blocks: none. iter-033 produced no review (planning iter,
+  no code, no sub-agents).
 
-Test gate: 628 tests pass. `npm run build` main JS 233.07 kB /
-  gzip 71.94 kB. Lint clean.
-Push: PR #68 squash-merged.
+Test gate: 628 tests pass (unchanged from iter-032). No build
+  run (no code). Lint untouched.
+Push: planning commit goes straight to main (no feature
+  shipped → no PR per feature-pr-mode.md scope).
 
-Last-iter shipped (PR #68):
-- `src/components/FieldError.{tsx,test.tsx,css}` (new; 5 specs)
-  — persistent slot, `aria-live="polite"`, toggles
-  `role="alert"` when message non-empty. min-height reserves
-  layout to prevent jump.
-- 5 forms gained `errorField` discriminator + per-input
-  `aria-invalid` + `aria-describedby="<form>-error"`:
-  BudgetForm, ExpenseForm, CategoryManager,
-  CategoryBudgetManager, RecurringManager. CategoryManager
-  Rename reverts to canonical name on empty submit.
-- `src/App.tsx` — skip-link added as first child of `<main>`;
-  new `<section id="main-content" aria-label="Expense list">`
-  wraps ExpenseList; `errors: string[]` collector replaces
-  `error = a || b || c || ...` cascade; persistent
-  `<div role="alert" aria-live="assertive" aria-atomic="true">`
-  always rendered.
-- `src/App.css` — `.skip-link` with `transform:
-  translateY(-200%)` at rest, `:focus` reveals.
-- 628 tests pass (+22). Main 233.07/71.94. Lint clean.
+Last-iter shipped (planning, no PR):
+- `GOALS.md` — `## Phase 7 — Power-user productivity & import
+  flexibility` section with P7.A..P7.E concrete items + Phase
+  8 deferral block + iter cadence plan.
+- `logs/iter-033.md` — planning rationale + iter-034 handoff.
+- `logs/latest.md` — refreshed for iter-034.
+- `.loop/state.json` — iter 32 → 33.
 
-Operational notes for iter-033:
-  - **Cadence:** 1500s (plan-iter — thinking work, not impl).
+Operational notes for iter-034:
+  - **Cadence:** 600s (impl-iter; fat-iter with 2 parallel
+    Class B sub-agents).
   - **Process-fix held**: explicit-path staging on every commit.
-    Eighteen-iter streak.
+    Nineteen-iter streak.
   - `vite.config.ts` `fileParallelism: false` still
     load-bearing.
   - **localStorage shim centralised** in `src/test/setup.ts`.
-  - **Seams in play (post-iter-032):** `store.ts` (IDB),
+  - **Seams in play (post-iter-033):** `store.ts` (IDB),
     `useStoredCollection` (hook), `errorMessages.ts`
     (messaging), `currency.ts` (formatter), `downloadFile.ts`
     (download), `useFilePicker.ts` + `useParsedFileImporter.ts`
-    (import), `FieldError.tsx` (a11y error slot).
+    (import), `FieldError.tsx` (a11y error slot). iter-034
+    adds `useUndoStack.ts` (mutation-inverse channel) and
+    potentially `RecurringForm.tsx` (form consolidation).
   - **DB version still 5**, backup `BACKUP_SCHEMA_VERSION`
-    still 2. iter-033 is pure planning — no schema changes.
-  - **Phase 7 themes from iter-030 arch pass:** 5 candidates
-    listed in GOALS.md `## Phase 7 — TBD` section. Triage
-    them into concrete P7.A..P7.E this iter.
+    still 2. iter-034 is presentation/hook-layer; schema bump
+    waits for iter-036 (P7.D).
 
-Open questions for iter-033:
-  (1) How many P7 items? Lean: 3 feature + maybe-bundle
-      polish. 5 is too many; 2 risks under-scoping the phase.
-  (2) Recurring EDIT — include? Lean: yes (cheapest, reuses
-      ExpenseForm consolidation pattern).
-  (3) Bank-CSV presets — include? Lean: yes (concrete user
-      value, unlocks TD.21 promotion).
-  (4) Calendar-view — include? Lean: defer to P8 (visually
-      compelling but cosmetic; less locality leverage).
-  (5) Undo stack — include? Lean: yes (touches the
-      mutation channel, validates `useStoredCollection`).
+Open questions for iter-034:
+  (1) Extract `<RecurringForm>` (like `<ExpenseForm>`) or
+      inline-edit fields in RecurringManager rows? Lean:
+      extract — earns locality at 2 consumers (add path +
+      edit path).
+  (2) UndoToast position: bottom-center fixed vs top-right
+      slide-in? Lean: bottom-center fixed (mobile-first;
+      doesn't collide with header).
+  (3) Auto-dismiss timeout: 5s vs 6s vs 8s? Lean: 6s
+      (Material Design Snackbar guidance).
+  (4) Toast queue policy: stack multiple inverses or
+      only-latest? Lean: only-latest — single-step undo,
+      new mutation REPLACES pending undo.
+  (5) Should RESTORE push an undo action? Lean: NO
+      (already destructive-with-dialog; undo for a destructive
+      data-replace would confuse the dialog gate).
