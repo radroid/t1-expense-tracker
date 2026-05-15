@@ -579,3 +579,55 @@ cleanup iter.
 iter-018 is a single-feature impl iter shipping TD.7 (+ TD.8 if scope
 permits). The arch-pass itself produces no code changes — only this
 log entry, GOALS.md TD additions, and the iter-017 closeout PR.
+
+---
+
+## iter-018 super-reviewer notes (PR #48 — TD.7 + TD.8)
+
+**Verdict: APPROVE (high confidence).**
+
+### Verified
+
+- **TD.12 holds**: `git show main:src/hooks/useExpenses.ts` confirmed the
+  OLD hook used the same `try { await store.X; setItems(await getAll()) }
+  catch { setError(failureMsg) }` pattern. Refactor preserves pre-existing
+  behavior. CR's 4 MAJOR findings are pre-existing TD, correctly deferred.
+- **Behavior parity** on 3 representative paths: valid input → returns
+  true + refreshes + clears error; invalid input → domain validator
+  message surfaces; store-failure → exact `messages.add` (`"Failed to add
+  expense."`).
+- **errorMessages strings**: verbatim match against `git show main:src/
+  hooks/use*.ts | grep "Failed to"` for all four hooks.
+- **`Object.isFrozen`** asserted for all four bundles.
+- **Store closure wrapping** verified in all four wrappers — vi.spyOn
+  compatibility preserved.
+- **Field aliases** (`expenses`/`categories`/`budgets`/`templates` →
+  `items`) returned by every wrapper; App.tsx untouched.
+- **No `*.test.ts` files modified** (only new test files added) — test-
+  preservation contract satisfied.
+
+### Findings (all info; no action required)
+
+- `useCategories.bootstrap`: discards `seedDefaultCategories`'s return
+  and the generic re-runs `getAllCategories` after. One redundant
+  round-trip on first mount vs old hook. Pure perf nit; behavior and
+  tests unaffected.
+- `useStoredCollection`'s optional-update fallback branch
+  (`messages.update ?? messages.add`) is unreachable from production
+  callers (budgets/templates wrappers don't expose `update` on their
+  public types) but tested as defense-in-depth.
+- `eslint-disable react-hooks/exhaustive-deps` on the load effect has a
+  5-line comment explaining the load-once intent.
+
+### Strengths
+
+- Clean separation: generic owns the {validate → write → refresh} shape;
+  wrappers own only domain-flavored surface (`set`, `rename`, `addMany`).
+  Each wrapper file shrank ~30-40%.
+- The two escape hatches (`setError`, `refresh`) are minimal and
+  well-justified by `addMany`'s bulk-summary flow.
+- Inline comments explain *why* (closures vs direct refs for spy compat;
+  exhaustive-deps suppression; bootstrap-then-getAll ordering; optional-
+  update fallback) — high signal-to-noise.
+- 15 new tests on the generic + 5 frozen/string-pinning tests give a
+  strong contract anchor without polluting domain test files.

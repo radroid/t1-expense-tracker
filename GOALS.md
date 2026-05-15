@@ -113,16 +113,15 @@ Candidate themes (to be triaged in the arch pass):
   reference its id (form silently falls back to Uncategorized). Decide: orphan + treat
   as uncategorized, or block deletion while in use, or reassign. Product decision
   (iter-006 peer review).
-- [ ] TD.7 — Generic `useStoredCollection<T, TInput>` hook — extract the
-  shared shape across `useExpenses`, `useCategories`, `useMonthlyBudgets`,
-  `useRecurringTemplates` (state machine + load + mutation orchestration
-  + last-error semantics). Domain hooks become thin wrappers that bind
-  the validator + store and expose domain-named methods. **Picked for
-  iter-018 by iter-017 arch pass.**
-- [ ] TD.8 — `src/lib/errorMessages.ts` constants map — lift the 12+
-  "Failed to load/add/save/delete X." strings out of hook
-  implementations. Bundle into TD.7's PR if scope allows. (iter-017 arch
-  pass)
+- [done] TD.7 — Generic `useStoredCollection<T, TInput, K>` hook —
+  extracted the shared CRUD-hook shape over a small `Store<T, K>`
+  interface; optional `update` + `bootstrap`; `setError` + `refresh`
+  escape hatches. Four domain hooks now thin wrappers (~50-90 LOC,
+  down from ~70-150). — iter-018 / PR #48
+- [done] TD.8 — `src/lib/errorMessages.ts` constants map — frozen
+  per-domain message bundles (`expenseMessages`, `categoryMessages`,
+  `budgetMessages`, `recurringTemplateMessages`). Bundled with TD.7.
+  — iter-018 / PR #48
 - [ ] TD.9 — Generic `makeStore<T>` IndexedDB factory — fold the
   uniform CRUD wrappers in `expenseStore`, `categoryStore`,
   `budgetStore`, `recurringTemplateStore` into one. Domain helpers
