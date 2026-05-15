@@ -892,3 +892,132 @@ iter-023 MUST start with the `improve-codebase-architecture` skill
 invocation (real tool call, not a concept). Result MUST be logged
 here with `**Source:** arch-pass`. This is a hard rule from the loop
 protocol.
+
+---
+
+## iter-023 — Phase-5 → Phase-6 arch pass
+
+**Source:** arch-pass (mandatory phase-boundary; `improve-codebase-architecture` skill invoked on entry).
+
+The Explore agent walked the codebase organically: 5 store files, the
+3-file backup pipeline, useStoredCollection + 5 consumers,
+useVisibleExpenses, currency.ts (incl. formatUSD shim), and
+Expense.recurring vestige. Six candidates surfaced; three pickups
+recommended for iter-024.
+
+### Candidate #1 — `makeStore<T, K>` factory  [PICKED for iter-024]
+
+**Files:** `expenseStore.ts`, `categoryStore.ts`, `budgetStore.ts`,
+`recurringTemplateStore.ts`, `categoryBudgetStore.ts`, `db.ts`.
+
+Five stores follow an identical template: `STORE_NAME` constant +
+4 CRUD wrappers around `withStore()`. Only `categoryStore.ts` earns
+its file via `seedDefaultCategories()`. The rest are pass-throughs.
+
+**Deletion test:** A single `makeStore<T, K>(name)` factory
+returning `{ add, getAll, update, remove }`. Domain helpers
+(`seedDefaultCategories`, composite-key plumbing) stay in their
+domain modules. Complexity concentrates in the factory.
+
+**Risk:** Future IDB-specific helpers (range queries, compound
+indices) would need escape hatches. Low today.
+
+**Status:** TD.9 (carried since iter-017; sequencing constraint
+"after useStoredCollection stabilizes" cleared 5 iters ago).
+**Pick for iter-024.**
+
+### Candidate #2 — `makeDownloadBlob` / download seam  [DEFER]
+
+**Files:** `ExportButton.tsx`, `BackupExport.tsx`.
+
+Both components duplicate the Blob+anchor+revoke dance. Six lines
+each; only filename + MIME differ. Lifting now is real but small.
+
+**Risk:** Premature without a third consumer. Defer until P6 lands
+a PDF/zip/etc. export and gives us 3 adapters.
+
+**Status:** **TD.13 (NEW)** — defer.
+
+### Candidate #3 — `useFileRestoreFlow` hook  [DEFER]
+
+**Files:** `ImportButton.tsx`, `BackupRestore.tsx`.
+
+File-picker + parse + optional confirmation + execute. The dialog
+path only `BackupRestore` uses. Hook would need a "no dialog"
+mode for ImportButton — knob, not a problem, but adds weight.
+
+**Risk:** Over-engineering if only one consumer needs the dialog
+branch. Defer until a 3rd consumer commits (e.g. bulk-replace CSV
+import).
+
+**Status:** **TD.14 (NEW)** — defer.
+
+### Candidate #4 — Delete `formatUSD` shim  [PICKED for iter-024]
+
+**Files:** `currency.ts`, currency.test.ts.
+
+Zero shipping callers as of P5.E. Shim was kept as a migration
+bridge; that work is done. Stale test descriptions in
+MonthlySummary.test.tsx + SpendingChart.test.tsx still reference
+"formatUSD" but bodies use formatCurrency.
+
+**Deletion test:** Zero complexity relocates. Pure subtraction.
+
+**Status:** **TD.16 (NEW)** — picked. Pair with TD.9 + TD.11 as
+"cleanup week".
+
+### Candidate #5 — Drop `Expense.recurring?: boolean`  [PICKED for iter-024]
+
+**Files:** `expense.ts`, `csv.ts`, `csv.test.ts`, `expense.test.ts`.
+
+Vestigial since P4.E (iter-016). `sourceTemplateId` superseded it.
+IDB is schema-less; persisted records keep the field as inert
+property; first `applyExpenseEdit` drops it via clean-shape.
+
+**Deletion test:** Removes ~5 test assertions, simplifies
+applyExpenseEdit's preservation branch.
+
+**Risk:** None. CSV readers ignore missing field; writers omit.
+
+**Status:** TD.11 (carried since iter-017). **Pick for iter-024.**
+
+### Candidate #6 — `backupPipeline.ts` barrel  [DEFER (or bundle)]
+
+**Files:** `backup.ts`, `parseBackup.ts`, `restoreBackup.ts`,
+`BackupExport.tsx`, `BackupRestore.tsx`.
+
+Three lib files + two components touch the snapshot shape. A
+single `backupPipeline.ts` would re-export `BackupSnapshot`,
+build/format/parse + a `parseAndValidate` helper. Future
+schema bumps land in one file.
+
+**Risk:** Barrel re-exports can lightweight. Stay slim if applied.
+
+**Status:** **TD.15 (NEW)** — defer to a backup-schema-evolution
+iter, OR bundle into iter-024 if scope allows.
+
+### Decision summary
+
+| # | Title | Status | TD | iter-024 |
+|---|---|---|---|---|
+| 1 | `makeStore<T, K>` factory | OPEN since iter-017 | TD.9 | **PICK** |
+| 2 | makeDownloadBlob seam | DEFER (need 3rd consumer) | TD.13 | — |
+| 3 | useFileRestoreFlow hook | DEFER (need 3rd consumer) | TD.14 | — |
+| 4 | Delete formatUSD shim | OPEN | TD.16 | **PICK** (pair) |
+| 5 | Drop Expense.recurring | OPEN since iter-017 | TD.11 | **PICK** (pair) |
+| 6 | backupPipeline barrel | OPEN | TD.15 | bundle if scope allows |
+
+iter-024 = **cleanup-week**: TD.9 (primary refactor) + TD.11 + TD.16
+(both pure subtractions). TD.15 bundles in if the diff stays small.
+The arch pass itself ships no code — just this log, GOALS TD
+additions, and the iter-023 closeout PR.
+
+### Re-evaluation of iter-017 deferrals
+
+- **TD.10 (expenseVisibility.ts pipeline)** — Phase 5 did NOT surface a
+  non-React consumer (CSV export reads through component props; backup
+  reads from hook items, not the pipeline). Continue deferring.
+- **TD.12 (useStoredCollection refresh-after-mutation isolation)** —
+  Five consumers + five iters since the refactor. No reported
+  symptom; behavior preserved by design. Reopen if a real-world case
+  surfaces; until then, deferring is fine.
