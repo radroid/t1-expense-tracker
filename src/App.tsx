@@ -75,7 +75,14 @@ function App() {
     const next = hash === '' ? '' : `#${hash}`
     if (typeof window !== 'undefined' && window.location.hash !== next) {
       // replaceState avoids polluting the back stack on every keystroke.
-      window.history.replaceState(null, '', next === '' ? ' ' : next)
+      // When clearing, target the current path + search so the URL retains
+      // its base — passing a single space (as an earlier revision did) is
+      // unconventional and would leave a literal " " in the URL bar.
+      const targetUrl =
+        next === ''
+          ? `${window.location.pathname}${window.location.search}`
+          : next
+      window.history.replaceState(null, '', targetUrl)
     }
   }, [selectedMonth, filter, searchTerm, dateRange])
 

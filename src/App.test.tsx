@@ -10,7 +10,7 @@ beforeEach(async () => {
   // Reset URL hash — P5.A persists filter state there, and jsdom's
   // location object outlives a single test (`window.history.replaceState`
   // in one test leaks into the next).
-  window.history.replaceState(null, '', ' ')
+  window.location.hash = ''
   await new Promise<void>((resolve, reject) => {
     const req = indexedDB.deleteDatabase('expense-tracker')
     req.onsuccess = () => resolve()
@@ -390,14 +390,19 @@ describe('App', () => {
     const search = await screen.findByLabelText('Search')
     expect((search as HTMLInputElement).value).toBe('Coffee')
 
-    // The month switcher reflects the hash-supplied month.
+    // The MonthSwitcher label reflects the restored value — proves the
+    // URL state actually drives the UI, not just the hash that
+    // round-trips on the next effect run. "May 2026" is the
+    // Intl.DateTimeFormat label for 2026-05.
+    expect(screen.getByText('May 2026')).toBeInTheDocument()
+
     expect(window.location.hash).toContain('month=2026-05')
 
     unmount()
     await new Promise<void>((r) => setTimeout(r, 0))
   })
 
-  it('writes filter changes back to the URL hash (P5.A)', async () => {
+  it('writes the search term back to the URL hash (P5.A)', async () => {
     const user = userEvent.setup()
     await renderApp()
 
