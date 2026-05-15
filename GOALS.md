@@ -58,8 +58,15 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] P4.F — Dark mode — `ThemeToggle` + `src/lib/theme.ts` + CSS custom
   properties; persisted to localStorage; first-paint applied in `main.tsx`.
   Component CSS not yet themable — see P4.I follow-up. — iter-013 / PR #37
-- [ ] P4.G — Empty + loading states — Polished empty and loading states across surfaces.
-- [ ] P4.H — Responsive layout — Mobile-friendly layout down to 480px.
+- [done] P4.G — Empty + loading states — Shared `<EmptyState>` (role=status,
+  title/hint/icon) + `<Spinner>` (role=status, sm/md/lg, prefers-reduced-
+  motion fallback). Wired into ExpenseList, SpendingByCategory,
+  MonthlySummary, SpendingChart, and App.tsx loading branch. — iter-015 / PR #42
+- [done] P4.H — Responsive layout — ≤768px (tablet) and ≤480px (mobile)
+  breakpoints across App.css + 17 component CSS files. Header stacks
+  vertically on mobile; forms become full-width; ExpenseList rows wrap
+  via flex+order; touch targets ≥44px everywhere (incl. CategoryManager).
+  — iter-015 / PR #43
 - [done] P4.I — Themability sweep — 16 component CSS files + `src/index.css`
   migrated from hard-coded hex/rgb to `var(--app-*)`. 3 new vars added
   (`--app-accent-fg`, `--app-surface-2`, `--app-surface-hover`). Light

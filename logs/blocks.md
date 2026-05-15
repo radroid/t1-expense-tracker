@@ -376,3 +376,52 @@ All pass AA+.
 `.category-filter__select` and `.expense-list__delete` — both were
 missing; in dark mode the browser-default outline would have been
 near-invisible.
+
+---
+
+## iter-015 super-reviewer notes
+
+### PR #42 (P4.G — empty + loading polish) — APPROVE with nits
+
+**Findings (all nit / info):**
+
+- **App.tsx loading scope**: Spinner only shows in the filter/list block;
+  insights, BudgetForm, CategoryManager still render their own
+  EmptyStates briefly during initial hook resolution. Not a regression
+  vs main. Deferred as P4.G follow-up — gate the whole post-header content
+  tree on `loading`, or render the spinner inside each insight card.
+- **Copy inconsistency**: "No expenses yet." / "No spending yet." /
+  "No expenses this period." (periods) vs "No data to chart" (no period).
+  Deferred (cosmetic).
+- **Spinner aria-label + visually-hidden text BOTH load-bearing** — CR
+  declined. Per WAI-ARIA 1.2, role="status" is NOT a name-from-content
+  role; aria-label provides the accessible name, the visually-hidden span
+  provides a visible cue under prefers-reduced-motion. Documented in
+  Spinner.tsx comment so future review passes don't re-litigate.
+
+### PR #43 (P4.H — responsive layout) — APPROVE after fix
+
+**Blocking finding (applied):**
+
+- **CategoryManager touch targets** — the only interactive cluster in the
+  diff without the ≥44px treatment given to siblings (forms, filters,
+  CSV row). Fix: ≤480px block adds `min-height: 44px; box-sizing:
+  border-box;` to buttons + inputs; add-form row stretches its
+  submit + name input to 100% width. Per-row swatch (color picker) and
+  rename/delete buttons share the same min-height; row uses flex-wrap so
+  they cluster sensibly.
+
+**Findings (nit / info, all addressed during CR triage before super-review):**
+
+- SpendingChart 11px → 0.75rem at ≤480px (a11y + rem consistency).
+- ExpenseList redundant `gap` at ≤480px (already set at ≤768px).
+- ExportButton missing `box-sizing: border-box` on full-width state.
+- ExpenseForm + BudgetForm: `box-sizing` hoisted to base input selectors.
+
+### Cross-PR coherence — APPROVE
+
+- File overlap check empty (`comm -12` on the two diffs).
+- Disjoint allowlists honored end-to-end.
+- Combined behavior at 480px: stacked header, full-width filters/buttons,
+  EmptyState cards render coherently with dashed border; Spinner ("lg",
+  40px ring) fits 360px viewport.

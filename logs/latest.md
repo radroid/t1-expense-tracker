@@ -1,60 +1,67 @@
 # Latest
 
-Latest: iter-014 — Phase 4 fat-iter. P4.C+D (CSV export+import via shared
-`src/lib/csv.ts` + `useExpenses.addMany`) bundled (PR #39); P4.I
-(themability sweep — 16 component CSS files + 3 new vars) shipped (PR #40).
-Dark mode now renders coherently across the entire app.
+Latest: iter-015 — Phase 4 fat-iter. P4.G (empty/loading polish — shared
+`<EmptyState>` + `<Spinner>`) shipped (PR #42); P4.H (responsive layout
+≤768px + ≤480px) shipped (PR #43). The app is now mobile-friendly and
+has consistent empty/loading UX.
 
 Stage: S3 (feature dev) — see `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-015 — fat-iter candidates: **P4.G (empty + loading polish)** +
-  **P4.H (responsive layout down to 480px)**. Bundle as 2 PRs (or 1 if scope
-  permits — they're orthogonal: P4.G touches per-component empty states,
-  P4.H touches App.css + media queries). P4.E (recurring expenses) is the
-  biggest remaining slice; ship it solo next iter after this one.
-Open first: `GOALS.md`, `src/App.css` (P4.H starting point — responsive
-  max-width + grid), the components with custom `__empty` classes
-  (`ExpenseList`, `SpendingByCategory`, `MonthlySummary`), the loading
-  surface (App.tsx `<p className="loading">Loading…</p>`).
-Open blocks: none open — see `logs/blocks.md` for iter-014 super-reviewer
-  notes (P4.I brand-accent hue shift design-choice flag).
+Next step: iter-016 — single-feature iter for **P4.E (recurring expenses)**,
+  the only remaining Phase 4 item. Vertical slice: new
+  `src/db/recurringTemplateStore.ts` (DB v3 → v4), `src/lib/recurring.ts`
+  (rollover logic), `src/hooks/useRecurringTemplates.ts`, and a UI surface
+  (RecurringManager component or section in CategoryManager). After P4.E,
+  iter-017 MUST run the mandatory phase-boundary arch pass before any
+  Phase 5 feature work.
+Open first: `GOALS.md`, `src/lib/expense.ts` (note the existing optional
+  `recurring?: boolean` — decide if we keep, drop, or repurpose),
+  `src/db/db.ts` (schema version bump), `src/hooks/useExpenses.ts`
+  (rollover hook calls into `addMany`).
+Open blocks: none open — see `logs/blocks.md` for iter-015 super-reviewer
+  notes (P4.G/P4.H combined APPROVE after CategoryManager touch-target
+  fix; trailing-period copy inconsistency + insights-section EmptyState-
+  during-load both deferred as nits).
 Carry-forward: TD.6 (category-deletion cascade — product decision pending);
-  deferred `useSpendingByCategory` (pair with P4.G); P3.D chart text
+  deferred `useSpendingByCategory` typing pair-up; P3.D chart text
   aria-hidden follow-up (low priority); centralise localStorage test shim
   in src/test/setup.ts when a 2nd consumer lands; DateRangeFilter from>to
-  normalize (super-review nit, low priority); CSV-injection prefix-escape
-  on export (low priority for local-only app).
-Test gate: 308 tests pass; `npm run build` + `npm run lint` clean.
+  normalize (low priority); CSV-injection prefix-escape on export (low
+  priority for local-only app); empty-state trailing-period normalize;
+  P4.G follow-up: loading spinner covers insights section during initial
+  hook resolution.
+Test gate: 316 tests pass; `npm run build` + `npm run lint` clean.
 Push: n/a — pr_mode, all work merged via PRs.
 
 Last-iter shipped:
-- P4.C + P4.D (#39): `src/lib/csv.ts` (formatExpensesCsv +
-  parseExpensesCsv); `useExpenses.addMany` + `BulkAddResult`; `ExportButton`
-  + `ImportButton` components; App.tsx wires both into a new `.app__csv`
-  row between filters and the list.
-- P4.I (#40): `src/index.css` adds `--app-accent-fg`, `--app-surface-2`,
-  `--app-surface-hover` across all 4 theme scopes. 16 component CSS files
-  migrated from hard-coded hex/rgb to vars. Two `:focus-visible` a11y
-  additions (CategoryFilter select, ExpenseList delete) — keyboard nav
-  was invisible in dark mode.
+- P4.G (#42): `src/components/EmptyState.{tsx,test.tsx,css}` +
+  `src/components/Spinner.{tsx,test.tsx,css}` (new); wired into
+  ExpenseList, SpendingByCategory, MonthlySummary, SpendingChart, and
+  App.tsx loading branch. +8 tests (5 EmptyState + 3 Spinner).
+- P4.H (#43): `@media (max-width: 768px)` + `@media (max-width: 480px)`
+  blocks across App.css + 17 component CSS files. Header stacks vertically
+  on mobile; forms full-width; ExpenseList rows wrap via flex+order;
+  ≥44px touch targets across forms, filters, CSV row, CategoryManager
+  (last one added per super-reviewer feedback). No new CSS vars.
 
-Operational notes for iter-015:
-  - **Process-fix held**: staged by explicit path on every commit this iter;
-    no `-A`, no recovery branches. Three-iter streak — keep it up.
-  - Dark mode is now visually coherent. Manual screenshot check in dark
-    mode (user-managed dev server) is the only outstanding verification.
+Operational notes for iter-016:
+  - **Process-fix held**: explicit-path staging on every commit. Four-iter
+    streak. Keep it up.
+  - **Phase 4 closes after P4.E** — iter-017 MUST start by invoking the
+    `improve-codebase-architecture` skill before any Phase 5 feature work.
+    This is a hard rule.
   - `vite.config.ts` `fileParallelism: false` still load-bearing — keep.
-  - Node 25 localStorage shim hack still present in test files using
-    localStorage. Centralise when a 2nd consumer lands.
-  - **addMany contract**: errors are message-only (no "Row N:" prefix).
-    Callers add row context if they need it. ImportButton does this for
-    parse errors (CSV line numbers) but NOT for addMany errors (since by
-    that point, valid rows have been filtered — addMany errors are
-    DB-failure rare).
+  - Node 25 localStorage shim hack still per-test-file. Centralise when
+    2nd consumer lands. P4.E recurring-templates state COULD be that 2nd
+    consumer if templates persist via localStorage instead of IndexedDB
+    — but DB is the right choice (the rest of the app uses it).
 
-Open questions for iter-015 (note in plan):
-  (1) P4.G: shared `<EmptyState>` component vs per-component `__empty`
-      classes? Lean: shared component (~6 consumers).
-  (2) P4.H: breakpoints — 480px only or also 768px? Lean both.
-  (3) P4.E (next iter after this): recurring as a new field on Expense
-      (boolean + frequency enum) OR a separate `recurring_template` table?
-      Lean: separate template + cron-style rollover in `useExpenses`.
+Open questions for iter-016 (note in plan):
+  (1) DB v3 → v4 migration: backfill the new templates store empty, or
+      seed from any expenses with `recurring:true`? Lean empty.
+  (2) Rollover trigger: on App mount, on MonthSwitcher month-change, or
+      both? Lean both with idempotency (don't double-generate).
+  (3) Frequency enum: monthly only for v1, or weekly+monthly? Lean
+      monthly only — simpler, ships faster, sufficient for the feature.
+  (4) UI placement: new RecurringManager component as its own section
+      next to CategoryManager, or fold into existing forms? Lean new
+      section — recurring is a distinct concept.
