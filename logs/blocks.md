@@ -751,3 +751,72 @@ log entry, GOALS.md TD additions, and the iter-017 closeout PR.
 - File picker resets between operations (`resetFileInput()` on every
   change) so re-selecting the same file re-fires onChange — a real
   UX trap avoided.
+
+---
+
+## iter-021 super-reviewer notes (PR #54 — P5.D per-category budgets)
+
+**Verdict: APPROVE (high confidence).**
+
+### Verified
+
+- **Composite-format locality**: grep confirms `categoryBudgetId(...)` is
+  the ONLY site that builds `${month}|${categoryId}` across `src/`.
+  Future format change is a one-file edit.
+- **CR's MAJOR fix applied**: `createCategoryBudget` trims `categoryId`
+  ONCE into `normalizedCategoryId` and reuses it for both the row
+  field and id derivation. Whitespace variants collapse to one row.
+- **Validation mirrors `MonthlyBudget`**: same MONTH_RE, finite>0
+  amount, throwing factory. Bad-month / empty-categoryId /
+  zero/negative/NaN/Infinity tests cover it.
+- **Hook binds `useStoredCollection`** with frozen
+  `categoryBudgetMessages` from `errorMessages.ts`. No re-rolled CRUD.
+- **`setCategoryBudget` is `put`** (upsert), not `add`. Composite-key
+  put behaves like `useMonthlyBudgets.set` → `setBudget`.
+- **`DB_VERSION === 5`** + `categoryBudgets` in `STORES`. Existing
+  upgrade loop creates the new store on each upgrade tick.
+- **v4 → v5 migration test**: seeds expense + recurringTemplate at v4,
+  reopens at v5, asserts both survive AND `categoryBudgets` exists
+  AND a row round-trips.
+- **Backup schemaVersion 1 → 2**: `BACKUP_SCHEMA_VERSION === 2`
+  exported + asserted. v1 snapshots → `unsupported-schema-version`
+  (NOT silent-pass — explicit test).
+- **Backup pipeline**: BackupSnapshot + buildBackup + parseBackup +
+  restoreBackup + BackupExport all carry `categoryBudgets`. Format
+  key order preserved. STORES tuple in restoreBackup covers all 5
+  stores; rollback test extended to confirm pre-restore
+  `categoryBudgets` survive a null-in-categoryBudgets abort.
+- **`<BackupRestore>` confirmation copy** enumerates per-category
+  budgets in the destructive warning + counts row.
+- **`<CategoryBudgetManager>` wired in App.tsx**; placement next to
+  `<RecurringManager>` / `<BudgetForm>`. No regression in budget
+  pipeline — `<BudgetVsActual>` still operates on `monthlyExpenses`.
+- **A11y**: inputs/buttons have per-category aria-labels
+  ("Budget for X", "Save budget for X", "Remove budget for X");
+  swatch is `aria-hidden`. Validation errors are `role="alert"`.
+- **Out-of-allowlist edit was TS-forced**: `BackupRestore.test.tsx`
+  snapshot helper added `categoryBudgets: []` — required by the
+  BackupSnapshot type change; behaviorally inert.
+
+### Findings (all nit / info — no action this iter)
+
+1. `restoreBackup.ts` header comment still reads "Replaces all four
+   stores" while the tuple now covers five. Cosmetic doc lag.
+2. `useCategoryBudgets.getFor` does a linear `items.find`. Fine at
+   current scale; swap to a memoized `Map` keyed by composite id if N
+   grows.
+3. `<CategoryBudgetManager>` has no `role="status"` success channel —
+   silent save. Acceptable for v1; consider adding a "Saved" toast if
+   user feedback requests it.
+
+### Strengths
+
+- `categoryBudgetId` as a single composite-format site is exactly the
+  "interface-as-test-surface" pattern from iter-017's arch glossary.
+  Should this domain ever need a different key shape, one file moves.
+- Backup schemaVersion bump is correctly *breaking* — silent v1 load
+  would lose `categoryBudgets`; explicit rejection forces a user
+  conversation rather than silent data loss.
+- Domain wraps `useStoredCollection` with the smallest possible
+  surface (set + remove + getFor + refresh); no new CRUD primitives
+  invented.
