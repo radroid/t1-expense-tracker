@@ -23,6 +23,8 @@ function App() {
   const categoriesHook = useCategories()
   const [editing, setEditing] = useState<Expense | null>(null)
   const [filter, setFilter] = useState<CategoryFilterValue>('all')
+  // Lazy initializer: useState calls `currentMonth` once on mount, so
+  // selectedMonth is a 'YYYY-MM' string — not a function reference.
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
 
   // Filter pipeline: all expenses → narrow to selected month → narrow by
