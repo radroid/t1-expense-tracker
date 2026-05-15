@@ -5,6 +5,7 @@ import {
   prevMonth,
   nextMonth,
   formatMonthLabel,
+  isoDateToday,
 } from './month'
 
 describe('currentMonth', () => {
@@ -46,5 +47,27 @@ describe('formatMonthLabel', () => {
   })
   it('formats January correctly', () => {
     expect(formatMonthLabel('2026-01')).toBe('January 2026')
+  })
+})
+
+describe('isoDateToday', () => {
+  it('returns a zero-padded YYYY-MM-DD string', () => {
+    // Single-digit month + day must be padded.
+    expect(isoDateToday(new Date(Date.UTC(2026, 0, 5, 12, 0, 0)))).toBe(
+      '2026-01-05',
+    )
+  })
+
+  it('uses UTC accessors so the value is timezone-independent', () => {
+    // 23:30 UTC on Jan 1 — would roll back to Dec 31 in many western zones if
+    // local accessors were used; the helper must still return 2026-01-01.
+    expect(isoDateToday(new Date('2026-01-01T23:30:00Z'))).toBe('2026-01-01')
+    // 00:30 UTC on Jan 1 — would roll forward to Jan 1 in eastern zones; the
+    // helper still anchors on UTC.
+    expect(isoDateToday(new Date('2026-01-01T00:30:00Z'))).toBe('2026-01-01')
+  })
+
+  it('defaults to a real Date when called with no arg', () => {
+    expect(isoDateToday()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })

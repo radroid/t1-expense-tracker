@@ -1,55 +1,25 @@
-import { useRef, useState } from 'react'
-import { parseExpensesCsv, type ParseError } from '../lib/csv'
+import { parseExpensesCsv } from '../lib/csv'
 import type { ExpenseInput } from '../lib/expense'
 import type { BulkAddResult } from '../hooks/useExpenses'
+import { useFilePicker } from '../hooks/useFilePicker'
+import { useParsedFileImporter } from '../hooks/useParsedFileImporter'
 import './ImportButton.css'
 
 interface ImportButtonProps {
   onImport: (inputs: ExpenseInput[]) => Promise<BulkAddResult>
 }
 
-interface Summary {
-  added: number
-  skipped: number
-  errors: string[]
-}
-
+// TD.14: file-picker mechanics + parse/import orchestration live in
+// useFilePicker / useParsedFileImporter. This component is now just
+// presentation + wiring.
 export function ImportButton({ onImport }: ImportButtonProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [summary, setSummary] = useState<Summary | null>(null)
-  const [headerError, setHeaderError] = useState<string>('')
-
-  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    // Reset the input so picking the same file twice re-fires onChange.
-    if (inputRef.current !== null) inputRef.current.value = ''
-    if (!file) return
-
-    setHeaderError('')
-    setSummary(null)
-
-    const text = await file.text()
-    const { rows, errors } = parseExpensesCsv(text)
-
-    // Header error: row === 0 means parser rejected the document outright.
-    const headerErr = errors.find((er: ParseError) => er.row === 0)
-    if (headerErr !== undefined) {
-      setHeaderError(headerErr.message)
-      return
-    }
-
-    const parseErrorMessages = errors.map(
-      (er) => `Row ${er.row}: ${er.message}`,
-    )
-
-    const result = await onImport(rows)
-    setSummary({
-      added: result.added,
-      // Combine parse-time skips with bulk-add-time skips.
-      skipped: errors.length + result.skipped,
-      errors: [...parseErrorMessages, ...result.errors],
-    })
-  }
+  const importer = useParsedFileImporter<ExpenseInput>({
+    parse: parseExpensesCsv,
+    importFn: onImport,
+  })
+  const { inputRef, onChange } = useFilePicker({
+    onFile: (text) => importer.onFile(text),
+  })
 
   return (
     <div className="import-button">
@@ -60,28 +30,28 @@ export function ImportButton({ onImport }: ImportButtonProps) {
           type="file"
           accept=".csv,text/csv"
           className="import-button__input"
-          onChange={handleChange}
+          onChange={onChange}
         />
       </label>
-      {headerError !== '' && (
+      {importer.headerError !== '' && (
         // P6.C a11y-029: a rejected CSV header is an immediate error, not a
         // status update — match RecurringImport's role="alert" parity.
         <p role="alert" className="import-button__result import-button__result--error">
-          {headerError}
+          {importer.headerError}
         </p>
       )}
-      {summary !== null && (
+      {importer.summary !== '' && (
         // P6.C a11y-028: `<p>` cannot legally contain a `<details>`
         // (block-level child); the browser auto-closes the `<p>` and that
         // breaks the live region. Use a `<div>` so the live-region root
         // stays intact across the details disclosure.
         <div role="status" aria-live="polite" className="import-button__result">
-          Imported {summary.added}. Skipped {summary.skipped}.
-          {summary.errors.length > 0 && (
+          {importer.summary}
+          {importer.rowErrors.length > 0 && (
             <details className="import-button__errors">
-              <summary>Errors ({summary.errors.length})</summary>
+              <summary>Errors ({importer.rowErrors.length})</summary>
               <ul>
-                {summary.errors.map((msg, i) => (
+                {importer.rowErrors.map((msg, i) => (
                   <li key={i}>{msg}</li>
                 ))}
               </ul>

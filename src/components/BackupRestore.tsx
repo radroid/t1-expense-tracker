@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { parseBackup, BackupParseError } from '../lib/parseBackup'
 import { restoreBackup } from '../db/restoreBackup'
 import type { BackupSnapshot } from '../lib/backup'
+import { useFilePicker } from '../hooks/useFilePicker'
 import './BackupRestore.css'
 
 interface BackupRestoreProps {
@@ -54,7 +55,6 @@ function reasonToMessage(reason: BackupParseError['reason']): string {
 }
 
 export function BackupRestore({ onRestore }: BackupRestoreProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [pending, setPending] = useState<BackupSnapshot | null>(null)
   const [inlineError, setInlineError] = useState('')
@@ -62,39 +62,27 @@ export function BackupRestore({ onRestore }: BackupRestoreProps) {
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
 
-  function resetFileInput() {
-    if (inputRef.current !== null) inputRef.current.value = ''
-  }
-
-  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    resetFileInput()
-    if (!file) return
-
-    setInlineError('')
-    setStatus('')
-
-    let text: string
-    try {
-      text = await file.text()
-    } catch {
-      setInlineError('Could not read backup file.')
-      return
-    }
-
-    try {
-      const snapshot = parseBackup(text)
-      setPending(snapshot)
-      setDialogError('')
-      openDialog(dialogRef.current)
-    } catch (err) {
-      if (err instanceof BackupParseError) {
-        setInlineError(reasonToMessage(err.reason))
-      } else {
-        setInlineError('Could not read backup file.')
+  // TD.14: ref-reset + file.text() boilerplate now lives in useFilePicker.
+  // The dialog-confirmation + atomic-restore flow stays local — this
+  // component's needs diverge from the plain "parse + import" shape.
+  const { inputRef, onChange: handleFile } = useFilePicker({
+    onFile: (text) => {
+      setInlineError('')
+      setStatus('')
+      try {
+        const snapshot = parseBackup(text)
+        setPending(snapshot)
+        setDialogError('')
+        openDialog(dialogRef.current)
+      } catch (err) {
+        if (err instanceof BackupParseError) {
+          setInlineError(reasonToMessage(err.reason))
+        } else {
+          setInlineError('Could not read backup file.')
+        }
       }
-    }
-  }
+    },
+  })
 
   function handleCancel() {
     closeDialog(dialogRef.current)
@@ -143,7 +131,7 @@ export function BackupRestore({ onRestore }: BackupRestoreProps) {
           type="file"
           accept="application/json,.json"
           className="backup-restore__input"
-          onChange={handleChange}
+          onChange={handleFile}
         />
       </label>
       {inlineError !== '' && (

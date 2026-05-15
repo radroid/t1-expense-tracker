@@ -50,3 +50,17 @@ export function formatMonthLabel(month: string): string {
   // in some zones for day 1 of the next month).
   return labelFormatter.format(new Date(Date.UTC(year, monthNum - 1, 1)))
 }
+
+// Returns today's date as 'YYYY-MM-DD' for use as a filename suffix on
+// downloaded files (CSV, JSON backup, recurring templates). UTC-based to
+// match the timezone-safety pattern used by formatMonthLabel — that costs
+// users near the day boundary one calendar day of "off-by-one" filename
+// labelling, but in exchange every user on every clock gets the same
+// deterministic name and we avoid the local-vs-UTC boundary bug that the
+// three duplicated todayIsoDate() helpers previously had.
+export function isoDateToday(now: Date = new Date()): string {
+  const yyyy = now.getUTCFullYear()
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(now.getUTCDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}

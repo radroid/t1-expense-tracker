@@ -1301,3 +1301,55 @@ Constraint: local-only by CLAUDE.md charter. No network deps.
 Recommendation: pick 2-3 feature items + 1 polish bundle (iter-032
 a11y-P1) for Phase 7 rather than full polish-phase. Feature
 momentum is strong and the codebase is healthy.
+
+---
+
+## iter-031 — super-reviewer (fat-iter: TD.13 + TD.14)
+
+**Verdict:** APPROVE-WITH-NITS — confidence **high**.
+
+Two sibling export/import refactors shipped together via parallel
+Class B sub-agents with disjoint allowlists. Both seams clean,
+well-tested.
+
+**TD.13 (downloadFile adapter):**
+- `downloadFile({filename, mime, body}, env?)` lifts Blob+anchor+revoke
+  dance from 3 export components. Optional injection bag for
+  testability (document / url / scheduleRevoke).
+- Safari/Firefox revoke-race fix landed at the seam:
+  `URL.revokeObjectURL` scheduled via `setTimeout(fn, 0)` (default
+  `scheduleRevoke`) — no longer synchronous after `a.click()`.
+- `isoDateToday()` in `src/lib/month.ts` replaces 3 duplicated
+  local-date helpers. UTC-based — user-observable near day
+  boundaries; rationale documented in helper comment.
+- 3 components collapse to one-liner `downloadFile({...})` calls.
+
+**TD.14 (file-picker split):**
+- `useFilePicker({onFile})` thin hook owns ref-reset +
+  `file.text()`; reset happens BEFORE awaiting `onFile` so
+  same-file re-pick fires onChange. All 3 components adopt.
+- `useParsedFileImporter<TInput>({parse, importFn})` orchestrator
+  owns headerError/summary/rowErrors. Header row-0 short-circuits
+  without calling importFn. Composes parse + import errors with
+  "Row N:" prefix. Only `ImportButton` + `RecurringImport`
+  adopt this; `BackupRestore` keeps its dialog/atomic-restore
+  logic in-place.
+- ImportButton 94 → 62 LOC; RecurringImport 102 → 76 LOC.
+  a11y attrs from iter-028 preserved.
+
+**Bundle impact:** Main JS 231.67 → 232.11 kB (gzip 71.37 →
+71.61; +0.24 kB gzip). Lazy chunks shrank: RecurringManager
+6.43 → 5.84 kB, BackupRestore 4.80 → 4.64 kB. Consolidation
+worked.
+
+**Nits (non-blocking):**
+- `useFilePicker.ts:38` `e.target.value` fallback is unreachable
+  in current usage (ref always wired); harmless.
+- `downloadFile.ts:54-58` SSR guard is untested.
+- UTC filename change near day boundary — well-documented but
+  worth a changelog note when this ships beyond the testbed.
+
+**Forbidden-file audit:** `src/db/*`, `src/App.tsx`, backup
+schema v2, DB v5 all UNTOUCHED.
+
+**Source:** super-reviewer (Class A).
