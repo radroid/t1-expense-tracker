@@ -1,0 +1,36 @@
+.spending-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: inherit;
+}
+
+.spending-chart__bar-bg {
+  fill: #f3f4f6;
+}
+
+.spending-chart__bar {
+  transition: opacity 120ms ease-in-out;
+}
+
+.spending-chart__bar:hover {
+  opacity: 0.85;
+}
+
+.spending-chart__label {
+  font-size: 13px;
+  fill: #111827;
+}
+
+.spending-chart__value {
+  font-size: 13px;
+  fill: #111827;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.spending-chart__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
