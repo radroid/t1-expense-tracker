@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { filterExpensesByCategory } from './expenseFilter'
+import {
+  filterExpensesByCategory,
+  filterExpensesByMonth,
+} from './expenseFilter'
 import type { Expense } from './expense'
 import type { Category } from './category'
 
@@ -56,5 +59,39 @@ describe('filterExpensesByCategory', () => {
     expect(
       filterExpensesByCategory(expenses, transport.id, [food, transport]),
     ).toEqual([])
+  })
+})
+
+describe('filterExpensesByMonth', () => {
+  const mk = (id: string, date: string): Expense => ({
+    id,
+    amount: 10,
+    description: `expense ${id}`,
+    date,
+  })
+
+  it('returns expenses whose date is in the given YYYY-MM', () => {
+    const expenses = [
+      mk('1', '2026-05-15'),
+      mk('2', '2026-04-30'),
+      mk('3', '2026-05-01'),
+    ]
+    expect(filterExpensesByMonth(expenses, '2026-05')).toEqual([
+      expenses[0],
+      expenses[2],
+    ])
+  })
+
+  it('returns an empty array when no expenses match', () => {
+    expect(
+      filterExpensesByMonth([mk('1', '2026-05-15')], '2026-04'),
+    ).toEqual([])
+  })
+
+  it('does not mutate the input array', () => {
+    const expenses = [mk('1', '2026-05-15'), mk('2', '2026-04-30')]
+    const snapshot = [...expenses]
+    filterExpensesByMonth(expenses, '2026-05')
+    expect(expenses).toEqual(snapshot)
   })
 })

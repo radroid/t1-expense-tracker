@@ -225,6 +225,46 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
+  it('switches months: previous month hides current-month expenses (P3.C)', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await addExpenseViaForm('20', 'This-month coffee')
+    await screen.findByText(/This-month coffee/)
+
+    // Visible by default — selectedMonth defaults to the current calendar month.
+    expect(screen.getByText(/This-month coffee/)).toBeInTheDocument()
+
+    // Step back one month — the current-month expense should disappear.
+    await user.click(screen.getByRole('button', { name: /previous month/i }))
+    expect(
+      await screen.findByText('No expenses yet.'),
+    ).toBeInTheDocument()
+
+    // Step forward again — it returns.
+    await user.click(screen.getByRole('button', { name: /next month/i }))
+    expect(await screen.findByText(/This-month coffee/)).toBeInTheDocument()
+  })
+
+  it('renders MonthlySummary that scopes with the visible expenses (P3.E)', async () => {
+    await renderApp()
+    await addExpenseViaForm('20', 'Lunch')
+    await screen.findByText(/Lunch/)
+    await addExpenseViaForm('30', 'Dinner')
+    await screen.findByText(/Dinner/)
+
+    // Total $50, Average $25, Count 2 — via the .monthly-summary__value scope.
+    expect(
+      screen.getByText('$50.00', { selector: '.monthly-summary__value' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('$25.00', { selector: '.monthly-summary__value' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('2', { selector: '.monthly-summary__value' }),
+    ).toBeInTheDocument()
+  })
+
   it('resets the filter to "All" when the filtered-on category is deleted', async () => {
     const user = userEvent.setup()
     await renderApp()
