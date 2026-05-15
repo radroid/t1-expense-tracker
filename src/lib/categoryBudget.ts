@@ -50,10 +50,14 @@ export function createCategoryBudget(
     throw new Error(`Invalid categoryId: must be a non-empty string`)
   }
 
+  // Normalize to the trimmed value before key derivation so whitespace
+  // variants (e.g. ' cat-abc ' vs 'cat-abc') collapse to the same row.
+  const normalizedCategoryId = categoryId.trim()
+
   return {
-    id: categoryBudgetId(month, categoryId),
+    id: categoryBudgetId(month, normalizedCategoryId),
     month,
-    categoryId,
+    categoryId: normalizedCategoryId,
     amount,
   }
 }
