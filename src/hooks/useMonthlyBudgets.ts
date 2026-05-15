@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { createMonthlyBudget, type MonthlyBudget } from '../lib/budget'
 import {
   getAllBudgets,
   removeBudget,
   setBudget,
 } from '../db/budgetStore'
+import { budgetMessages } from '../lib/errorMessages'
+import {
+  useStoredCollection,
+  type Store,
+} from './useStoredCollection'
 
 export interface UseMonthlyBudgets {
   budgets: MonthlyBudget[]
@@ -17,55 +22,53 @@ export interface UseMonthlyBudgets {
   getFor: (month: string) => MonthlyBudget | undefined
 }
 
-// Orchestrates monthly-budget persistence on top of `budgetStore`. Mirrors
-// `useExpenses` / `useCategories` in shape — validation → store write →
-// refresh, surfacing a last-error string and boolean success.
+interface BudgetInput {
+  month: string
+  amount: number
+}
+
+// Persistence-layer hook for monthly budgets. The underlying store uses
+// `setBudget` (an IDB `put`/upsert) so there is no separate add vs. update —
+// we wire the generic's `add` to `setBudget`. The domain-shaped `set(month,
+// amount)` is the public method; tests reference it directly.
 export function useMonthlyBudgets(): UseMonthlyBudgets {
-  const [budgets, setBudgets] = useState<MonthlyBudget[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  // Closures rather than direct references so vi.spyOn on the store module
+  // works in tests (the spy mutates the namespace; our closures re-resolve
+  // through the live ESM binding on each call).
+  const store = useMemo<Store<MonthlyBudget>>(
+    () => ({
+      add: (b) => setBudget(b),
+      getAll: () => getAllBudgets(),
+      remove: (month) => removeBudget(month),
+    }),
+    [],
+  )
 
-  useEffect(() => {
-    getAllBudgets()
-      .then(setBudgets)
-      .catch(() => setError('Failed to load budgets.'))
-      .finally(() => setLoading(false))
-  }, [])
+  const collection = useStoredCollection<MonthlyBudget, BudgetInput>({
+    store,
+    validateAdd: createMonthlyBudget,
+    messages: budgetMessages,
+  })
 
-  async function set(month: string, amount: number): Promise<boolean> {
-    let budget: MonthlyBudget
-    try {
-      budget = createMonthlyBudget({ month, amount })
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid budget.')
-      return false
-    }
-    try {
-      await setBudget(budget)
-      setBudgets(await getAllBudgets())
-      setError('')
-      return true
-    } catch {
-      setError('Failed to save budget.')
-      return false
-    }
+  const { items, loading, error, add, remove } = collection
+
+  const set = useCallback(
+    (month: string, amount: number): Promise<boolean> => add({ month, amount }),
+    [add],
+  )
+
+  const getFor = useCallback(
+    (month: string): MonthlyBudget | undefined =>
+      items.find((b) => b.month === month),
+    [items],
+  )
+
+  return {
+    budgets: items,
+    loading,
+    error,
+    set,
+    remove,
+    getFor,
   }
-
-  async function remove(month: string): Promise<boolean> {
-    try {
-      await removeBudget(month)
-      setBudgets(await getAllBudgets())
-      setError('')
-      return true
-    } catch {
-      setError('Failed to delete budget.')
-      return false
-    }
-  }
-
-  function getFor(month: string): MonthlyBudget | undefined {
-    return budgets.find((b) => b.month === month)
-  }
-
-  return { budgets, loading, error, set, remove, getFor }
 }

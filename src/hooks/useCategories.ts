@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   createCategory,
   type Category,
@@ -11,6 +11,11 @@ import {
   seedDefaultCategories,
   updateCategory,
 } from '../db/categoryStore'
+import { categoryMessages } from '../lib/errorMessages'
+import {
+  useStoredCollection,
+  type Store,
+} from './useStoredCollection'
 
 export interface UseCategories {
   categories: Category[]
@@ -21,69 +26,68 @@ export interface UseCategories {
   remove: (id: string) => Promise<boolean>
 }
 
-// Orchestrates category persistence. On mount it seeds defaults if the
-// store is empty and returns the full list. Same boolean-success contract
-// as useExpenses so App can chain follow-ups (e.g. resetting the filter
-// when the filtered-on category is deleted).
+// Validator used by the generic's update path. Categories are renamed by id
+// from the UI; we adapt that to the generic's (existing, input) shape by
+// passing the existing category through unchanged and substituting only name.
+const validateCategoryRename = (
+  existing: Category,
+  input: CategoryInput,
+): Category => ({
+  ...existing,
+  name: input.name,
+})
+
+// Persistence-layer hook for categories. On mount it seeds defaults if the
+// store is empty (via `useStoredCollection`'s `bootstrap`) and returns the
+// full list. `rename(id, name)` is the domain-shaped wrapper around the
+// generic's `update(existing, input)`.
 export function useCategories(): UseCategories {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  // Closures rather than direct references so vi.spyOn on the store module
+  // works in tests (the spy mutates the namespace; our closures re-resolve
+  // through the live ESM binding on each call).
+  const store = useMemo<Store<Category>>(
+    () => ({
+      add: (c) => addCategory(c),
+      getAll: () => getAllCategories(),
+      update: (c) => updateCategory(c),
+      remove: (id) => removeCategory(id),
+    }),
+    [],
+  )
 
-  useEffect(() => {
-    seedDefaultCategories()
-      .then(setCategories)
-      .catch(() => setError('Failed to load categories.'))
-      .finally(() => setLoading(false))
-  }, [])
+  const collection = useStoredCollection<Category, CategoryInput>({
+    store,
+    validateAdd: createCategory,
+    validateUpdate: validateCategoryRename,
+    messages: categoryMessages,
+    // `seedDefaultCategories` returns the seeded list, but the generic's
+    // own getAll() runs right after — so we discard the seed's return and
+    // let getAll() drive state. Net effect matches the pre-refactor flow.
+    bootstrap: async () => {
+      await seedDefaultCategories()
+    },
+  })
 
-  async function add(input: CategoryInput): Promise<boolean> {
-    let category: Category
-    try {
-      category = createCategory(input)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid category.')
-      return false
-    }
-    try {
-      await addCategory(category)
-      setCategories(await getAllCategories())
-      setError('')
-      return true
-    } catch {
-      setError('Failed to add category.')
-      return false
-    }
+  const { items, loading, error, add, update, remove, setError } = collection
+
+  const rename = useCallback(
+    async (id: string, name: string): Promise<boolean> => {
+      const existing = items.find((c) => c.id === id)
+      if (!existing) {
+        setError('Category not found.')
+        return false
+      }
+      return update(existing, { ...existing, name })
+    },
+    [items, update, setError],
+  )
+
+  return {
+    categories: items,
+    loading,
+    error,
+    add,
+    rename,
+    remove,
   }
-
-  async function rename(id: string, name: string): Promise<boolean> {
-    const existing = categories.find((c) => c.id === id)
-    if (!existing) {
-      setError('Category not found.')
-      return false
-    }
-    try {
-      await updateCategory({ ...existing, name })
-      setCategories(await getAllCategories())
-      setError('')
-      return true
-    } catch {
-      setError('Failed to rename category.')
-      return false
-    }
-  }
-
-  async function remove(id: string): Promise<boolean> {
-    try {
-      await removeCategory(id)
-      setCategories(await getAllCategories())
-      setError('')
-      return true
-    } catch {
-      setError('Failed to delete category.')
-      return false
-    }
-  }
-
-  return { categories, loading, error, add, rename, remove }
 }
