@@ -209,7 +209,7 @@ describe('App', () => {
       screen.getByText('$35.00', { selector: '.running-total__amount' }),
     ).toBeInTheDocument()
 
-    // Filter → Food: only Lunch + total $10.
+    // Filter → Food: only Lunch + total $10 + breakdown only shows Food $10.
     await user.selectOptions(
       screen.getByLabelText('Filter by category'),
       'Food',
@@ -219,5 +219,35 @@ describe('App', () => {
     expect(
       screen.getByText('$10.00', { selector: '.running-total__amount' }),
     ).toBeInTheDocument()
+    // SpendingByCategory section now reflects the filtered slice.
+    expect(
+      screen.getByText('$10.00', { selector: '.spending-by-category__total' }),
+    ).toBeInTheDocument()
+  })
+
+  it('resets the filter to "All" when the filtered-on category is deleted', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await user.clear(screen.getByLabelText('Amount'))
+    await user.type(screen.getByLabelText('Amount'), '10')
+    await user.clear(screen.getByLabelText('Description'))
+    await user.type(screen.getByLabelText('Description'), 'Lunch')
+    await user.selectOptions(screen.getByLabelText('Category'), 'Food')
+    await user.click(screen.getByRole('button', { name: /add expense/i }))
+    await screen.findByText(/Lunch/)
+
+    const filterSelect = screen.getByLabelText(
+      'Filter by category',
+    ) as HTMLSelectElement
+    await user.selectOptions(filterSelect, 'Food')
+    expect(filterSelect.value).not.toBe('all')
+
+    // Delete the Food category — filter must snap back to 'all', and the
+    // (now-orphan) Lunch expense stays visible.
+    await user.click(screen.getByRole('button', { name: /delete food/i }))
+
+    await waitFor(() => expect(filterSelect.value).toBe('all'))
+    expect(screen.getByText(/Lunch/)).toBeInTheDocument()
   })
 })

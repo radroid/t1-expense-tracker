@@ -1,7 +1,10 @@
 import type { Expense } from './expense'
 import type { Category } from './category'
 
-export type CategoryFilterValue = 'all' | 'uncategorized' | string
+// `string & {}` preserves autocomplete on the 'all' / 'uncategorized' literals.
+// Without it TypeScript collapses the union to `string` and call sites lose
+// hint about the special values.
+export type CategoryFilterValue = 'all' | 'uncategorized' | (string & {})
 
 /**
  * Filters expenses by category selection.

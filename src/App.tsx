@@ -133,6 +133,10 @@ function App() {
     try {
       await removeCategory(id)
       setCategories(await getAllCategories())
+      // Deleting the category currently being filtered on would leave the
+      // <select> orphaned (no matching <option>) and silently produce an empty
+      // list + $0 totals. Snap back to 'all'.
+      if (filter === id) setFilter('all')
       setError('')
     } catch {
       setError('Failed to delete category.')
