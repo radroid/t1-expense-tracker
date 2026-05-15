@@ -89,6 +89,48 @@ describe('useExpenses', () => {
     expect(result.current.expenses[0].amount).toBe(12)
   })
 
+  it('update() with invalid input sets error and returns false; persistence failure same', async () => {
+    const { result } = renderHook(() => useExpenses())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => {
+      await result.current.add({
+        amount: 10,
+        description: 'Coffee',
+        date: '2026-05-15',
+      })
+    })
+    const existing = result.current.expenses[0]
+
+    // Validation failure: amount must be > 0.
+    let okBad!: boolean
+    await act(async () => {
+      okBad = await result.current.update(existing, {
+        amount: -5,
+        description: 'Bad',
+        date: '2026-05-15',
+      })
+    })
+    expect(okBad).toBe(false)
+    expect(result.current.expenses[0].amount).toBe(10)
+    expect(result.current.error).not.toBe('')
+
+    // Persistence failure: store rejects.
+    vi.spyOn(expenseStore, 'updateExpense').mockRejectedValueOnce(
+      new Error('store failure'),
+    )
+    let okStoreFail!: boolean
+    await act(async () => {
+      okStoreFail = await result.current.update(existing, {
+        amount: 12,
+        description: 'Espresso',
+        date: '2026-05-15',
+      })
+    })
+    expect(okStoreFail).toBe(false)
+    expect(result.current.expenses[0].description).toBe('Coffee')
+  })
+
   it('remove() deletes and returns true; sets error + returns false on store failure', async () => {
     const { result } = renderHook(() => useExpenses())
     await waitFor(() => expect(result.current.loading).toBe(false))
