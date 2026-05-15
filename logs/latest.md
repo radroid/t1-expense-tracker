@@ -1,79 +1,83 @@
 # Latest
 
-Latest: iter-019 — P5.A (URL filter persistence) + P5.B (JSON backup
-export) shipped together (PR #50). First Phase 5 features done.
+Latest: iter-020 — P5.C (JSON backup restore) shipped (PR #52). Three
+of five Phase 5 features done (P5.A, P5.B, P5.C). Full export/import
+loop closed: a user can now snapshot all four stores and atomically
+restore the snapshot back.
 
-Stage: S3 (Phase 5 in flight — 2/5 features done) — see `.loop/state.json`
-  (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-020 — single-feature impl iter for **P5.C (JSON backup
-  restore)**. Adds `<BackupRestore>` (file picker + confirmation modal
-  + schemaVersion check) and a `restoreBackup(snapshot)` cross-store
-  routine (likely `src/db/restoreBackup.ts` — cross-store DB op, not
-  pure lib). v1 policy: full-replace (clear + bulk-add for all four
-  stores in a single IDB transaction). Merge policy deferred.
-Open first: `GOALS.md` (Phase 5 section — P5.C still open); `src/lib/backup.ts`
-  (the `BackupSnapshot` shape P5.C consumes); `src/components/BackupExport.tsx`
-  (Blob-download mirror; restore will inverse via FileReader);
-  `src/db/{expense,category,budget,recurringTemplate}Store.ts` (the
-  four stores that need clear + bulk-add); `src/db/db.ts`
-  (`withStore` is single-store; multi-store transactions may need a
-  small `withStores(names, mode, fn)` helper).
-Open blocks: none open — see `logs/blocks.md` for iter-019 super-reviewer
-  notes (APPROVE high confidence; CR's MAJOR replaceState-with-space
-  fix was applied during triage, not at super-review).
+Stage: S3 (Phase 5 in flight — 3/5 features done) — see
+  `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
+Next step: iter-021 — **P5.D (per-category budgets)** as a
+  single-feature impl iter. Vertical slice: new `categoryBudgets`
+  store (DB v4 → v5; composite key `${month}|${categoryId}`);
+  `src/lib/categoryBudget.ts` factory; `useCategoryBudgets` hook
+  (binds into the `useStoredCollection` seam from iter-018); new
+  `<CategoryBudgetManager>` section (mirror `<RecurringManager>`
+  pattern). Behavior decision: per-category budgets are INDEPENDENT
+  from the existing month-total budget for v1 (no implicit "month
+  total = sum of per-category" coupling). Revisit in v2 if users want
+  it.
+Open first: `GOALS.md` (P5.D), `src/lib/budget.ts` +
+  `src/hooks/useMonthlyBudgets.ts` (reference shape), `src/components/BudgetVsActual.tsx`
+  + `src/components/BudgetForm.tsx` (UI dependencies), `src/db/db.ts`
+  (DB version bump), `src/db/dbMigration.test.ts` (extend migration
+  test).
+Open blocks: none open — see `logs/blocks.md` for iter-020 super-
+  reviewer notes (APPROVE high confidence; atomicity + jsdom dialog
+  fallback both verified).
 Carry-forward: TD.6 (category-deletion cascade — product decision
-  pending); TD.9 (makeStore factory — sequenced after the new hook
-  seam stabilizes); TD.10 (expenseVisibility.ts — deferred); TD.11
-  (drop vestigial Expense.recurring — deferred); TD.12
-  (useStoredCollection refresh-after-mutation error isolation);
+  pending); TD.9 (makeStore factory); TD.10 (expenseVisibility.ts —
+  deferred); TD.11 (drop vestigial Expense.recurring — deferred);
+  TD.12 (useStoredCollection refresh-after-mutation error isolation);
   deferred `useSpendingByCategory` typing pair-up; P3.D chart text
-  aria-hidden follow-up; centralise localStorage test shim;
-  DateRangeFilter from>to normalize (low priority); CSV-injection
-  prefix-escape on export (low priority); empty-state trailing-period
-  normalize; P4.G follow-up: spinner covers insights section; CSV
-  export/import of recurring templates; **Blob-revoke race in
-  Export/BackupExport** (declined CR nit, logged iter-019);
-  **filename-vs-exportedAt timezone skew** in BackupExport (1-day
-  skew possible near midnight UTC; cosmetic).
-Test gate: 433 tests pass; `npm run build` + `npm run lint` clean.
+  aria-hidden follow-up; centralise localStorage test shim (Node 25
+  shim is still per-test-file); DateRangeFilter from>to normalize
+  (low priority); CSV-injection prefix-escape on export (low
+  priority); empty-state trailing-period normalize; P4.G follow-up:
+  spinner covers insights section; CSV export/import of recurring
+  templates; Blob-revoke race in Export/BackupExport (declined CR
+  nit, logged iter-019); filename-vs-exportedAt timezone skew in
+  BackupExport.
+Test gate: 451 tests pass; `npm run build` + `npm run lint` clean.
 Push: n/a — pr_mode, all work merged via PRs.
 
 Last-iter shipped:
-- P5.A + P5.B (#50): `src/lib/urlFilters.{ts,test.ts}` (pure URLSearchParams
-  parse/serialize); `src/lib/backup.{ts,test.ts}` (BackupSnapshot +
-  buildBackup + formatBackup, schemaVersion=1, injectable now);
-  `src/components/BackupExport.{tsx,test.tsx,css}` (Blob download);
-  `src/App.tsx` (lazy-init filters from hash + write-back effect; wires
-  BackupExport into .app__csv row); `src/App.test.tsx` (hash reset in
-  beforeEach + 3 integration tests). +45 tests (30 urlFilters + 12
-  backup + 3 App).
+- P5.C (#52): `src/lib/parseBackup.{ts,test.ts}` (shape validator with
+  three typed error reasons); `src/db/restoreBackup.{ts,test.ts}`
+  (atomic full-replace via one `db.transaction([...STORES],
+  'readwrite')`); `src/components/BackupRestore.{tsx,test.tsx,css}`
+  (file picker + native `<dialog>` + jsdom feature-detect fallback);
+  `src/App.tsx` (wires BackupRestore with `Promise.allSettled` hook
+  refresh fan-out — refresh failure ≠ data-loss since DB write
+  already committed); four hook wrappers expose `refresh()`
+  passthrough (justified scope creep — required by spec contract).
+  +18 tests.
 
-Operational notes for iter-020:
-  - **P5.C is destructive** — clear all four stores then bulk-add from
-    the snapshot. UI confirmation modal is non-negotiable. Use the
-    schemaVersion check to refuse unsupported shapes loudly (alert,
-    not silent).
-  - **Multi-store IDB transaction**: `withStore` is single-store. For
-    P5.C, a `withStores(names: string[], mode, fn)` helper in
-    `src/db/db.ts` is reasonable — or use a one-shot
-    `db.transaction(allStoreNames, 'readwrite')` in `restoreBackup.ts`
-    directly without going through `withStore`.
+Operational notes for iter-021:
+  - **DB version is currently 4** (iter-016 P4.E). P5.D bumps to 5.
+    Test cycle: v3→v4 migration test (iter-016) + v4→v5 migration
+    test (iter-021).
+  - **`useStoredCollection` is the established seam** for new stores
+    — `useCategoryBudgets` should bind into it with a frozen
+    messages bundle in `src/lib/errorMessages.ts`. Don't re-roll the
+    CRUD pattern.
+  - **Composite key pattern**: lean string composite (`${month}|${
+    categoryId}`) over array tuple — consistent with `monthlyBudgets`
+    keyed by `month` and simpler IDB lookups.
   - **Cadence:** 600s (impl iter).
   - **Process-fix held**: explicit-path staging on every commit.
-    Eight-iter streak.
+    Nine-iter streak. Keep it up.
   - `vite.config.ts` `fileParallelism: false` still load-bearing.
-  - **App.test hash-reset pattern is now load-bearing** — every new
-    test added must inherit the beforeEach reset, or assert hash
-    explicitly. P5.A introduces the persistence; P5.C will rely on
-    the same reset.
+  - **App.test hash-reset pattern (iter-019)** still load-bearing for
+    any test mounting App.
 
-Open questions for iter-020 (P5.C):
-  (1) Atomicity — wrap clear+bulk-add of all four stores in one
-      multi-store IDB transaction (yes, lean) vs sequential per-store
-      (simpler but partial-failure risk)? Lean: single transaction.
-  (2) Confirmation UI — `<dialog>` element vs custom modal div? Lean
-      native `<dialog>` (a11y comes free).
-  (3) Where does restoreBackup live? Lean: `src/db/restoreBackup.ts`
-      (DB op, not pure lib).
-  (4) Schema version mismatch — alert + abort, or auto-migrate? Lean:
-      alert + abort for v1; migration story is future work.
+Open questions for iter-021 (P5.D):
+  (1) Composite key — `${month}|${categoryId}` string vs array tuple
+      key path? Lean: string.
+  (2) UI — new `<CategoryBudgetManager>` section vs per-category
+      strip in `<BudgetVsActual>`? Lean: new section (mirror
+      RecurringManager).
+  (3) Coupling — independent reads vs implicit "month total = sum"?
+      Lean: independent for v1; revisit if users want.
+  (4) DB v4 → v5 migration — backfill empty (consistent with v3 → v4
+      for recurringTemplates). Lean yes.
