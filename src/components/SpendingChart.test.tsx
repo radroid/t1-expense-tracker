@@ -20,7 +20,7 @@ function category(id: string, name: string, color = '#000000'): Category {
 
 describe('SpendingChart', () => {
   it('renders an empty-state message when there are no expenses', () => {
-    render(<SpendingChart expenses={[]} categories={[]} />)
+    render(<SpendingChart expenses={[]} categories={[]} currency="USD" />)
     expect(screen.getByText('No data to chart')).toBeInTheDocument()
   })
 
@@ -30,6 +30,7 @@ describe('SpendingChart', () => {
       <SpendingChart
         expenses={[expense(25, 'e1', 'c1')]}
         categories={[food]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('Food')).toBeInTheDocument()
@@ -52,6 +53,7 @@ describe('SpendingChart', () => {
           expense(50, 'e3', 'c2'),
         ]}
         categories={[food, transport, housing]}
+        currency="USD"
       />,
     )
     const bars = container.querySelectorAll('.spending-chart__bar')
@@ -71,6 +73,7 @@ describe('SpendingChart', () => {
           expense(2, 'e3', 'missing-cat'),
         ]}
         categories={[food]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('Uncategorized')).toBeInTheDocument()
@@ -88,6 +91,7 @@ describe('SpendingChart', () => {
       <SpendingChart
         expenses={[expense(25, 'e1', 'c1')]}
         categories={[food]}
+        currency="USD"
       />,
     )
     expect(screen.getByText('$25.00')).toBeInTheDocument()
@@ -100,6 +104,7 @@ describe('SpendingChart', () => {
       <SpendingChart
         expenses={[expense(25, 'e1', 'c1')]}
         categories={[food]}
+        currency="USD"
       />,
     )
     const svg = screen.getByRole('img', { name: 'Spending by category' })

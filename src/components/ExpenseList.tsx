@@ -1,17 +1,18 @@
 import type { Expense } from '../lib/expense';
 import type { Category } from '../lib/category';
-import { formatUSD } from '../lib/currency';
+import { formatCurrency, type CurrencyCode } from '../lib/currency';
 import { EmptyState } from './EmptyState';
 import './ExpenseList.css';
 
 interface ExpenseListProps {
   expenses: Expense[];
   categories: Category[];
+  currency: CurrencyCode;
   onDelete?: (id: string) => void;
   onEdit?: (expense: Expense) => void;
 }
 
-export function ExpenseList({ expenses, categories, onDelete, onEdit }: ExpenseListProps) {
+export function ExpenseList({ expenses, categories, currency, onDelete, onEdit }: ExpenseListProps) {
   if (expenses.length === 0) {
     // Title keeps the existing "No expenses yet." copy so App-level integration
     // tests (which findByText that string) keep working.
@@ -38,7 +39,7 @@ export function ExpenseList({ expenses, categories, onDelete, onEdit }: ExpenseL
         return (
           <li key={expense.id} className="expense-list__item">
             <span className="expense-list__amount">
-              {formatUSD(expense.amount)}
+              {formatCurrency(expense.amount, currency)}
             </span>
             <span className="expense-list__description">{expense.description}</span>
             {category ? (

@@ -6,14 +6,14 @@ import { computeBudgetStatus } from '../lib/budgetStatus'
 describe('BudgetVsActual', () => {
   it('renders the empty-state message when there is no budget', () => {
     const status = computeBudgetStatus(undefined, 25)
-    render(<BudgetVsActual status={status} />)
+    render(<BudgetVsActual status={status} currency="USD" />)
     expect(screen.getByText(/no budget set/i)).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('under-budget: progress bar width < 100%, no warning, "$X left" text', () => {
     const status = computeBudgetStatus(100, 40)
-    const { container } = render(<BudgetVsActual status={status} />)
+    const { container } = render(<BudgetVsActual status={status} currency="USD" />)
     const bar = container.querySelector(
       '.budget-vs-actual__bar',
     ) as HTMLElement
@@ -26,7 +26,7 @@ describe('BudgetVsActual', () => {
 
   it('exact-budget: progress bar width 100%, no warning', () => {
     const status = computeBudgetStatus(100, 100)
-    const { container } = render(<BudgetVsActual status={status} />)
+    const { container } = render(<BudgetVsActual status={status} currency="USD" />)
     const bar = container.querySelector(
       '.budget-vs-actual__bar',
     ) as HTMLElement
@@ -37,7 +37,7 @@ describe('BudgetVsActual', () => {
 
   it('over-budget: bar clamped to 100%, --over modifier present, warning rendered', () => {
     const status = computeBudgetStatus(100, 150)
-    const { container } = render(<BudgetVsActual status={status} />)
+    const { container } = render(<BudgetVsActual status={status} currency="USD" />)
     const bar = container.querySelector(
       '.budget-vs-actual__bar',
     ) as HTMLElement
@@ -49,16 +49,18 @@ describe('BudgetVsActual', () => {
     expect(screen.getByText(/\$50\.00 over/)).toBeInTheDocument()
   })
 
-  it('formats budget and actual via formatUSD ($X.XX, not raw numbers)', () => {
+  it('formats budget and actual via formatCurrency on the currency prop ($X.XX, not raw numbers)', () => {
     const status = computeBudgetStatus(50, 12.5)
-    render(<BudgetVsActual status={status} />)
+    render(<BudgetVsActual status={status} currency="USD" />)
     expect(screen.getByText('$50.00')).toBeInTheDocument()
     expect(screen.getByText('$12.50')).toBeInTheDocument()
   })
 
   it('re-renders without errors when props are unchanged', () => {
     const status = computeBudgetStatus(100, 40)
-    const { rerender } = render(<BudgetVsActual status={status} />)
-    expect(() => rerender(<BudgetVsActual status={status} />)).not.toThrow()
+    const { rerender } = render(<BudgetVsActual status={status} currency="USD" />)
+    expect(() =>
+      rerender(<BudgetVsActual status={status} currency="USD" />),
+    ).not.toThrow()
   })
 })

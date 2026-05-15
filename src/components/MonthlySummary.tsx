@@ -1,14 +1,15 @@
 import type { Expense } from '../lib/expense'
 import { summarizeExpenses } from '../lib/monthlyTotals'
-import { formatUSD } from '../lib/currency'
+import { formatCurrency, type CurrencyCode } from '../lib/currency'
 import { EmptyState } from './EmptyState'
 import './MonthlySummary.css'
 
 interface MonthlySummaryProps {
   expenses: Expense[]
+  currency: CurrencyCode
 }
 
-export function MonthlySummary({ expenses }: MonthlySummaryProps) {
+export function MonthlySummary({ expenses, currency }: MonthlySummaryProps) {
   const { total, average, count } = summarizeExpenses(expenses)
 
   if (count === 0) {
@@ -22,11 +23,11 @@ export function MonthlySummary({ expenses }: MonthlySummaryProps) {
     <ul className="monthly-summary">
       <li className="monthly-summary__row">
         <span className="monthly-summary__label">Total</span>
-        <span className="monthly-summary__value">{formatUSD(total)}</span>
+        <span className="monthly-summary__value">{formatCurrency(total, currency)}</span>
       </li>
       <li className="monthly-summary__row">
         <span className="monthly-summary__label">Average</span>
-        <span className="monthly-summary__value">{formatUSD(average)}</span>
+        <span className="monthly-summary__value">{formatCurrency(average, currency)}</span>
       </li>
       <li className="monthly-summary__row">
         <span className="monthly-summary__label">Count</span>

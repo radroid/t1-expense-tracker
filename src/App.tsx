@@ -17,6 +17,7 @@ import { BudgetVsActual } from './components/BudgetVsActual'
 import { SearchBox } from './components/SearchBox'
 import { DateRangeFilter } from './components/DateRangeFilter'
 import { ThemeToggle } from './components/ThemeToggle'
+import { CurrencySelector } from './components/CurrencySelector'
 import { ExportButton } from './components/ExportButton'
 import { ImportButton } from './components/ImportButton'
 import { BackupExport } from './components/BackupExport'
@@ -37,6 +38,7 @@ import { useMonthlyBudgets } from './hooks/useMonthlyBudgets'
 import { useCategoryBudgets } from './hooks/useCategoryBudgets'
 import { useRecurringTemplates } from './hooks/useRecurringTemplates'
 import { useVisibleExpenses } from './hooks/useVisibleExpenses'
+import { useCurrency } from './hooks/useCurrency'
 import './App.css'
 
 function App() {
@@ -45,6 +47,7 @@ function App() {
   const budgetsHook = useMonthlyBudgets()
   const categoryBudgetsHook = useCategoryBudgets()
   const recurringHook = useRecurringTemplates()
+  const { currency, setCurrency } = useCurrency()
   const [editing, setEditing] = useState<Expense | null>(null)
   // Lazy-init filter state from the URL hash so a bookmarked / reloaded
   // filtered view restores on first paint. parseFilters returns only the
@@ -173,7 +176,8 @@ function App() {
       <header className="app__header">
         <h1>Expense Tracker</h1>
         <ThemeToggle />
-        <RunningTotal expenses={visibleExpenses} />
+        <CurrencySelector value={currency} onChange={setCurrency} />
+        <RunningTotal expenses={visibleExpenses} currency={currency} />
         <MonthSwitcher value={selectedMonth} onChange={setSelectedMonth} />
       </header>
       {editing ? (
@@ -247,6 +251,7 @@ function App() {
           <ExpenseList
             expenses={visibleExpenses}
             categories={categoriesHook.categories}
+            currency={currency}
             onDelete={expensesHook.remove}
             onEdit={setEditing}
           />
@@ -254,17 +259,19 @@ function App() {
       )}
       <section className="app__insights">
         <h2>Budget vs actual</h2>
-        <BudgetVsActual status={budgetStatus} />
+        <BudgetVsActual status={budgetStatus} currency={currency} />
         <h2>Monthly summary</h2>
-        <MonthlySummary expenses={visibleExpenses} />
+        <MonthlySummary expenses={visibleExpenses} currency={currency} />
         <h2>Spending by category</h2>
         <SpendingByCategory
           expenses={visibleExpenses}
           categories={categoriesHook.categories}
+          currency={currency}
         />
         <SpendingChart
           expenses={visibleExpenses}
           categories={categoriesHook.categories}
+          currency={currency}
         />
       </section>
       <section className="app__budget">
