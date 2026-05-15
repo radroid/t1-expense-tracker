@@ -93,9 +93,15 @@ the post-arch handoff into concrete items below.
   categories, monthlyBudgets, recurringTemplates }`; `<BackupExport>`
   triggers a Blob download `backup-YYYY-MM-DD.json`. Empty data ships
   a valid snapshot. — iter-019 / PR #50
-- [ ] P5.C — JSON backup restore — import a backup JSON; merge or
-  replace policy with a confirmation modal. Reads schemaVersion to
-  refuse unsupported snapshots. Pairs with P5.B. iter-020 target.
+- [done] P5.C — JSON backup restore — `src/lib/parseBackup.ts`
+  (shallow shape validation, 3 error reasons + `BackupParseError`);
+  `src/db/restoreBackup.ts` (atomic full-replace via one
+  `db.transaction(STORES, 'readwrite')` — clear + add for all four
+  stores in a single tx; throw aborts the whole tx);
+  `<BackupRestore>` (file picker + native `<dialog>` confirmation +
+  inline `role="alert"`/`role="status"`; jsdom fallback toggles `open`
+  attribute). App.tsx wires `Promise.allSettled` over the four hooks'
+  `refresh()` after the DB write commits. — iter-020 / PR #52
 - [ ] P5.D — Per-category budgets — extend the budget pipeline so a
   budget can be scoped to (month, categoryId) in addition to (month).
   New `categoryBudgets` store + hook + UI section. Composes with

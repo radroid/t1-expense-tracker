@@ -688,3 +688,66 @@ log entry, GOALS.md TD additions, and the iter-017 closeout PR.
   intent verification.
 - CR's MAJOR finding was caught + remediated during the same iter; the
   fix preserves base URL on clear instead of leaving a literal space.
+
+---
+
+## iter-020 super-reviewer notes (PR #52 — P5.C JSON backup restore)
+
+**Verdict: APPROVE (high confidence).**
+
+### Verified
+
+- **Atomicity is correct**: a single `db.transaction([...STORES],
+  'readwrite')` issues all `clear()` + `add()` calls synchronously
+  inside the executor, with the await pinned to
+  `oncomplete`/`onerror`/`onabort`. No `await` interleaves between
+  requests — the auto-commit hazard is avoided.
+- **Synchronous-throw rollback is real and tested**: the `[null]`
+  injection in `restoreBackup.test.ts` exercises the catch → `tx.abort()`
+  path; seeded pre-restore data survives across all four stores.
+- **`parseBackup` orders checks correctly**: shape → number-typed
+  `schemaVersion` → exact-equality version match → `exportedAt`
+  string → four array fields. The "schemaVersion missing" case is
+  steered to `invalid-shape` (not `unsupported-schema-version`).
+- **jsdom fallback is feature-detected at call site**, not globally
+  monkey-patched. Production retains real `showModal`/`close`
+  semantics including `::backdrop`.
+- **App.tsx integration uses `Promise.allSettled`** — a transient
+  refresh failure won't be misreported as "Restore failed", which is
+  the correct policy given the DB write has already committed
+  atomically.
+- **Hook `refresh()` additions are pure one-line passthroughs** of the
+  pre-existing `useStoredCollection.refresh` escape hatch
+  (iter-018). No behavior change to existing call sites; existing
+  hook tests untouched.
+
+### Findings (all nit / info — no action)
+
+1. `restoreBackup.ts:32`: `tx.onerror` and `tx.onabort` both call
+   `reject(...)`. On a synchronous catch path the inner `reject(err)`
+   fires first, then `tx.abort()` triggers the abort handler which
+   re-rejects. Harmless (Promise resolves once) but worth a one-line
+   comment that duplicate rejections are intentionally swallowed.
+2. `BackupRestore.tsx:113`: `onRestore` is typed
+   `() => Promise<boolean>`; the "refresh failed" branch is currently
+   unreachable because the integrator uses `Promise.allSettled` and
+   always returns `true`. Not a defect — keeps the contract honest
+   for future callers.
+3. `parseBackup.ts:78`: array-field check doesn't distinguish
+   missing-vs-wrong-type in the error message (both surface as "must
+   be an array"). Spec only requires three reasons. Consider a
+   "missing" message variant later for nicer UX.
+
+### Strengths
+
+- Atomicity contract is testably proven (rollback test) and matches
+  the documented behavior of IDB multi-store transactions.
+- jsdom-vs-production parity for the `<dialog>` element is handled
+  surgically — feature-detect at call site, tests assert via
+  `hasAttribute('open')` to stay agnostic.
+- A11y: `role="alert"` for parse/restore errors, `role="status"` for
+  "Restored.", 44px touch targets, `::backdrop` styling for the
+  destructive confirmation.
+- File picker resets between operations (`resetFileInput()` on every
+  change) so re-selecting the same file re-fires onChange — a real
+  UX trap avoided.
