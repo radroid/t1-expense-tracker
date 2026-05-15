@@ -1,6 +1,11 @@
 const DB_NAME = 'expense-tracker'
-const DB_VERSION = 2
-const STORES = ['expenses', 'categories'] as const
+const DB_VERSION = 3
+
+const STORES: ReadonlyArray<{ name: string; keyPath: string }> = [
+  { name: 'expenses', keyPath: 'id' },
+  { name: 'categories', keyPath: 'id' },
+  { name: 'monthlyBudgets', keyPath: 'month' },
+]
 
 export function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -8,8 +13,8 @@ export function openDb(): Promise<IDBDatabase> {
     req.onupgradeneeded = () => {
       const db = req.result
       for (const store of STORES) {
-        if (!db.objectStoreNames.contains(store)) {
-          db.createObjectStore(store, { keyPath: 'id' })
+        if (!db.objectStoreNames.contains(store.name)) {
+          db.createObjectStore(store.name, { keyPath: store.keyPath })
         }
       }
     }
