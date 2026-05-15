@@ -42,6 +42,9 @@ describe('TrendsChart', () => {
       Number(b.getAttribute('height')),
     )
     const maxHeight = Math.max(...heights)
+    // Guard against an all-zero-height regression: if maxHeight === 0,
+    // the toBe(maxHeight) line below would tautologically pass.
+    expect(maxHeight).toBeGreaterThan(0)
     // The last bar (Dec, total=100) should be the tallest.
     expect(Number(bars[11].getAttribute('height'))).toBe(maxHeight)
     // Every other bar (total=0) should have height 0.

@@ -1060,6 +1060,38 @@ No behavioral drift; diff is exactly the contracted pure-subtraction
 
 ---
 
+## iter-026 — super-reviewer (fat-iter: P6.A + P6.E)
+
+**Verdict:** APPROVE-WITH-NITS — confidence **high**.
+
+Cross-feature integration clean. Both features verified against the
+iter brief:
+
+- **P6.A (Recurring CSV):** `RECURRING_CSV_HEADER` matches spec
+  (no `frequency`); `RecurringBulkAddResult` mirrors
+  `useExpenses.addMany`; empty-input fast-path tested; row-context
+  preserved across parser→onImport (the P5.B off-by-N risk closed).
+  CSV tokenizer duplication from `csv.ts` is explicitly
+  acknowledged in-code (lift = future TD).
+- **P6.E (Category-delete cascade):** pluralization correct
+  (1/2/7); defense-in-depth (UI disable + App guard);
+  `useCategories` stays domain-pure (no `useExpenses` import).
+
+**Forbidden-file audit:** `src/db/db.ts`, `src/lib/csv.ts`,
+`src/db/restoreBackup.ts`, `src/lib/backup.ts`,
+`src/lib/parseBackup.ts`, `src/hooks/useExpenses.ts`,
+`src/hooks/useStoredCollection.ts` all UNTOUCHED.
+
+**Nit (logged as carry-forward, not a blocker):** The App-level
+`handleDeleteCategory` count guard (`App.tsx:172-175`) is not
+directly exercised by a test — the App test asserts the UI-layer
+disable, which short-circuits the click. The guard survives only as
+defense-in-depth. Captured as a follow-up TD entry.
+
+**Source:** super-reviewer (Class A).
+
+---
+
 ## iter-027 — super-reviewer (P6.B time-series analytics)
 
 **Verdict:** APPROVE — confidence **high**.
@@ -1097,37 +1129,5 @@ hold and are test-covered:
 **Forbidden-file audit:** `src/db/*`, `src/lib/{csv,
 recurringCsv, backup, parseBackup}.ts`,
 `src/db/restoreBackup.ts` all UNTOUCHED.
-
-**Source:** super-reviewer (Class A).
-
----
-
-## iter-026 — super-reviewer (fat-iter: P6.A + P6.E)
-
-**Verdict:** APPROVE-WITH-NITS — confidence **high**.
-
-Cross-feature integration clean. Both features verified against the
-iter brief:
-
-- **P6.A (Recurring CSV):** `RECURRING_CSV_HEADER` matches spec
-  (no `frequency`); `RecurringBulkAddResult` mirrors
-  `useExpenses.addMany`; empty-input fast-path tested; row-context
-  preserved across parser→onImport (the P5.B off-by-N risk closed).
-  CSV tokenizer duplication from `csv.ts` is explicitly
-  acknowledged in-code (lift = future TD).
-- **P6.E (Category-delete cascade):** pluralization correct
-  (1/2/7); defense-in-depth (UI disable + App guard);
-  `useCategories` stays domain-pure (no `useExpenses` import).
-
-**Forbidden-file audit:** `src/db/db.ts`, `src/lib/csv.ts`,
-`src/db/restoreBackup.ts`, `src/lib/backup.ts`,
-`src/lib/parseBackup.ts`, `src/hooks/useExpenses.ts`,
-`src/hooks/useStoredCollection.ts` all UNTOUCHED.
-
-**Nit (logged as carry-forward, not a blocker):** The App-level
-`handleDeleteCategory` count guard (`App.tsx:172-175`) is not
-directly exercised by a test — the App test asserts the UI-layer
-disable, which short-circuits the click. The guard survives only as
-defense-in-depth. Captured as a follow-up TD entry.
 
 **Source:** super-reviewer (Class A).
