@@ -249,4 +249,43 @@ happens a third time.
 arch-pass via the `improve-codebase-architecture` skill fires next iter before
 Phase 4 (Polish & power features) starts.
 
+## iter-012 — phase-boundary arch pass (Phase 3 → Phase 4)
+
+**Source:** arch-pass (Skill `improve-codebase-architecture`)
+**Surfaced 3 deepening opportunities:**
+1. `useVisibleExpenses` hook — extract filter pipeline composition. **Executed.**
+2. Data-hook factory across `useExpenses` / `useCategories` / `useMonthlyBudgets`.
+   **Declined.** Deletion test: each hook has unique validation, error message,
+   load path (seed-on-empty for categories, upsert for budgets, validate-then-
+   write for expenses); a factory would push that divergence into config
+   objects without removing it.
+3. `useSpendingByCategory` (dedup `SpendingByCategory` + `SpendingChart` sort
+   + empty check). **Deferred.** Two callsites with identical args is
+   borderline; pair with P3.G's empty-state requirements when that lands so
+   the interface is shaped by the real need, not speculation.
+
+**Executed (PR #34, super-review APPROVE):**
+- `src/hooks/useVisibleExpenses.ts` — composes `monthlyExpenses` (month only —
+  for BudgetVsActual; budget covers the whole month regardless of category)
+  and `visibleExpenses` (month + category — for every user-visible surface).
+  Two `useMemo` layers so flipping the category filter doesn't re-walk the
+  month filter. App.tsx loses the two inline `filterExpensesBy*` calls.
+- CR caught one genuine test bug — memo test was comparing
+  `visibleExpenses` against a captured `monthlyExpenses` ref (passing for the
+  wrong reason since under `filter='all'` they alias). Applied.
+- Super-reviewer noted: deletion-test outcome is "thin but justified" —
+  one-caller-today, but the named return (`monthlyExpenses` vs
+  `visibleExpenses`) clarifies the BudgetVsActual invariant that previously
+  lived in a code comment. P4.A search and P4.B date-range will plug into
+  the same hook's signature.
+
+**Phase 3 → 4 readiness:** Phase 4 (P4.A search, P4.B date-range, P4.C/D CSV,
+P4.E recurring, P4.F dark mode, P4.G empty/loading polish, P4.H responsive)
+will plug new view-state filters into `useVisibleExpenses` rather than
+scattering through App. P4.C/D CSV import adds bulk-mutation methods to
+`useExpenses` (no factory needed — just new methods). P4.G triggers the
+deferred `useSpendingByCategory`. P4.E (recurring) is the heaviest — likely
+needs new lib for month-rollover generation, plus a `recurring: true` flag
+on the existing Expense model (already there per the schema, never used).
+
 
