@@ -1,24 +1,13 @@
 import type { Category } from '../lib/category'
 import { createCategory, DEFAULT_CATEGORIES } from '../lib/category'
-import { withStore } from './db'
+import { makeStore } from './store'
 
-const STORE_NAME = 'categories'
+const store = makeStore<Category>('categories')
 
-export async function addCategory(c: Category): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.add(c))
-}
-
-export function getAllCategories(): Promise<Category[]> {
-  return withStore<Category[]>(STORE_NAME, 'readonly', (store) => store.getAll())
-}
-
-export async function updateCategory(c: Category): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.put(c))
-}
-
-export async function removeCategory(id: string): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.delete(id))
-}
+export const addCategory = (c: Category): Promise<void> => store.add(c)
+export const getAllCategories = (): Promise<Category[]> => store.getAll()
+export const updateCategory = (c: Category): Promise<void> => store.put(c)
+export const removeCategory = (id: string): Promise<void> => store.remove(id)
 
 export async function seedDefaultCategories(): Promise<Category[]> {
   const existing = await getAllCategories()

@@ -1,10 +1,10 @@
 import { createExpense, type Expense, type ExpenseInput } from './expense'
 
-// CSV columns: date,amount,description,categoryId,recurring
-// (categoryId + recurring are optional; render empty string if missing)
-export const CSV_HEADER = 'date,amount,description,categoryId,recurring'
+// CSV columns: date,amount,description,categoryId
+// (categoryId is optional; renders as an empty cell when missing.)
+export const CSV_HEADER = 'date,amount,description,categoryId'
 
-const EXPECTED_COLUMNS = ['date', 'amount', 'description', 'categoryid', 'recurring']
+const EXPECTED_COLUMNS = ['date', 'amount', 'description', 'categoryid']
 
 export interface ParseError {
   row: number
@@ -32,7 +32,6 @@ export function formatExpensesCsv(expenses: Expense[]): string {
       String(e.amount),
       csvQuote(e.description),
       e.categoryId !== undefined ? csvQuote(e.categoryId) : '',
-      e.recurring !== undefined ? String(e.recurring) : '',
     ]
     lines.push(cells.join(','))
   }
@@ -114,14 +113,6 @@ function headerMatches(cells: string[]): boolean {
   return true
 }
 
-function parseRecurring(raw: string): { value?: boolean; error?: string } {
-  const v = raw.trim().toLowerCase()
-  if (v === '') return {}
-  if (v === 'true') return { value: true }
-  if (v === 'false') return { value: false }
-  return { error: `Invalid recurring value: ${raw}` }
-}
-
 // Parses a CSV string into ExpenseInput rows. See header comment in this file
 // and the test file for the full contract.
 export function parseExpensesCsv(text: string): ParseResult {
@@ -148,17 +139,11 @@ export function parseExpensesCsv(text: string): ParseResult {
       })
       return
     }
-    const [dateRaw, amountRaw, descriptionRaw, categoryIdRaw, recurringRaw] = cells
+    const [dateRaw, amountRaw, descriptionRaw, categoryIdRaw] = cells
     const date = dateRaw.trim()
     const amountStr = amountRaw.trim()
     const description = descriptionRaw
     const categoryId = categoryIdRaw.trim()
-    const recurringParsed = parseRecurring(recurringRaw)
-
-    if (recurringParsed.error !== undefined) {
-      errors.push({ row: rowNumber, message: recurringParsed.error })
-      return
-    }
 
     const amount = Number(amountStr)
     if (amountStr === '' || Number.isNaN(amount)) {
@@ -172,7 +157,6 @@ export function parseExpensesCsv(text: string): ParseResult {
       date,
     }
     if (categoryId !== '') input.categoryId = categoryId
-    if (recurringParsed.value !== undefined) input.recurring = recurringParsed.value
 
     try {
       // Run through createExpense's validation to mirror its contract.
@@ -192,7 +176,6 @@ export function parseExpensesCsv(text: string): ParseResult {
       date,
     }
     if (categoryId !== '') cleaned.categoryId = categoryId
-    if (recurringParsed.value !== undefined) cleaned.recurring = recurringParsed.value
     rows.push(cleaned)
   })
 

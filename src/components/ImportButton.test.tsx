@@ -26,7 +26,7 @@ describe('ImportButton', () => {
     render(<ImportButton onImport={onImport} />)
 
     const input = screen.getByLabelText(/import csv/i) as HTMLInputElement
-    const text = `${CSV_HEADER}\n2026-05-15,10,Coffee,,\n`
+    const text = `${CSV_HEADER}\n2026-05-15,10,Coffee,\n`
     await user.upload(input, fileFromText(text))
 
     await waitFor(() => expect(onImport).toHaveBeenCalledTimes(1))
@@ -72,8 +72,8 @@ describe('ImportButton', () => {
     const input = screen.getByLabelText(/import csv/i) as HTMLInputElement
     const text =
       `${CSV_HEADER}\n` +
-      `2026-05-15,10,Coffee,,\n` +
-      `2026-13-40,5,BadDate,,\n` // skipped by parse
+      `2026-05-15,10,Coffee,\n` +
+      `2026-13-40,5,BadDate,\n` // skipped by parse
     await user.upload(input, fileFromText(text))
 
     await waitFor(() => expect(onImport).toHaveBeenCalledTimes(1))

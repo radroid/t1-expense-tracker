@@ -29,14 +29,12 @@ describe('createExpense', () => {
     expect(a.id).not.toBe(b.id);
   });
 
-  it('passes through optional categoryId and recurring when present', () => {
+  it('passes through optional categoryId when present', () => {
     const expense = createExpense({
       ...validInput,
       categoryId: 'cat-1',
-      recurring: true,
     });
     expect(expense.categoryId).toBe('cat-1');
-    expect(expense.recurring).toBe(true);
   });
 
   it('passes through optional sourceTemplateId when present', () => {
@@ -50,7 +48,6 @@ describe('createExpense', () => {
   it('omits optional fields when not provided', () => {
     const expense = createExpense(validInput);
     expect(expense.categoryId).toBeUndefined();
-    expect(expense.recurring).toBeUndefined();
     expect(expense.sourceTemplateId).toBeUndefined();
   });
 
@@ -132,16 +129,14 @@ describe('applyExpenseEdit', () => {
     expect(updated.description).toBe('Tea');
   });
 
-  it('passes through optional categoryId and recurring when present', () => {
+  it('passes through optional categoryId when present', () => {
     const updated = applyExpenseEdit(existing, {
       amount: 20,
       description: 'Tea',
       date: '2026-05-15',
       categoryId: 'cat-2',
-      recurring: true,
     });
     expect(updated.categoryId).toBe('cat-2');
-    expect(updated.recurring).toBe(true);
   });
 
   it('preserves existing categoryId when the input omits it (TD.2)', () => {
@@ -152,16 +147,6 @@ describe('applyExpenseEdit', () => {
       date: '2026-05-15',
     });
     expect(updated.categoryId).toBe('cat-food');
-  });
-
-  it('preserves existing recurring flag when the input omits it (TD.2)', () => {
-    const withRecurring: Expense = { ...existing, recurring: true };
-    const updated = applyExpenseEdit(withRecurring, {
-      amount: 20,
-      description: 'Tea',
-      date: '2026-05-15',
-    });
-    expect(updated.recurring).toBe(true);
   });
 
   it('preserves existing sourceTemplateId when the input omits it', () => {

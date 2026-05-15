@@ -1,20 +1,9 @@
-import type { Expense } from '../lib/expense';
-import { withStore } from './db';
+import type { Expense } from '../lib/expense'
+import { makeStore } from './store'
 
-const STORE_NAME = 'expenses';
+const store = makeStore<Expense>('expenses')
 
-export async function addExpense(e: Expense): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.add(e));
-}
-
-export function getAllExpenses(): Promise<Expense[]> {
-  return withStore<Expense[]>(STORE_NAME, 'readonly', (store) => store.getAll());
-}
-
-export async function updateExpense(e: Expense): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.put(e));
-}
-
-export async function removeExpense(id: string): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.delete(id));
-}
+export const addExpense = (e: Expense): Promise<void> => store.add(e)
+export const getAllExpenses = (): Promise<Expense[]> => store.getAll()
+export const updateExpense = (e: Expense): Promise<void> => store.put(e)
+export const removeExpense = (id: string): Promise<void> => store.remove(id)

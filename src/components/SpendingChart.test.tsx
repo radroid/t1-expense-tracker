@@ -85,7 +85,7 @@ describe('SpendingChart', () => {
     expect(uncategorizedBar!.getAttribute('fill')).toBe('#9ca3af')
   })
 
-  it('formats values via formatUSD (e.g. $25.00, not 25)', () => {
+  it('formats values via formatCurrency (e.g. $25.00, not 25)', () => {
     const food = category('c1', 'Food')
     render(
       <SpendingChart
