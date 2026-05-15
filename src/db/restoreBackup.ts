@@ -24,7 +24,9 @@ export async function restoreBackup(snapshot: BackupSnapshot): Promise<void> {
   const db = await openDb()
   try {
     await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORES as unknown as string[], 'readwrite')
+      // Spread to a mutable string[] for IDB; STORES is a readonly
+      // tuple so the literal types stay precise for the for-of loop.
+      const tx = db.transaction([...STORES], 'readwrite')
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error ?? new Error('Restore transaction failed.'))
       tx.onabort = () => reject(tx.error ?? new Error('Restore transaction aborted.'))

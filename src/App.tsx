@@ -223,8 +223,11 @@ function App() {
               onRestore={async () => {
                 // After the multi-store IDB write commits, pull every
                 // hook back into sync. Parallel because each refresh is
-                // an independent store read.
-                await Promise.all([
+                // an independent store read. allSettled so a refresh
+                // failure (which is just a UI-sync miss, not a data
+                // loss) doesn't make BackupRestore show "Restore
+                // failed" — the DB write already committed.
+                await Promise.allSettled([
                   expensesHook.refresh(),
                   categoriesHook.refresh(),
                   budgetsHook.refresh(),

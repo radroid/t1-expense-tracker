@@ -29,9 +29,9 @@ describe('parseBackup', () => {
   })
 
   it('throws BackupParseError with reason "invalid-json" on syntactically bad JSON', () => {
-    expect(() => parseBackup('not json')).toThrowError(BackupParseError)
     try {
       parseBackup('not json')
+      throw new Error('expected parseBackup to throw')
     } catch (e) {
       expect(e).toBeInstanceOf(BackupParseError)
       expect((e as BackupParseError).reason).toBe('invalid-json')
