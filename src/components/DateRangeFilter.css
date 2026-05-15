@@ -37,3 +37,16 @@
 .date-range-filter__clear:hover {
   background: var(--app-surface-hover);
 }
+
+@media (max-width: 480px) {
+  .date-range-filter__from,
+  .date-range-filter__to {
+    flex: 1 1 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .date-range-filter__clear {
+    flex: 1 1 100%;
+  }
+}

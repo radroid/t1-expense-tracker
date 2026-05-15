@@ -24,3 +24,20 @@
   outline: 2px solid var(--app-accent);
   outline-offset: 2px;
 }
+
+@media (max-width: 768px) {
+  .category-filter {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-filter__select {
+    width: 100%;
+  }
+}

@@ -24,6 +24,7 @@
   background: var(--app-card-bg);
   color: var(--app-fg);
   font: inherit;
+  box-sizing: border-box;
 }
 
 .expense-form__field input:focus-visible,
@@ -67,4 +68,28 @@
 
 .expense-form__actions button[type='button']:hover {
   background: var(--app-surface-hover);
+}
+
+@media (max-width: 768px) {
+  .expense-form {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .expense-form__field input,
+  .expense-form__field select {
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+    width: 100%;
+  }
+
+  .expense-form__actions {
+    flex-direction: column;
+  }
+
+  .expense-form__actions button {
+    width: 100%;
+    min-height: 44px;
+  }
 }

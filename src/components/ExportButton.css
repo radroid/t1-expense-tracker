@@ -18,3 +18,11 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .export-button {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+  }
+}
