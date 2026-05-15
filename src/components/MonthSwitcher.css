@@ -1,0 +1,32 @@
+.month-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.month-switcher__prev,
+.month-switcher__next {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.month-switcher__prev:hover,
+.month-switcher__next:hover {
+  background: #f3f3f3;
+}
+
+.month-switcher__label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  min-width: 10ch;
+  text-align: center;
+}

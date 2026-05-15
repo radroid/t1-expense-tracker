@@ -1,5 +1,6 @@
 import type { Expense } from './expense'
 import type { Category } from './category'
+import { monthOf } from './month'
 
 // `string & {}` preserves autocomplete on the 'all' / 'uncategorized' literals.
 // Without it TypeScript collapses the union to `string` and call sites lose
@@ -32,4 +33,13 @@ export function filterExpensesByCategory(
   }
 
   return expenses.filter((e) => e.categoryId === filter)
+}
+
+// Filters expenses whose `date` falls within the given 'YYYY-MM' month.
+// Pure. Does not mutate inputs.
+export function filterExpensesByMonth(
+  expenses: Expense[],
+  month: string,
+): Expense[] {
+  return expenses.filter((e) => monthOf(e.date) === month)
 }

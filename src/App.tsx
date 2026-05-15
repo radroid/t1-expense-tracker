@@ -6,10 +6,14 @@ import { RunningTotal } from './components/RunningTotal'
 import { SpendingByCategory } from './components/SpendingByCategory'
 import { CategoryManager } from './components/CategoryManager'
 import { CategoryFilter } from './components/CategoryFilter'
+import { MonthSwitcher } from './components/MonthSwitcher'
+import { MonthlySummary } from './components/MonthlySummary'
 import {
   filterExpensesByCategory,
+  filterExpensesByMonth,
   type CategoryFilterValue,
 } from './lib/expenseFilter'
+import { currentMonth } from './lib/month'
 import { useExpenses } from './hooks/useExpenses'
 import { useCategories } from './hooks/useCategories'
 import './App.css'
@@ -19,9 +23,19 @@ function App() {
   const categoriesHook = useCategories()
   const [editing, setEditing] = useState<Expense | null>(null)
   const [filter, setFilter] = useState<CategoryFilterValue>('all')
+  // Lazy initializer: useState calls `currentMonth` once on mount, so
+  // selectedMonth is a 'YYYY-MM' string — not a function reference.
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
 
-  const visibleExpenses = filterExpensesByCategory(
+  // Filter pipeline: all expenses → narrow to selected month → narrow by
+  // category. Both filters compose against the visible slice that flows to
+  // ExpenseList, RunningTotal, SpendingByCategory, and MonthlySummary.
+  const monthlyExpenses = filterExpensesByMonth(
     expensesHook.expenses,
+    selectedMonth,
+  )
+  const visibleExpenses = filterExpensesByCategory(
+    monthlyExpenses,
     filter,
     categoriesHook.categories,
   )
@@ -51,6 +65,7 @@ function App() {
       <header className="app__header">
         <h1>Expense Tracker</h1>
         <RunningTotal expenses={visibleExpenses} />
+        <MonthSwitcher value={selectedMonth} onChange={setSelectedMonth} />
       </header>
       {editing ? (
         <ExpenseForm
@@ -98,6 +113,8 @@ function App() {
         </>
       )}
       <section className="app__insights">
+        <h2>Monthly summary</h2>
+        <MonthlySummary expenses={visibleExpenses} />
         <h2>Spending by category</h2>
         <SpendingByCategory
           expenses={visibleExpenses}
