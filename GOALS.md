@@ -77,19 +77,34 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
   (`--app-accent-fg`, `--app-surface-2`, `--app-surface-hover`). Light
   palette preserved; dark palette AA+ on all surfaces. — iter-014 / PR #40
 
-## Phase 5 — (to be defined after iter-017 arch pass)
+## Phase 5 — Power-user persistence & data control
 
-Phase 4 closed in iter-016. iter-017 MUST start with the mandatory
-phase-boundary architecture pass (`improve-codebase-architecture` skill
-invocation) before any Phase 5 feature work. Phase 5 items will be added
-to this section based on the arch pass output and product direction.
+iter-017 phase-boundary arch pass surfaced 5 deepening candidates; TD.7
++ TD.8 shipped in iter-018. iter-019 triages the Phase 5 themes from
+the post-arch handoff into concrete items below.
 
-Candidate themes (to be triaged in the arch pass):
-- Per-category budgets (not just monthly total).
-- Multi-currency support.
-- Backup/restore via JSON export (separate from CSV).
-- Search/filter persistence in URL or localStorage.
-- Account/sync (would break the local-only constraint — needs decision).
+- [done] P5.A — URL filter persistence — `src/lib/urlFilters.ts` pure
+  parse/serialize over URLSearchParams (stable key order: month, cat,
+  q, from, to; silent-drop on invalid month/date). App.tsx lazy-inits
+  filter state from the hash on first paint + `useEffect` writes back
+  via `history.replaceState`. — iter-019 / PR #50
+- [done] P5.B — JSON backup export — `src/lib/backup.ts` builds a
+  versioned `BackupSnapshot { schemaVersion: 1, exportedAt, expenses,
+  categories, monthlyBudgets, recurringTemplates }`; `<BackupExport>`
+  triggers a Blob download `backup-YYYY-MM-DD.json`. Empty data ships
+  a valid snapshot. — iter-019 / PR #50
+- [ ] P5.C — JSON backup restore — import a backup JSON; merge or
+  replace policy with a confirmation modal. Reads schemaVersion to
+  refuse unsupported snapshots. Pairs with P5.B. iter-020 target.
+- [ ] P5.D — Per-category budgets — extend the budget pipeline so a
+  budget can be scoped to (month, categoryId) in addition to (month).
+  New `categoryBudgets` store + hook + UI section. Composes with
+  existing `useStoredCollection` seam. iter-020+ target (larger
+  scope; requires UI design for the per-category progress strip).
+- [ ] P5.E — Multi-currency — single-currency-per-expense field
+  (`currency?: string`, ISO 4217). Display preference (`useCurrency`
+  hook) defaults to USD. Updates totals/format helpers. iter-021+
+  target (lots of touch points; defer until P5.A-D land).
 
 ## Tech debt
 
