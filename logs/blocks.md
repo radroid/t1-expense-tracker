@@ -116,4 +116,17 @@ expenses pointing at a now-gone id; the form's `<select>` silently falls back to
 Uncategorized and a subsequent edit re-saves it as uncategorized. Out of P2.C scope.
 → GOALS TD.6 (category-deletion cascade — orphan vs. block, a product decision).
 
+## iter-007 — Class A integrated peer review
+
+**Source:** peer-review (fat-iter Phase 4, 2 features: P2.E + P2.F)
+**Verdict:** APPROVE — both match plans; no shared-file collisions (P2.E owns
+ExpenseList, P2.F new files); orphan handling consistent between features (P2.E shows
+no badge for orphan, P2.F buckets orphan into the "Uncategorized" total — coherent UX:
+no money leaks from the summary even if the badge is silent). Currency formatter is now
+triplicated (RunningTotal + ExpenseList + SpendingByCategory) — TD.1 already tracks
+this and SpendingByCategory has an explicit TD.1 acknowledgement comment.
+**Non-blocking nits:** P2.E's empty `<span aria-hidden>` placeholder grid cell is
+intentional (grid alignment) but undocumented; P2.F's `.slice().sort()` is redundant
+since the lib already returns a fresh array. Trivial.
+
 
