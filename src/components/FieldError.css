@@ -1,0 +1,16 @@
+/* Reserve a one-line slot so toggling the error doesn't shove the
+   following layout down. The slot is always in the DOM (a11y live
+   region requirement); only the text content swaps in / out. */
+.field-error {
+  margin: 0;
+  min-height: 1.25em;
+  color: var(--app-error);
+  font-size: 0.875rem;
+  line-height: 1.25em;
+}
+
+.field-error--shown {
+  /* Hook for any per-form visual tweak that wants to know the slot is
+     currently filled. No visual change by default — color above is the
+     full styling. */
+}

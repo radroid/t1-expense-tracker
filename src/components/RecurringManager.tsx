@@ -7,6 +7,7 @@ import type { Category } from '../lib/category'
 import type { RecurringBulkAddResult } from '../hooks/useRecurringTemplates'
 import { RecurringExport } from './RecurringExport'
 import { RecurringImport } from './RecurringImport'
+import { FieldError } from './FieldError'
 import './RecurringManager.css'
 
 interface RecurringManagerProps {
@@ -21,6 +22,10 @@ interface RecurringManagerProps {
   ) => Promise<RecurringBulkAddResult>
   onDelete: (id: string) => Promise<boolean>
 }
+
+type ErrorField = 'description' | 'amount' | 'dayOfMonth' | null
+
+const ERROR_ID = 'recurring-manager-error'
 
 const noopAddMany = async (): Promise<RecurringBulkAddResult> => ({
   added: 0,
@@ -44,6 +49,7 @@ export function RecurringManager({
   const [dayOfMonth, setDayOfMonth] = useState('1')
   const [categoryId, setCategoryId] = useState<string>('')
   const [error, setError] = useState('')
+  const [errorField, setErrorField] = useState<ErrorField>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -51,18 +57,21 @@ export function RecurringManager({
     const trimmed = description.trim()
     if (trimmed === '') {
       setError('Please enter a description.')
+      setErrorField('description')
       return
     }
 
     const amountNum = Number(amount)
     if (!Number.isFinite(amountNum) || amountNum <= 0) {
       setError('Please enter an amount greater than 0.')
+      setErrorField('amount')
       return
     }
 
     const dayNum = Number(dayOfMonth)
     if (!Number.isInteger(dayNum) || dayNum < 1 || dayNum > 28) {
       setError('Day of month must be an integer between 1 and 28.')
+      setErrorField('dayOfMonth')
       return
     }
 
@@ -82,6 +91,7 @@ export function RecurringManager({
     const ok = await onAdd(input)
     if (ok) {
       setError('')
+      setErrorField(null)
       setDescription('')
       setAmount('')
       setDayOfMonth('1')
@@ -121,6 +131,8 @@ export function RecurringManager({
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            aria-invalid={errorField === 'description' ? true : undefined}
+            aria-describedby={ERROR_ID}
           />
         </div>
 
@@ -132,6 +144,8 @@ export function RecurringManager({
             step="0.01"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            aria-invalid={errorField === 'amount' ? true : undefined}
+            aria-describedby={ERROR_ID}
           />
         </div>
 
@@ -148,6 +162,8 @@ export function RecurringManager({
             type="number"
             value={dayOfMonth}
             onChange={(e) => setDayOfMonth(e.target.value)}
+            aria-invalid={errorField === 'dayOfMonth' ? true : undefined}
+            aria-describedby={ERROR_ID}
           />
         </div>
 
@@ -167,11 +183,7 @@ export function RecurringManager({
           </select>
         </div>
 
-        {error && (
-          <p className="recurring-manager__error" role="alert">
-            {error}
-          </p>
-        )}
+        <FieldError id={ERROR_ID} message={error === '' ? null : error} />
 
         <button type="submit">Add recurring template</button>
       </form>

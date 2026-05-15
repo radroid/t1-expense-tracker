@@ -1353,3 +1353,53 @@ worked.
 schema v2, DB v5 all UNTOUCHED.
 
 **Source:** super-reviewer (Class A).
+
+---
+
+## iter-032 — super-reviewer (a11y-P1 bundle: TD.18 + TD.19 + TD.20 + TD.23)
+
+**Verdict:** APPROVE-WITH-NITS — confidence **high**.
+
+Four coherent fixes across form-error association, page navigation,
+and App-level error fan-in. Single Class B sub-agent owned the
+bundle since all surfaces shared App.tsx integration.
+
+**TD.18 (form-error association, 5 forms):**
+- New `FieldError` component — persistent slot, empty at rest,
+  `role="alert"` toggles when message is non-empty. `aria-live="polite"`
+  constant. `min-height: 1.25em` reserves layout.
+- Each form discriminates `errorField` per validated input;
+  `aria-invalid={errorField === '<name>'}` + `aria-describedby`
+  point at the form's FieldError id.
+- CategoryManager Rename: empty input now REVERTS to canonical name
+  (was silent no-op) — clean, no extra alert region.
+
+**TD.19 (skip-link):**
+- `<a className="skip-link">Skip to expense list</a>` is FIRST child
+  of `<main>`. `transform: translateY(-200%)` at rest;
+  `:focus` reveals. Themed via `--app-accent` / `--app-accent-fg`.
+- Target: new `<section id="main-content" aria-label="Expense list">`
+  wrapping ExpenseList.
+
+**TD.20 + TD.23 (App error fan-in):**
+- `error = a || b || c || …` cascade replaced with
+  `errors: string[]` (filter falsy + join " · ").
+- Persistent slot: `<div role="alert" aria-live="assertive"
+  aria-atomic="true">` ALWAYS in the DOM, empty at rest.
+- Multi-error case test exercises two hooks failing simultaneously.
+
+**Nits (non-blocking):**
+- The "no iter-028 test updates needed" claim relies on
+  ExpenseForm's amount validation being permissive (only catches
+  `isNaN || empty`, NOT negative/zero — those fall through to the
+  hook layer and surface via the App alert, not the form's
+  FieldError). If form-level positivity validation is ever added,
+  iter-028 `findByRole('alert')` queries in `App.test.tsx:114,
+  153,160` could double-up. Worth a TD/comment.
+- `.field-error--shown` CSS class has empty body — harmless hook,
+  could be removed.
+
+**Forbidden-file audit:** `src/db/*`, `src/lib/*`, `src/hooks/*`,
+backup schema v2, DB v5 all UNTOUCHED.
+
+**Source:** super-reviewer (Class A).

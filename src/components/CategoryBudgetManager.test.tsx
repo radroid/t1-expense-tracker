@@ -184,6 +184,53 @@ describe('CategoryBudgetManager', () => {
     expect(input.value).toBe('150')
   })
 
+  // a11y-P1 TD.18 — form-error association on the failing-row amount input.
+  describe('a11y form-error association', () => {
+    it('marks the failing row\'s amount input aria-invalid="true" on validation failure', async () => {
+      const user = userEvent.setup()
+      render(
+        <CategoryBudgetManager
+          month="2026-05"
+          categories={categories}
+          categoryBudgets={[]}
+          onSet={vi.fn().mockResolvedValue(true)}
+          onRemove={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      const foodInput = screen.getByLabelText('Budget for Food')
+      const housingInput = screen.getByLabelText('Budget for Housing')
+      expect(foodInput).not.toHaveAttribute('aria-invalid', 'true')
+
+      await user.click(screen.getByLabelText('Save budget for Food'))
+
+      // ONLY the Food row is marked invalid — Housing stays clean.
+      expect(foodInput).toHaveAttribute('aria-invalid', 'true')
+      expect(housingInput).not.toHaveAttribute('aria-invalid', 'true')
+    })
+
+    it('links the amount inputs to the FieldError via aria-describedby', () => {
+      render(
+        <CategoryBudgetManager
+          month="2026-05"
+          categories={categories}
+          categoryBudgets={[]}
+          onSet={vi.fn().mockResolvedValue(true)}
+          onRemove={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      const foodDB = screen
+        .getByLabelText('Budget for Food')
+        .getAttribute('aria-describedby')
+      const housingDB = screen
+        .getByLabelText('Budget for Housing')
+        .getAttribute('aria-describedby')
+      expect(foodDB).not.toBeNull()
+      // Both rows reference the same shared error region.
+      expect(foodDB).toBe(housingDB)
+      expect(document.getElementById(foodDB!)).not.toBeNull()
+    })
+  })
+
   it('filters by the selected month — budgets for other months are not shown', () => {
     const mixed: CategoryBudget[] = [
       ...budgets,
