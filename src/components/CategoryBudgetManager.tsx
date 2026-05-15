@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Category } from '../lib/category'
 import type { CategoryBudget } from '../lib/categoryBudget'
+import { FieldError } from './FieldError'
 import './CategoryBudgetManager.css'
 
 interface CategoryBudgetManagerProps {
@@ -21,6 +22,8 @@ interface CategoryBudgetManagerProps {
   onRemove: (id: string) => Promise<boolean>
 }
 
+const ERROR_ID = 'category-budget-manager-error'
+
 // Lists one row per category for the selected month. Each row shows the
 // existing amount (if any), an editable amount input, a Save button, and a
 // Remove button (only when a budget already exists for that category). One
@@ -39,6 +42,10 @@ export function CategoryBudgetManager({
   // existing-amount placeholder.
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
+  // Which row's amount input caused the most recent validation failure.
+  // Single shared alert + per-row aria-invalid (TD.18) means we record
+  // the categoryId, not a discriminated enum.
+  const [errorCategoryId, setErrorCategoryId] = useState<string | null>(null)
 
   function existingFor(categoryId: string): CategoryBudget | undefined {
     return categoryBudgets.find(
@@ -50,17 +57,20 @@ export function CategoryBudgetManager({
     const raw = drafts[categoryId] ?? ''
     if (raw.trim() === '') {
       setError('Please enter an amount.')
+      setErrorCategoryId(categoryId)
       return
     }
     const amountNum = Number(raw)
     if (!Number.isFinite(amountNum) || amountNum <= 0) {
       setError('Please enter an amount greater than 0.')
+      setErrorCategoryId(categoryId)
       return
     }
 
     const ok = await onSet(month, categoryId, amountNum)
     if (ok) {
       setError('')
+      setErrorCategoryId(null)
       // Clear the draft so the existing-amount placeholder takes over again.
       setDrafts((prev) => {
         const next = { ...prev }
@@ -106,6 +116,8 @@ export function CategoryBudgetManager({
                 aria-label={`Budget for ${c.name}`}
                 placeholder={placeholder}
                 value={draftValue}
+                aria-invalid={errorCategoryId === c.id ? true : undefined}
+                aria-describedby={ERROR_ID}
                 onChange={(e) =>
                   setDrafts((prev) => ({ ...prev, [draftKey]: e.target.value }))
                 }
@@ -135,11 +147,7 @@ export function CategoryBudgetManager({
           )
         })}
       </ul>
-      {error && (
-        <p className="category-budget-manager__error" role="alert">
-          {error}
-        </p>
-      )}
+      <FieldError id={ERROR_ID} message={error === '' ? null : error} />
     </div>
   )
 }

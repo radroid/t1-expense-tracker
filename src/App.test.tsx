@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import App from './App'
 import * as expenseStore from './db/expenseStore'
+import * as categoryStore from './db/categoryStore'
 import { addRecurringTemplate } from './db/recurringTemplateStore'
 import { createRecurringTemplate } from './lib/recurring'
 import { CURRENCY_STORAGE_KEY } from './lib/currency'
@@ -538,6 +539,74 @@ describe('App', () => {
     ).toBeInTheDocument()
     // And the choice is persisted.
     expect(localStorage.getItem(CURRENCY_STORAGE_KEY)).toBe('JPY')
+  })
+
+  // a11y-P1 TD.19 / TD.20 / TD.23 — skip-link, persistent error region,
+  // multi-hook error consolidation.
+  describe('a11y bundle (TD.19 / TD.20 / TD.23)', () => {
+    it('renders a keyboard-only skip-link as the first focusable element, always in the DOM', async () => {
+      await renderApp()
+      const link = document.querySelector('a.skip-link') as HTMLAnchorElement | null
+      expect(link).not.toBeNull()
+      expect(link!.getAttribute('href')).toBe('#main-content')
+      expect(link!.textContent ?? '').toMatch(/skip/i)
+    })
+
+    it('renders an element with id="main-content" that the skip-link targets', async () => {
+      await renderApp()
+      const target = document.getElementById('main-content')
+      expect(target).not.toBeNull()
+      // The expense-list area lives inside this section. At rest the list
+      // is empty (EmptyState renders), so we assert via the "No expenses
+      // yet" empty-state copy that ExpenseList owns.
+      expect(target!.textContent ?? '').toMatch(/No expenses yet/)
+    })
+
+    it('renders a persistent error region with role="alert" and aria-live="assertive", empty when there are no errors', async () => {
+      await renderApp()
+      const region = document.querySelector('.app__error') as HTMLElement | null
+      expect(region).not.toBeNull()
+      expect(region!.getAttribute('role')).toBe('alert')
+      expect(region!.getAttribute('aria-live')).toBe('assertive')
+      // No errors at rest → empty text content.
+      expect(region!.textContent ?? '').toBe('')
+    })
+
+    it('joins multiple simultaneous hook errors with " · " in the persistent region (TD.23)', async () => {
+      const user = userEvent.setup()
+      await renderApp()
+      // Seed an expense so a Delete click has work to do.
+      await addExpenseViaForm('15', 'Lunch')
+      await screen.findByText(/Lunch/)
+
+      // Force expenseStore.removeExpense to reject — that surfaces as
+      // expensesHook.error after the failed delete.
+      vi.spyOn(expenseStore, 'removeExpense').mockRejectedValueOnce(
+        new Error('expense store failure'),
+      )
+      // And force categoryStore.removeCategory to reject too, so
+      // categoriesHook.error is set simultaneously.
+      vi.spyOn(categoryStore, 'removeCategory').mockRejectedValueOnce(
+        new Error('category store failure'),
+      )
+
+      // Trigger both deletes (Transport is unused — its block-while-in-use
+      // guard won't fire, so the rejected removeCategory is what surfaces).
+      await user.click(screen.getByRole('button', { name: /delete lunch/i }))
+      await user.click(screen.getByRole('button', { name: /delete transport/i }))
+
+      // Both error strings end up in the join, separated by " · ".
+      await waitFor(() => {
+        const region = document.querySelector('.app__error') as HTMLElement
+        expect(region.textContent ?? '').toMatch(/·/)
+      })
+      const text = (document.querySelector('.app__error') as HTMLElement)
+        .textContent ?? ''
+      // The exact wording of each hook's error is its own concern — we
+      // assert both fragments are present + separated by " · ".
+      const parts = text.split(' · ').filter((p) => p.length > 0)
+      expect(parts.length).toBeGreaterThanOrEqual(2)
+    })
   })
 
   it('sets a per-category budget and shows the saved amount (P5.D)', async () => {

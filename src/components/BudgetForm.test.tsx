@@ -98,4 +98,41 @@ describe('BudgetForm', () => {
     expect(onSubmit).not.toHaveBeenCalled()
     expect(screen.getByRole('alert')).toBeInTheDocument()
   })
+
+  // a11y-P1 TD.18 — form-error association.
+  describe('a11y form-error association', () => {
+    it('marks the amount input aria-invalid="true" on validation failure', async () => {
+      const user = userEvent.setup()
+      render(
+        <BudgetForm
+          month="2026-05"
+          currentAmount={undefined}
+          onSubmit={vi.fn()}
+        />,
+      )
+
+      const amount = screen.getByLabelText(/amount/i)
+      // No error yet — aria-invalid omitted.
+      expect(amount).not.toHaveAttribute('aria-invalid', 'true')
+
+      await user.click(screen.getByRole('button', { name: /set budget/i }))
+
+      expect(amount).toHaveAttribute('aria-invalid', 'true')
+    })
+
+    it('links the amount input to the FieldError via aria-describedby', () => {
+      render(
+        <BudgetForm
+          month="2026-05"
+          currentAmount={undefined}
+          onSubmit={vi.fn()}
+        />,
+      )
+      const amount = screen.getByLabelText(/amount/i)
+      const describedBy = amount.getAttribute('aria-describedby')
+      expect(describedBy).not.toBeNull()
+      // The element with that id must exist (the persistent FieldError slot).
+      expect(document.getElementById(describedBy!)).not.toBeNull()
+    })
+  })
 })

@@ -147,17 +147,20 @@ function App() {
     budgetsHook.loading ||
     categoryBudgetsHook.loading ||
     recurringHook.loading
-  // Each hook owns its own error string; we surface whichever is non-empty
-  // (expense first). Note this is a small UX shift from the pre-hooks code,
-  // where a single shared error slot was cleared by ANY successful op — now
-  // an expense success only clears the expense error, leaving any outstanding
-  // category error visible (and vice versa). Errors are domain-scoped.
-  const error =
-    expensesHook.error ||
-    categoriesHook.error ||
-    budgetsHook.error ||
-    categoryBudgetsHook.error ||
-    recurringHook.error
+  // Each hook owns its own error string. Pre-iter-032, only the first
+  // non-empty error was shown (priority-cascade); this dropped real
+  // information when two stores failed at once. a11y-P1 TD.23 changes
+  // this to a join across all currently-set errors so SR + sighted users
+  // see every outstanding failure. Filter on `e !== ''` (the canonical
+  // "no error" sentinel each hook uses) rather than truthiness so a
+  // hypothetical falsy-but-non-empty value still surfaces.
+  const errors = [
+    expensesHook.error,
+    categoriesHook.error,
+    budgetsHook.error,
+    categoryBudgetsHook.error,
+    recurringHook.error,
+  ].filter((e): e is string => e !== '')
 
   // P4.E: rollover recurring templates into actual expenses for the selected
   // month. Triggers on mount AND any month switch. Idempotency comes from
@@ -208,6 +211,13 @@ function App() {
 
   return (
     <main className="app">
+      {/* a11y-P1 TD.19: skip-link is the first focusable element so a
+          keyboard user lands on it on Tab. Visible only on :focus via
+          a CSS transform; positioned absolutely so it doesn't shift
+          layout when hidden. Targets #main-content below. */}
+      <a href="#main-content" className="skip-link">
+        Skip to expense list
+      </a>
       <header className="app__header">
         <h1>Expense Tracker</h1>
         <ThemeToggle />
@@ -238,11 +248,21 @@ function App() {
           clearOnSubmit
         />
       )}
-      {error && (
-        <p className="app__error" role="alert">
-          {error}
-        </p>
-      )}
+      {/* a11y-P1 TD.20 + TD.23: persistent error live-region — always in
+          the DOM (empty when there are no errors) so assistive tech can
+          observe insertions without losing the region reference. The
+          slot uses `aria-live="assertive"` since these are domain
+          errors. TD.23: all currently-set hook errors are joined with
+          " · " rather than priority-cascaded — a second simultaneous
+          failure is now visible alongside the first. */}
+      <div
+        className="app__error"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        {errors.length > 0 ? errors.join(' · ') : ''}
+      </div>
       {loading ? (
         <Spinner size="lg" />
       ) : (
@@ -285,13 +305,23 @@ function App() {
               />
             </Suspense>
           </div>
-          <ExpenseList
-            expenses={visibleExpenses}
-            categories={categoriesHook.categories}
-            currency={currency}
-            onDelete={expensesHook.remove}
-            onEdit={setEditing}
-          />
+          {/* a11y-P1 TD.19 target: skip-link above jumps here. Wrapping
+              the expense list in a labelled section gives the link a
+              concrete anchor and gives SR users a landmark for "the
+              expense list". */}
+          <section
+            id="main-content"
+            className="app__main"
+            aria-label="Expense list"
+          >
+            <ExpenseList
+              expenses={visibleExpenses}
+              categories={categoriesHook.categories}
+              currency={currency}
+              onDelete={expensesHook.remove}
+              onEdit={setEditing}
+            />
+          </section>
           {/* P6.C a11y-012: insights/trends/budget/categories/recurring all
               depend on data the hooks are still loading. Rendering them
               with empty/zero state during mount flashes "$0", "No budget",

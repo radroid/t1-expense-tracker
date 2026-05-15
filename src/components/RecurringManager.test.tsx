@@ -269,6 +269,94 @@ describe('RecurringManager', () => {
     ])
   })
 
+  // a11y-P1 TD.18 — form-error association across description/amount/dayOfMonth.
+  describe('a11y form-error association', () => {
+    it('marks the description input aria-invalid when description validation fails', async () => {
+      const user = userEvent.setup()
+      render(
+        <RecurringManager
+          templates={[]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      await user.click(screen.getByRole('button', { name: /add recurring/i }))
+      expect(screen.getByLabelText('Template description')).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+      expect(screen.getByLabelText('Template amount')).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+    })
+
+    it('marks the dayOfMonth input aria-invalid when day validation fails', async () => {
+      const user = userEvent.setup()
+      render(
+        <RecurringManager
+          templates={[]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      await user.type(screen.getByLabelText('Template description'), 'Bad')
+      await user.clear(screen.getByLabelText('Template amount'))
+      await user.type(screen.getByLabelText('Template amount'), '10')
+      await user.clear(screen.getByLabelText('Day of month'))
+      await user.type(screen.getByLabelText('Day of month'), '31')
+      await user.click(screen.getByRole('button', { name: /add recurring/i }))
+
+      expect(screen.getByLabelText('Day of month')).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+      expect(screen.getByLabelText('Template description')).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+      expect(screen.getByLabelText('Template amount')).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+    })
+
+    it('links each validated input to the FieldError via aria-describedby', () => {
+      render(
+        <RecurringManager
+          templates={[]}
+          categories={categories}
+          onAdd={vi.fn().mockResolvedValue(true)}
+          onAddMany={vi
+            .fn()
+            .mockResolvedValue({ added: 0, skipped: 0, errors: [] })}
+          onDelete={vi.fn().mockResolvedValue(true)}
+        />,
+      )
+      const descDB = screen
+        .getByLabelText('Template description')
+        .getAttribute('aria-describedby')
+      const amountDB = screen
+        .getByLabelText('Template amount')
+        .getAttribute('aria-describedby')
+      const dayDB = screen
+        .getByLabelText('Day of month')
+        .getAttribute('aria-describedby')
+      expect(descDB).not.toBeNull()
+      expect(descDB).toBe(amountDB)
+      expect(descDB).toBe(dayDB)
+      expect(document.getElementById(descDB!)).not.toBeNull()
+    })
+  })
+
   it('shows an inline validation error for non-positive amount', async () => {
     const user = userEvent.setup()
     const onAdd = vi.fn().mockResolvedValue(true)

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Category, CategoryInput } from '../lib/category'
+import { FieldError } from './FieldError'
 import './CategoryManager.css'
 
 interface CategoryManagerProps {
@@ -13,6 +14,10 @@ interface CategoryManagerProps {
   getInUseCount?: (categoryId: string) => number
 }
 
+type AddErrorField = 'add-name' | null
+
+const ADD_ERROR_ID = 'category-add-error'
+
 const DEFAULT_COLOR = '#888888'
 
 export function CategoryManager({
@@ -25,6 +30,10 @@ export function CategoryManager({
   const [name, setName] = useState('')
   const [color, setColor] = useState(DEFAULT_COLOR)
   const [error, setError] = useState('')
+  // Discriminated state for which field the current add-form error
+  // belongs to. Single-field today, but the union keeps the wiring
+  // shape consistent with the other forms (a11y-P1 TD.18).
+  const [errorField, setErrorField] = useState<AddErrorField>(null)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -32,11 +41,13 @@ export function CategoryManager({
     const trimmedName = name.trim()
     if (trimmedName === '') {
       setError('Please enter a category name.')
+      setErrorField('add-name')
       return
     }
 
     onAdd({ name: trimmedName, color })
     setError('')
+    setErrorField(null)
     setName('')
   }
 
@@ -62,6 +73,8 @@ export function CategoryManager({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            aria-invalid={errorField === 'add-name' ? true : undefined}
+            aria-describedby={ADD_ERROR_ID}
           />
         </div>
 
@@ -75,11 +88,7 @@ export function CategoryManager({
           />
         </div>
 
-        {error && (
-          <p className="category-manager__error" role="alert">
-            {error}
-          </p>
-        )}
+        <FieldError id={ADD_ERROR_ID} message={error === '' ? null : error} />
 
         <button type="submit">Add category</button>
       </form>
@@ -107,6 +116,12 @@ function CategoryRow({
   function handleRename() {
     const trimmedName = name.trim()
     if (trimmedName === '') {
+      // a11y-P1 TD.18: rather than adding an inline error to every row
+      // (which would multiply alert regions on the page), we revert the
+      // local draft to the canonical name. The Save button silently
+      // no-ops were the previous behavior; the revert here makes the
+      // resolution visible to the user.
+      setName(category.name)
       return
     }
     onRename(category.id, trimmedName)

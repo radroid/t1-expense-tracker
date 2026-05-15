@@ -4,6 +4,51 @@
   padding: 2rem 1rem;
   background: var(--app-bg);
   color: var(--app-fg);
+  /* Positioning context for the skip-link, which is absolutely
+     positioned relative to the app shell. */
+  position: relative;
+}
+
+/* a11y-P1 TD.19: keyboard-only skip-link.
+
+   Always in the DOM (so AT can discover it), but visually offscreen via
+   transform until it receives focus. Once focused, slides into view
+   pinned to the top-left of the app shell. We use transform (not
+   display:none / visibility:hidden) because those would also remove
+   the element from the tab order. */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(-200%);
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  background: var(--app-accent);
+  color: var(--app-accent-fg);
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--app-fg);
+  outline-offset: 2px;
+}
+
+/* a11y-P1 TD.20: persistent error live region. Empty by default so the
+   slot reserves no vertical space when there's no error, but the element
+   itself is always present in the DOM so assistive tech keeps a stable
+   reference to it. */
+.app__error {
+  margin: 0;
+  color: var(--app-error);
+}
+
+.app__error:empty {
+  /* Avoid reserving margins when there's nothing to announce — the slot
+     is purely a live region anchor in this state. */
+  margin: 0;
+  padding: 0;
 }
 
 .app h1 {

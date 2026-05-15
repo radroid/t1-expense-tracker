@@ -458,6 +458,79 @@ describe('ExpenseForm — category picker', () => {
     expect(select.value).toBe('cat-transport')
   })
 
+  // a11y-P1 TD.18 — form-error association across the three validated fields.
+  describe('a11y form-error association', () => {
+    it('marks the amount input aria-invalid when amount validation fails', async () => {
+      const user = userEvent.setup()
+      render(
+        <ExpenseForm
+          categories={categories}
+          submitLabel="Add expense"
+          onSubmit={vi.fn()}
+          clearOnSubmit
+        />,
+      )
+      await user.click(screen.getByRole('button', { name: /add/i }))
+      expect(screen.getByLabelText(/amount/i)).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+      // Description and date are NOT marked invalid — only the failing field.
+      expect(screen.getByLabelText(/description/i)).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+      expect(screen.getByLabelText(/date/i)).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+    })
+
+    it('marks the description input aria-invalid when description validation fails', async () => {
+      const user = userEvent.setup()
+      render(
+        <ExpenseForm
+          categories={categories}
+          submitLabel="Add expense"
+          onSubmit={vi.fn()}
+          clearOnSubmit
+        />,
+      )
+      await user.type(screen.getByLabelText(/amount/i), '10')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+      expect(screen.getByLabelText(/description/i)).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+      expect(screen.getByLabelText(/amount/i)).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
+    })
+
+    it('links each validated input to the FieldError via aria-describedby', () => {
+      render(
+        <ExpenseForm
+          categories={categories}
+          submitLabel="Add expense"
+          onSubmit={vi.fn()}
+          clearOnSubmit
+        />,
+      )
+      const amountDB = screen
+        .getByLabelText(/amount/i)
+        .getAttribute('aria-describedby')
+      const descDB = screen
+        .getByLabelText(/description/i)
+        .getAttribute('aria-describedby')
+      const dateDB = screen.getByLabelText(/date/i).getAttribute('aria-describedby')
+      expect(amountDB).not.toBeNull()
+      expect(amountDB).toBe(descDB)
+      expect(amountDB).toBe(dateDB)
+      expect(document.getElementById(amountDB!)).not.toBeNull()
+    })
+  })
+
   it('retains the category selection after a clearOnSubmit submit', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()

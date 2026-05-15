@@ -130,4 +130,39 @@ describe('CategoryManager', () => {
       expect(onDelete).not.toHaveBeenCalled()
     })
   })
+
+  // a11y-P1 TD.18 — form-error association on the add form's name input.
+  describe('a11y form-error association', () => {
+    it('marks the name input aria-invalid="true" on blank-name submit', async () => {
+      const user = userEvent.setup()
+      setup()
+      const nameInput = screen.getByLabelText('New category name')
+      expect(nameInput).not.toHaveAttribute('aria-invalid', 'true')
+
+      await user.click(screen.getByRole('button', { name: /add category/i }))
+
+      expect(nameInput).toHaveAttribute('aria-invalid', 'true')
+    })
+
+    it('links the name input to the FieldError via aria-describedby', () => {
+      setup()
+      const nameInput = screen.getByLabelText('New category name')
+      const describedBy = nameInput.getAttribute('aria-describedby')
+      expect(describedBy).not.toBeNull()
+      expect(document.getElementById(describedBy!)).not.toBeNull()
+    })
+
+    it('reverts the row name draft to the canonical name when the user tries to save a blank rename', async () => {
+      const user = userEvent.setup()
+      const { onRename } = setup()
+      const renameInput = screen.getByLabelText('Rename Groceries') as HTMLInputElement
+      await user.clear(renameInput)
+      // (input is now empty)
+      await user.click(screen.getByRole('button', { name: /save Groceries/i }))
+      // onRename was NOT called because the trimmed name was blank.
+      expect(onRename).not.toHaveBeenCalled()
+      // Draft is reverted to the canonical category name.
+      expect(renameInput.value).toBe('Groceries')
+    })
+  })
 })

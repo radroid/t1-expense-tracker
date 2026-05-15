@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ExpenseInput } from '../lib/expense'
 import type { Category } from '../lib/category'
+import { FieldError } from './FieldError'
 import './ExpenseForm.css'
 
 interface ExpenseFormProps {
@@ -11,6 +12,10 @@ interface ExpenseFormProps {
   onCancel?: () => void
   clearOnSubmit?: boolean
 }
+
+type ErrorField = 'amount' | 'description' | 'date' | null
+
+const ERROR_ID = 'expense-form-error'
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
@@ -31,6 +36,10 @@ export function ExpenseForm({
   const [date, setDate] = useState(initial?.date ?? todayISO())
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
   const [error, setError] = useState('')
+  // Tracks which field the current `error` is about, so we can mark
+  // ONLY that input as aria-invalid (TD.18). null when there's no
+  // outstanding validation failure.
+  const [errorField, setErrorField] = useState<ErrorField>(null)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -40,14 +49,17 @@ export function ExpenseForm({
 
     if (amount.trim() === '' || Number.isNaN(parsedAmount)) {
       setError('Please enter a valid amount.')
+      setErrorField('amount')
       return
     }
     if (trimmedDescription === '') {
       setError('Please enter a description.')
+      setErrorField('description')
       return
     }
     if (date === '') {
       setError('Please enter a date.')
+      setErrorField('date')
       return
     }
 
@@ -59,6 +71,7 @@ export function ExpenseForm({
     })
 
     setError('')
+    setErrorField(null)
 
     if (clearOnSubmit) {
       setAmount('')
@@ -76,6 +89,8 @@ export function ExpenseForm({
           step="any"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          aria-invalid={errorField === 'amount' ? true : undefined}
+          aria-describedby={ERROR_ID}
         />
       </div>
 
@@ -86,6 +101,8 @@ export function ExpenseForm({
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          aria-invalid={errorField === 'description' ? true : undefined}
+          aria-describedby={ERROR_ID}
         />
       </div>
 
@@ -96,6 +113,8 @@ export function ExpenseForm({
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
+          aria-invalid={errorField === 'date' ? true : undefined}
+          aria-describedby={ERROR_ID}
         />
       </div>
 
@@ -115,11 +134,7 @@ export function ExpenseForm({
         </select>
       </div>
 
-      {error && (
-        <p className="expense-form__error" role="alert">
-          {error}
-        </p>
-      )}
+      <FieldError id={ERROR_ID} message={error === '' ? null : error} />
 
       <div className="expense-form__actions">
         <button type="submit">{submitLabel}</button>
