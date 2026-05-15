@@ -109,10 +109,13 @@ the post-arch handoff into concrete items below.
   `monthlyBudgets` for v1 — no implicit "month total = sum of
   per-category". Backup schema bumped 1→2 to include the new entity.
   — iter-021 / PR #54
-- [ ] P5.E — Multi-currency — single-currency-per-expense field
-  (`currency?: string`, ISO 4217). Display preference (`useCurrency`
-  hook) defaults to USD. Updates totals/format helpers. iter-021+
-  target (lots of touch points; defer until P5.A-D land).
+- [done] P5.E — Multi-currency — single user-pref currency
+  (`CurrencyCode = 'USD'|'EUR'|'GBP'|'JPY'`), localStorage-backed
+  mirroring `theme.ts`. `useCurrency` hook + `<CurrencySelector>` UI;
+  `formatCurrency(amount, code)` formatter with per-code cached
+  `Intl.NumberFormat`. `currency` prop threaded through six money-
+  rendering components. NOT per-expense for v1 (per-expense without
+  conversion rates would mislead totals). — iter-022 / PR #56
 
 ## Tech debt
 

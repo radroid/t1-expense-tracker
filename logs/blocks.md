@@ -820,3 +820,75 @@ log entry, GOALS.md TD additions, and the iter-017 closeout PR.
 - Domain wraps `useStoredCollection` with the smallest possible
   surface (set + remove + getFor + refresh); no new CRUD primitives
   invented.
+
+---
+
+## iter-022 super-reviewer notes (PR #56 — P5.E multi-currency)
+
+**Verdict: APPROVE (high confidence).** Phase 5 closer.
+
+### Verified
+
+- **Forbidden-file audit clean**: diff against `src/lib/expense.ts`,
+  `src/lib/csv.ts`, `src/lib/backup.ts`, `src/db/` is empty.
+  `DB_VERSION === 5` and `BACKUP_SCHEMA_VERSION === 2` unchanged.
+- **`useCurrency`** uses `useState` lazy initializer (no SSR/effect
+  race on first paint). `setCurrency` is `useCallback`-memoized.
+- **`formatterCache`** keyed by `CurrencyCode` (4 entries max). Locale
+  pinned to `'en-US'`; thousands-separator test across all four codes.
+- **JPY zero-fraction-digit path**: `formatterFor` sets
+  `minimumFractionDigits: 0, maximumFractionDigits: 0` for JPY,
+  `2,2` for the rest. No hard-coded `2` leak.
+- **Defensive try/catch tests**: `vi.spyOn(Storage.prototype,
+  'getItem'|'setItem').mockImplementation(() => { throw ... })`
+  drives the catch branches. `loadCurrency` returns `'USD'` on
+  read-throw; `saveCurrency` swallows write-throw.
+- **`isCurrencyCode`** covers all 4 positive cases + `'XYZ'`/`''`/case
+  mismatch + `null`/`undefined`/number/object negatives.
+- **`<CurrencySelector>`**: `useId`-bound `<label htmlFor>`,
+  belt-and-braces `isCurrencyCode` guard in the change handler,
+  `--app-*` tokens, `min-height: 44px` on wrapper + select, mobile
+  `≤480px` breakpoint full-width.
+- **App.test integration**: localStorage seeded `'EUR'` boots
+  RunningTotal as `€10.00`; switching to `'JPY'` via the selector
+  flips to `¥100` (no decimals) AND persists `'JPY'` back to
+  localStorage — full hook+selector+formatter loop end-to-end.
+- **All 6 consumers receive `currency: CurrencyCode`** and route
+  through `formatCurrency`. App.tsx owns `useCurrency()`. Grep
+  confirms no shipping `formatUSD` callers remain (shim used only by
+  its own pinned tests).
+- **Test infra consolidated**: `src/test/setup.ts` owns the Node-25
+  Storage shim + a global `afterEach(localStorage.clear())`.
+  Per-file shims removed from `theme.test.ts` + `ThemeToggle.test.tsx`.
+
+### Findings (all nit / info — no action)
+
+1. `MonthlySummary.test.tsx:31` + `SpendingChart.test.tsx:88` test
+   descriptions still say "with formatUSD" / "via formatUSD" while
+   bodies now exercise `formatCurrency(amount, 'USD')`. Cosmetic;
+   assertions correct. Rename in a follow-up.
+2. `formatUSD` shim is exported, used only by its own pinned tests.
+   Grep confirms zero shipping callers. Safe to drop in a later iter.
+
+### Strengths
+
+- **Phase 5 closes cleanly.** Five features landed across five iters
+  (iter-019/020/021/022 covered them, with the arch pass at iter-017
+  setting up the hook seam that all four storage-backed Phase 5
+  features used).
+- The currency seam mirrors the theme seam exactly — same
+  load/save/key pattern, same try/catch fallback, same shape of
+  storage hook. Future "preference" additions can copy the pattern
+  without thought.
+- The localStorage shim centralisation finally landed — a
+  long-running carry-forward that was always blocked on "wait for a
+  second consumer". `useCurrency` was that consumer.
+- Prop drilling over Context was the right call for 6 sites of depth
+  ≤2 — no provider indirection added.
+
+## Phase 5 closed → iter-023 = MANDATORY ARCH PASS
+
+iter-023 MUST start with the `improve-codebase-architecture` skill
+invocation (real tool call, not a concept). Result MUST be logged
+here with `**Source:** arch-pass`. This is a hard rule from the loop
+protocol.
