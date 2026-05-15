@@ -398,7 +398,12 @@ describe('App', () => {
     // the App-side guard directly by asserting the disabled state + the
     // count annotation.
     expect(deleteFood).toBeDisabled()
-    expect(screen.getByText(/1 expense/i)).toBeInTheDocument()
+    // Scope to the CategoryManager's annotation span; the TrendsChart
+    // tooltip also contains "(1 expense)" so a global getByText is
+    // ambiguous.
+    const inUseCount = document.querySelector('.category-manager__count')
+    expect(inUseCount).not.toBeNull()
+    expect(inUseCount!.textContent).toMatch(/1 expense/i)
 
     // The Lunch expense is still there; Food is still selectable in the
     // filter (i.e. wasn't deleted out from under the filter).

@@ -1060,6 +1060,48 @@ No behavioral drift; diff is exactly the contracted pure-subtraction
 
 ---
 
+## iter-027 — super-reviewer (P6.B time-series analytics)
+
+**Verdict:** APPROVE — confidence **high**.
+
+Combined contract-review + forced design-review pass (UI feature
+without automated visual signal). All P6.B contract guarantees
+hold and are test-covered:
+
+- `summarizeByMonth` sorts ascending YYYY-MM (lex-sort works
+  because zero-padded); no zero-fills.
+- `summarizeYear` always emits 12 entries Jan→Dec; other-year
+  expenses excluded; bad year throws via `parseYear`.
+- `<YearSwitcher>` structurally mirrors `<MonthSwitcher>`
+  (role=group, aria-labels, 44px touch targets).
+- `<TrendsChart>` enforces single-accent bar color via CSS
+  class (not inline `fill=`) — notably cleaner than the older
+  SpendingChart which still inline-fills.
+- App.tsx reads from full `expensesHook.expenses` (NOT
+  `visibleExpenses`) — year view stays stable as user filters
+  change.
+
+**Design-review:**
+- Theme: both CSS files use only `var(--app-*)` tokens — no
+  hex/rgb leaks; light + dark palettes both pass AA.
+- Touch targets: YearSwitcher buttons 44×44 minimum.
+- Hierarchy: `<h2>Trends</h2>` + YearSwitcher + chart reads
+  cohesively. Consistent with `app__insights` pattern.
+- Empty state: reuses EmptyState ("No data to chart") with
+  `role="status"`.
+- **Nit (non-blocking):** 12 month labels at ≤480px width get
+  visually tight (font-size 10px). Future polish: alternate or
+  rotate. Captured as carry-forward (P6.C a11y/responsive
+  sweep covers this).
+
+**Forbidden-file audit:** `src/db/*`, `src/lib/{csv,
+recurringCsv, backup, parseBackup}.ts`,
+`src/db/restoreBackup.ts` all UNTOUCHED.
+
+**Source:** super-reviewer (Class A).
+
+---
+
 ## iter-026 — super-reviewer (fat-iter: P6.A + P6.E)
 
 **Verdict:** APPROVE-WITH-NITS — confidence **high**.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { type Expense, type ExpenseInput } from './lib/expense'
 import { dueTemplatesForMonth, generateDueExpenses } from './lib/recurring'
 import { ExpenseForm } from './components/ExpenseForm'
@@ -11,6 +11,8 @@ import { CategoryBudgetManager } from './components/CategoryBudgetManager'
 import { RecurringManager } from './components/RecurringManager'
 import { CategoryFilter } from './components/CategoryFilter'
 import { MonthSwitcher } from './components/MonthSwitcher'
+import { YearSwitcher } from './components/YearSwitcher'
+import { TrendsChart } from './components/TrendsChart'
 import { MonthlySummary } from './components/MonthlySummary'
 import { BudgetForm } from './components/BudgetForm'
 import { BudgetVsActual } from './components/BudgetVsActual'
@@ -25,6 +27,8 @@ import { BackupRestore } from './components/BackupRestore'
 import { Spinner } from './components/Spinner'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
+import { currentYear } from './lib/year'
+import { summarizeYear } from './lib/trends'
 import {
   parseFilters,
   serializeFilters,
@@ -69,6 +73,11 @@ function App() {
   const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(
     initialFilters.dateRange ?? null,
   )
+  // P6.B — selectedYear for the Trends section. Independent of selectedMonth;
+  // the Trends section is always rendered and reads from the full expenses
+  // list (NOT visibleExpenses) so user filters in the month view don't
+  // collapse the year-over-year picture.
+  const [selectedYear, setSelectedYear] = useState<string>(currentYear)
 
   // P5.A — keep the URL hash in sync with current filter state. Effect
   // runs on every filter change; no DOM access in the lib, so we own
@@ -99,6 +108,11 @@ function App() {
   // through App. monthlyExpenses is the month-only slice (used by BudgetVsActual
   // — budget is month-scoped regardless of category filter); visibleExpenses is
   // the user-visible slice flowing to everything else.
+  const yearTrendsData = useMemo(
+    () => summarizeYear(expensesHook.expenses, selectedYear),
+    [expensesHook.expenses, selectedYear],
+  )
+
   const { monthlyExpenses, visibleExpenses } = useVisibleExpenses({
     expenses: expensesHook.expenses,
     selectedMonth,
@@ -280,6 +294,15 @@ function App() {
           expenses={visibleExpenses}
           categories={categoriesHook.categories}
           currency={currency}
+        />
+      </section>
+      <section className="app__trends">
+        <h2>Trends</h2>
+        <YearSwitcher value={selectedYear} onChange={setSelectedYear} />
+        <TrendsChart
+          data={yearTrendsData}
+          currency={currency}
+          yearLabel={selectedYear}
         />
       </section>
       <section className="app__budget">
