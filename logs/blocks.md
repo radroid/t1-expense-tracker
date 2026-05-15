@@ -1456,3 +1456,22 @@ test gap + a cluster of warnings/nits.
 assertive) and `undo-toast` (`role="status"`, polite) coexist correctly.
 
 **Source:** super-reviewer (Class A).
+
+## iter-034 — CodeRabbit (PR #69)
+
+**Verdict:** 1 Major finding deferred to follow-up (workaround exists).
+
+**Major (deferred to P7.E or follow-up TD):**
+- `RecurringManager` edit form cannot CLEAR an existing categoryId.
+  Selecting "(none)" falls through `parseDraft` (omits categoryId
+  when empty), then `applyRecurringTemplateEdit` preserves existing
+  categoryId under TD.2 semantics. CodeRabbit's proposed fix passing
+  `categoryId: undefined` doesn't resolve it either (undefined ===
+  preserve). Real fix: amend `applyRecurringTemplateEdit` to treat
+  the input categoryId as authoritative (drop the preserve-on-omit
+  symmetry with `applyExpenseEdit`); update applyExpenseEdit
+  consistently if/when this same scenario surfaces for expense edit.
+  Workaround for users: delete + re-add template. Non-blocking for
+  merge.
+
+**Source:** CodeRabbit PR review.
