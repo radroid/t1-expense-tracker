@@ -1,90 +1,87 @@
 # Latest
 
-Latest: iter-031 — **TD.13 + TD.14 fat-iter shipped (PR #67).**
-Two sibling export/import refactors from the iter-030 arch pass.
-TD.13 lifts Blob+anchor+revoke into `src/lib/downloadFile.ts`
-(Safari/Firefox revoke-race fix at the seam). TD.14 splits the
-file-picker pattern into `useFilePicker` (thin) +
-`useParsedFileImporter` (orchestrator); BackupRestore keeps its
-dialog logic. 606 tests pass (+18). Main bundle 232.11 kB / gzip
-71.61; lazy chunks shrank from consolidation.
+Latest: iter-032 — **a11y-P1 fat-iter shipped (PR #68).**
+Four sibling a11y refactors landed in one coherent sweep across
+the error/feedback surface. TD.18 (form-error-association across
+5 forms via new `<FieldError>` + `errorField` discriminator);
+TD.19 (skip-link as first child of `<main>`); TD.20 (persistent
+live region always in DOM); TD.23 (multi-error consolidation —
+errors collector replaces `||` cascade). 628 tests pass (+22).
+Main bundle 233.07 kB / gzip 71.94.
 
-Stage: S3 (pre-Phase-7 refactors continuing) — see
+Stage: S3 (pre-Phase-7 refactors complete) — see
   `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-032 — **a11y-P1 sweep**. TD.18 (form-error-
-  association across 5 forms) + TD.19 (skip-link) + TD.20
-  (persistent error live region) + TD.23 (multi-hook error
-  consolidation). Coherent sweep across form + App.tsx error
-  surfaces. Single PR.
-Open first (for iter-032):
-  - TD.18: `BudgetForm.tsx`, `ExpenseForm.tsx`,
-    `CategoryManager.tsx`, `CategoryBudgetManager.tsx`,
-    `RecurringManager.tsx` (+ tests). Consider new
-    `src/components/FieldError.{tsx,test.tsx,css}` helper.
-  - TD.19: `src/App.tsx` (skip-link rendering) +
-    `src/index.css` (focus-visible styling).
-  - TD.20 + TD.23: `src/App.tsx` (error fan-in + persistent
-    live region).
-Open blocks: none. iter-031 super-reviewer logged under
-  `## iter-031 — super-reviewer (fat-iter: TD.13 + TD.14)` with
-  APPROVE-WITH-NITS high-confidence. Three minor nits captured
-  for carry-forward.
+Next step: iter-033 — **Phase 7 PLANNING**. Triage the 5 themes
+  (recurring-template EDIT, undo stack, bank-CSV presets, local
+  categorization heuristics, calendar-view tab) into concrete
+  `P7.A`...`P7.E` items in GOALS.md. Pick 2–3 feature items
+  based on user value × independence. NO code this iter — pure
+  planning.
+Open first (for iter-033):
+  - `GOALS.md` — append `## Phase 7 — <title>` with concrete
+    `P7.A`...`P7.E` items; promote whichever themes earn their
+    keep.
+  - `ARCHITECTURE.md` — verify the seams the chosen themes
+    will need (`useStoredCollection.update` for recurring EDIT;
+    `tokenizeCsv` for bank-CSV presets; `month.ts` for
+    calendar-view).
+  - `logs/iter-032.md` — open questions (1)..(5) above are the
+    triage spine.
+Open blocks: none. iter-032 super-reviewer logged under
+  `## iter-032 — super-reviewer (a11y-P1 bundle: TD.18 +
+  TD.19 + TD.20 + TD.23)` with APPROVE-WITH-NITS high-
+  confidence. Two minor nits captured for carry-forward.
 
-Test gate: 606 tests pass. `npm run build` main JS 232.11 kB /
-  gzip 71.61 kB. Lazy: RecurringManager 5.84 (was 6.43);
-  BackupRestore 4.64 (was 4.80). Lint clean.
-Push: PR #67 squash-merged.
+Test gate: 628 tests pass. `npm run build` main JS 233.07 kB /
+  gzip 71.94 kB. Lint clean.
+Push: PR #68 squash-merged.
 
-Last-iter shipped (PR #67):
-- `src/lib/downloadFile.{ts,test.ts}` (new; 6 specs) — Blob+
-  anchor+revoke adapter with optional injection bag for
-  testability. Safari/Firefox revoke-race fix via
-  `setTimeout(fn, 0)` scheduler default.
-- `src/lib/month.ts` — added `isoDateToday(now?: Date): string`
-  (UTC, +3 specs). Replaces 3 duplicated local-date helpers
-  in the export components.
-- `src/hooks/useFilePicker.{ts,test.ts}` (new; 4 specs) — thin
-  hook owning ref-reset + `file.text()`. Reset BEFORE awaiting
-  onFile so same-file re-pick fires.
-- `src/hooks/useParsedFileImporter.{ts,test.ts}` (new; 5 specs)
-  — orchestrator owning headerError/summary/rowErrors with
-  parse + import error composition.
-- 3 export components collapse to one-liner `downloadFile({...})`
-  calls. 2 import components collapse (ImportButton 94→62 LOC;
-  RecurringImport 102→76 LOC). BackupRestore adopts only
-  `useFilePicker` (dialog logic preserved).
+Last-iter shipped (PR #68):
+- `src/components/FieldError.{tsx,test.tsx,css}` (new; 5 specs)
+  — persistent slot, `aria-live="polite"`, toggles
+  `role="alert"` when message non-empty. min-height reserves
+  layout to prevent jump.
+- 5 forms gained `errorField` discriminator + per-input
+  `aria-invalid` + `aria-describedby="<form>-error"`:
+  BudgetForm, ExpenseForm, CategoryManager,
+  CategoryBudgetManager, RecurringManager. CategoryManager
+  Rename reverts to canonical name on empty submit.
+- `src/App.tsx` — skip-link added as first child of `<main>`;
+  new `<section id="main-content" aria-label="Expense list">`
+  wraps ExpenseList; `errors: string[]` collector replaces
+  `error = a || b || c || ...` cascade; persistent
+  `<div role="alert" aria-live="assertive" aria-atomic="true">`
+  always rendered.
+- `src/App.css` — `.skip-link` with `transform:
+  translateY(-200%)` at rest, `:focus` reveals.
+- 628 tests pass (+22). Main 233.07/71.94. Lint clean.
 
-Operational notes for iter-032:
-  - **Cadence:** 600s (impl-iter).
+Operational notes for iter-033:
+  - **Cadence:** 1500s (plan-iter — thinking work, not impl).
   - **Process-fix held**: explicit-path staging on every commit.
-    Seventeen-iter streak.
+    Eighteen-iter streak.
   - `vite.config.ts` `fileParallelism: false` still
     load-bearing.
   - **localStorage shim centralised** in `src/test/setup.ts`.
-  - **Seams in play (post-iter-031):** `store.ts` (IDB),
+  - **Seams in play (post-iter-032):** `store.ts` (IDB),
     `useStoredCollection` (hook), `errorMessages.ts`
     (messaging), `currency.ts` (formatter), `downloadFile.ts`
     (download), `useFilePicker.ts` + `useParsedFileImporter.ts`
-    (import). iter-032 may add `FieldError` (visual a11y seam)
-    if scope earns it.
+    (import), `FieldError.tsx` (a11y error slot).
   - **DB version still 5**, backup `BACKUP_SCHEMA_VERSION`
-    still 2. iter-032 is presentation-layer.
-  - **a11y context from iter-028:** 13 P0 + 8 P1 + 8 P2
-    findings; P0 cluster shipped. The P1 cluster targets
-    form-error-association — already enumerated as
-    a11y-016..a11y-019 in `logs/blocks.md` ## iter-028.
-    Class B can implement directly without a re-audit.
+    still 2. iter-033 is pure planning — no schema changes.
+  - **Phase 7 themes from iter-030 arch pass:** 5 candidates
+    listed in GOALS.md `## Phase 7 — TBD` section. Triage
+    them into concrete P7.A..P7.E this iter.
 
-Open questions for iter-032:
-  (1) `<FieldError>` component vs convention? Lean:
-      component at 5 consumers; small surface, earns
-      locality.
-  (2) Audit-first vs spec-and-impl? Lean: spec-and-impl
-      since iter-028 audit already enumerated. No re-audit
-      needed.
-  (3) Single PR or split a11y-P1 + multi-error? Lean: single
-      PR — all touch error/feedback surfaces.
-  (4) `errors: string[]` collector at App.tsx — render as
-      `<ul>` (verbose) or join with `· ` (compact)? Lean:
-      join with `· ` separator (matches iter-028 audit
-      a11y-007 suggestion).
+Open questions for iter-033:
+  (1) How many P7 items? Lean: 3 feature + maybe-bundle
+      polish. 5 is too many; 2 risks under-scoping the phase.
+  (2) Recurring EDIT — include? Lean: yes (cheapest, reuses
+      ExpenseForm consolidation pattern).
+  (3) Bank-CSV presets — include? Lean: yes (concrete user
+      value, unlocks TD.21 promotion).
+  (4) Calendar-view — include? Lean: defer to P8 (visually
+      compelling but cosmetic; less locality leverage).
+  (5) Undo stack — include? Lean: yes (touches the
+      mutation channel, validates `useStoredCollection`).

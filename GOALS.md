@@ -170,7 +170,8 @@ local-only, adding a network dependency violates that charter.
   from full `expensesHook.expenses` so user filters don't collapse
   the year view. — iter-027 / PR #62
 - [done] P6.C — Accessibility audit pass — Class A audit enumerated
-  13 P0 + 8 P1 + 8 P2 findings; P0 cluster (14 fixes) shipped:
+  13 P0 + 8 P1 + 8 P2 findings; P0 cluster (14 fixes) shipped iter-028;
+  P1 cluster (TD.18 + TD.19 + TD.20 + TD.23 fat-iter) shipped iter-032 / PR #68.
   empty-state title normalization; chart `<text>` aria-hidden;
   section `aria-labelledby` landmarks; BudgetVsActual
   `role="progressbar"` with aria-value*; BackupRestore `<dialog>`
@@ -291,21 +292,18 @@ local-only, adding a network dependency violates that charter.
   test descriptions in `MonthlySummary.test.tsx` +
   `SpendingChart.test.tsx` renamed `formatUSD`→`formatCurrency`.
   — iter-024 / PR #59
-- [ ] TD.18 — A11y form-error-association sweep — every form with
-  inline validation (BudgetForm, ExpenseForm, CategoryManager,
-  CategoryBudgetManager, RecurringManager) currently sets a single
-  inline `role="alert"` but doesn't mark the individual `<input>`s
-  with `aria-invalid` or `aria-describedby` pointing at the
-  alert. SR users hear the message but can't easily identify which
-  field failed. Coherent independent sweep — ~5 forms, modest
-  per-form delta. (iter-028 a11y audit P1 cluster — a11y-016
-  through a11y-019.)
-- [ ] TD.19 — A11y skip-link — add a "Skip to expense list"
-  anchor before `<header>` styled to appear on focus only, plus
-  a corresponding `id="main-content"` target on the main list
-  region. Helps keyboard users bypass the header toolbar
-  (ThemeToggle, CurrencySelector, MonthSwitcher) which currently
-  has no grouping. (iter-028 a11y audit a11y-004.)
+- [done] TD.18 — A11y form-error-association sweep — 5 forms
+  (BudgetForm, ExpenseForm, CategoryManager, CategoryBudgetManager,
+  RecurringManager) gained per-field `aria-invalid` +
+  `aria-describedby` via new `errorField` discriminator + new
+  `<FieldError>` component (`aria-live="polite"`, `role="alert"`
+  when message non-empty). CategoryManager Rename now reverts to
+  canonical name on empty submit. — iter-032 / PR #68.
+- [done] TD.19 — A11y skip-link — `<a class="skip-link"
+  href="#main-content">Skip to expense list</a>` is the first
+  child of `<main>`; `transform: translateY(-200%)` at rest,
+  `:focus` reveals. New `<section id="main-content"
+  aria-label="Expense list">` wraps ExpenseList. — iter-032 / PR #68.
 - [ ] TD.21 — CSV core concentration — `src/lib/csv.ts` and
   `src/lib/recurringCsv.ts` share a bit-identical 60-LOC
   `tokenizeCsv` state machine + `csvQuote` + `headerMatches` +
@@ -323,12 +321,10 @@ local-only, adding a network dependency violates that charter.
   two seams shrinks the orchestration footprint. **Reassess at
   P7→P8** unless P7 adds another App-level effect. (iter-030 arch
   pass.)
-- [ ] TD.23 — Multi-hook error consolidation — `App.tsx`'s
-  `error = a || b || c || d || e` cascade hides errors when
-  multiple hooks fail simultaneously (only the first non-falsy
-  surfaces). Replace with `errors: string[]` collector (filter
-  falsy, join " · " or render as `<ul>`). Pair with TD.20's
-  persistent live-region slot. (iter-030 arch pass.)
+- [done] TD.23 — Multi-hook error consolidation — `App.tsx`'s
+  `error = a || b || c || d || e` cascade replaced with
+  `errors: string[]` collector (filter falsy, join " · "). Paired
+  with TD.20's persistent live region. — iter-032 / PR #68.
 - [ ] TD.24 — `bindStore<T, K>(mod, methodMap)` helper to remove
   the spy-friendly closure boilerplate from 5 domain hooks. Each
   hook currently declares an identical `useMemo<Store<T>>` wrapping
@@ -336,14 +332,11 @@ local-only, adding a network dependency violates that charter.
   through ESM bindings; the rationale comment is copy-pasted in
   4-5 places. Cleanup-bundle only — pick during a future
   cleanup-week iter, not standalone. (iter-030 arch pass.)
-- [ ] TD.20 — A11y persistent error live region — current
-  `{error && <p role="alert">…}` renders the region only when an
-  error appears; cleaner pattern is a persistent slot. Also:
-  when multiple hooks error simultaneously only the first is
-  shown (expense > category > budget > categoryBudgets >
-  recurring). Consider joining with " · " so a category error
-  isn't masked by an expense error. (iter-028 a11y audit
-  a11y-007.)
+- [done] TD.20 — A11y persistent error live region — App.tsx now
+  renders a persistent `<div role="alert" aria-live="assertive"
+  aria-atomic="true" className="app__error">` always in the DOM
+  (empty when no errors); replaces the conditional
+  `{error && <p>...}` pattern. — iter-032 / PR #68.
 - [ ] TD.17 — App-level category-delete guard at
   `App.tsx.handleDeleteCategory` is defense-in-depth but not directly
   exercised by a test — UI disable short-circuits the click, so the
