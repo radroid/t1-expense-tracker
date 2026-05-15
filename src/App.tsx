@@ -18,9 +18,15 @@ import { DateRangeFilter } from './components/DateRangeFilter'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ExportButton } from './components/ExportButton'
 import { ImportButton } from './components/ImportButton'
+import { BackupExport } from './components/BackupExport'
 import { Spinner } from './components/Spinner'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
+import {
+  parseFilters,
+  serializeFilters,
+  type FilterState,
+} from './lib/urlFilters'
 import { totalAmount } from './lib/totals'
 import { computeBudgetStatus } from './lib/budgetStatus'
 import { useExpenses } from './hooks/useExpenses'
@@ -36,14 +42,49 @@ function App() {
   const budgetsHook = useMonthlyBudgets()
   const recurringHook = useRecurringTemplates()
   const [editing, setEditing] = useState<Expense | null>(null)
-  const [filter, setFilter] = useState<CategoryFilterValue>('all')
-  // Lazy initializer: useState calls `currentMonth` once on mount, so
-  // selectedMonth is a 'YYYY-MM' string — not a function reference.
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(
-    null,
+  // Lazy-init filter state from the URL hash so a bookmarked / reloaded
+  // filtered view restores on first paint. parseFilters returns only the
+  // fields present in the hash; missing fields fall back to defaults.
+  // Reading window.location.hash inside the initializer runs once.
+  const initialFilters: Partial<FilterState> = parseFilters(
+    typeof window === 'undefined'
+      ? ''
+      : window.location.hash.replace(/^#/, ''),
   )
+  const [filter, setFilter] = useState<CategoryFilterValue>(
+    (initialFilters.filter as CategoryFilterValue | undefined) ?? 'all',
+  )
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    initialFilters.selectedMonth ?? currentMonth(),
+  )
+  const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm ?? '')
+  const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(
+    initialFilters.dateRange ?? null,
+  )
+
+  // P5.A — keep the URL hash in sync with current filter state. Effect
+  // runs on every filter change; no DOM access in the lib, so we own
+  // window.location here.
+  useEffect(() => {
+    const hash = serializeFilters({
+      selectedMonth,
+      filter,
+      searchTerm,
+      dateRange,
+    })
+    const next = hash === '' ? '' : `#${hash}`
+    if (typeof window !== 'undefined' && window.location.hash !== next) {
+      // replaceState avoids polluting the back stack on every keystroke.
+      // When clearing, target the current path + search so the URL retains
+      // its base — passing a single space (as an earlier revision did) is
+      // unconventional and would leave a literal " " in the URL bar.
+      const targetUrl =
+        next === ''
+          ? `${window.location.pathname}${window.location.search}`
+          : next
+      window.history.replaceState(null, '', targetUrl)
+    }
+  }, [selectedMonth, filter, searchTerm, dateRange])
 
   // Filter pipeline lives in useVisibleExpenses. New view-state (P4.A search,
   // P4.B date-range) will plug into that hook's signature rather than scattering
@@ -171,6 +212,12 @@ function App() {
           <div className="app__csv">
             <ExportButton expenses={visibleExpenses} />
             <ImportButton onImport={expensesHook.addMany} />
+            <BackupExport
+              expenses={expensesHook.expenses}
+              categories={categoriesHook.categories}
+              monthlyBudgets={budgetsHook.budgets}
+              recurringTemplates={recurringHook.templates}
+            />
           </div>
           <ExpenseList
             expenses={visibleExpenses}
