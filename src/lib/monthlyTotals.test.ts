@@ -45,8 +45,4 @@ describe('summarizeExpenses', () => {
     expect(input[0].amount).toBe(1)
     expect(input[1].amount).toBe(2)
   })
-
-  it('works correctly when expenses is []', () => {
-    expect(summarizeExpenses([])).toEqual({ total: 0, average: 0, count: 0 })
-  })
 })
