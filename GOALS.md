@@ -125,15 +125,16 @@ picked; one candidate (per-expense currency with external FX rates)
 explicitly **out-of-charter** for this testbed — the app is
 local-only, adding a network dependency violates that charter.
 
-- [ ] P6.A — Recurring-template CSV export/import — parallel to
-  P4.C/P4.D but for `recurringTemplates`. `formatTemplatesCsv` +
-  `parseTemplatesCsv` (header: `name,amount,description,dayOfMonth,
-  categoryId`); `<RecurringExport>` + `<RecurringImport>` buttons in
-  `RecurringManager`. Re-uses `useRecurringTemplates` for bulk add
-  (may need `addMany` on the hook, mirroring `useExpenses`).
-  Creates the 3rd consumer for the deferred `makeDownloadBlob` seam
-  (TD.13) + `useFileRestoreFlow` (TD.14) — arch-feedback loop. Skip-
-  and-report policy on row errors, matching expenses CSV import.
+- [done] P6.A — Recurring-template CSV export/import. New
+  `src/lib/recurringCsv.ts` (`formatTemplatesCsv` + `parseTemplatesCsv`,
+  header `description,amount,dayOfMonth,categoryId` — frequency
+  excluded, always `'monthly'` today). `useRecurringTemplates.addMany`
+  mirrors `useExpenses.addMany` (`BulkAddResult: {added, skipped,
+  errors}`). New `<RecurringExport>` + `<RecurringImport>` components
+  mirror `<ExportButton>` + `<ImportButton>`; `<RecurringManager>`
+  renders both inline. Creates the 3rd consumer for the deferred
+  TD.13 / TD.14 arch seams — Phase-6 → Phase-7 arch pass should
+  pick them up. — iter-026 / PR #61
 - [ ] P6.B — Time-series analytics — new `src/lib/trends.ts` exposes
   `summarizeByMonth(expenses): Array<{month, total, count}>` (sorted
   ascending). New `<TrendsChart>` component (pure SVG, parallels
@@ -160,17 +161,14 @@ local-only, adding a network dependency violates that charter.
   (c) memoize expensive aggregations (`summarizeByMonth` etc.);
   (d) defer non-critical CSS if Lighthouse flags it. Ship measurement
   + improvement together; report before/after numbers in the iter log.
-- [ ] P6.E — Category-deletion cascade UX resolution (TD.6 promote) —
-  **product decision made:** **block deletion while in use**. The
-  alternatives (silent orphan-to-Uncategorized, force-reassign-on-delete)
-  both surprise the user; blocking matches "no destructive surprise"
-  UX. Impl: `useCategories.remove(id)` checks
-  `expenses.some(e => e.categoryId === id)` and rejects with
-  `categoryMessages.inUse` ("Category is used by N expenses; remove
-  or recategorize them first"); `<CategoryManager>` row shows the
-  count + disables Delete when > 0. The check sits in App.tsx where
-  both hooks are wired (alternative: pass an `isInUse(id)` predicate
-  into `<CategoryManager>`). Closes TD.6.
+- [done] P6.E — Category-deletion cascade UX (block-while-in-use,
+  closes TD.6). New `categoryMessages.inUse(count)` pluralized factory.
+  `useCategories.setError` exposed; hook stays domain-pure (no
+  `useExpenses` import). `<CategoryManager>` gains optional
+  `getInUseCount` prop; Delete disabled + "· N expense(s)" annotation
+  when count > 0. `App.tsx.handleDeleteCategory` checks count BEFORE
+  remove; defense-in-depth at three layers (UI disable + App guard +
+  hook unchanged). — iter-026 / PR #61
 
 ### Deferred (out of Phase 6 scope)
 
@@ -200,10 +198,8 @@ local-only, adding a network dependency violates that charter.
   at v2 directly, seeds an expenses row, reopens via `openDb()` at v3, asserts
   the expense survives + `monthlyBudgets` store exists + a budget round-trips.
   — iter-010 / PR #27
-- [ ] TD.6 — Category-deletion cascade — deleting a category orphans expenses that
-  reference its id (form silently falls back to Uncategorized). Decide: orphan + treat
-  as uncategorized, or block deletion while in use, or reassign. Product decision
-  (iter-006 peer review).
+- [done] TD.6 — Category-deletion cascade resolved: block-while-in-use
+  (promoted to P6.E in iter-025, shipped in iter-026 / PR #61).
 - [done] TD.7 — Generic `useStoredCollection<T, TInput, K>` hook —
   extracted the shared CRUD-hook shape over a small `Store<T, K>`
   interface; optional `update` + `bootstrap`; `setError` + `refresh`
@@ -260,6 +256,14 @@ local-only, adding a network dependency violates that charter.
   test descriptions in `MonthlySummary.test.tsx` +
   `SpendingChart.test.tsx` renamed `formatUSD`→`formatCurrency`.
   — iter-024 / PR #59
+- [ ] TD.17 — App-level category-delete guard at
+  `App.tsx.handleDeleteCategory` is defense-in-depth but not directly
+  exercised by a test — UI disable short-circuits the click, so the
+  count-check branch survives only as a backstop for future refactors
+  that might remove the UI disable. Add a focused test that bypasses
+  the UI disable (e.g. lifting `handleDeleteCategory` to a testable
+  seam) and verifies the App-layer block + inUse error. Low priority
+  — purely test-coverage. (iter-026 super-reviewer nit)
 
 ## Open dependencies (waiting on user)
 

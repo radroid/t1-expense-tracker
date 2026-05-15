@@ -1,80 +1,73 @@
 # Latest
 
-Latest: iter-025 — **Phase 6 planned.** Five P6 items written into
-GOALS.md: P6.A (recurring CSV export/import), P6.B (time-series
-analytics + year view), P6.C (a11y audit), P6.D (perf/bundle pass),
-P6.E (category-deletion cascade UX — TD.6 promote with product
-decision made: block-while-in-use). Per-expense FX currency declined
-as out-of-charter for this local-only testbed.
+Latest: iter-026 — **P6.A (recurring CSV export/import) + P6.E
+(category-delete cascade) shipped (PR #61).** Fat-iter; two
+parallel Class B sub-agents with disjoint allowlists; main-agent
+integrated App.tsx. TD.6 closed (block-while-in-use product call).
+561 tests pass (+37).
 
-Stage: S3 (Phase 6 starting) — see `.loop/state.json`
+Stage: S3 (Phase 6, 2 of 5 done) — see `.loop/state.json`
   (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-026 — **fat-iter** shipping P6.A (recurring CSV) +
-  P6.E (category-delete cascade). Zero pairwise file overlap; two
-  parallel Class B sub-agents.
-Open first (for iter-026):
-  - P6.A: `src/lib/csv.ts` + `csv.test.ts` (pattern); `src/lib/
-    recurring.ts` (RecurringTemplate shape);
-    `src/hooks/useRecurringTemplates.ts` (add `addMany`);
-    `src/components/RecurringManager.tsx`; new
-    `<RecurringExport>` + `<RecurringImport>`.
-  - P6.E: `src/hooks/useCategories.ts` (in-use check before
-    remove); `src/lib/errorMessages.ts` (add `categoryMessages.inUse`);
-    `src/components/CategoryManager.tsx` (delete disable + count);
-    App.tsx (predicate wiring if not hook-internal).
-Open blocks: none.
+Next step: iter-027 — **P6.B time-series analytics**. New
+  `src/lib/trends.ts` (`summarizeByMonth`); new `<TrendsChart>`
+  (pure SVG, parallel to SpendingChart); new `<YearSwitcher>`.
+  Year filter narrows visibleExpenses; budget pipeline stays
+  month-scoped (P4.B carveout pattern extends).
+Open first (for iter-027): `src/components/SpendingChart.tsx`
+  (parallel for TrendsChart); `src/components/MonthSwitcher.tsx`
+  (parallel for YearSwitcher); `src/hooks/useVisibleExpenses.ts`
+  (year-filter wiring); `src/lib/expenseFilter.ts` (filter
+  primitives — year filter joins this set); `src/lib/totals.ts`.
+Open blocks: none open. iter-026 super-reviewer logged under
+  `## iter-026 — super-reviewer (fat-iter: P6.A + P6.E)` with
+  APPROVE-WITH-NITS high-confidence. Nit captured as TD.17.
 
-Test gate: 524 tests pass (unchanged — thinking iter, no code).
-Push: PR #60 (iter-025 planning) — see `gh pr view 60` after merge.
+Test gate: 561 tests pass. `npm run build` 239.23 kB / gzip 72.00
+  clean. `npm run lint` clean.
+Push: PR #61 squash-merged.
 
-Last-iter shipped: nothing (thinking-iter). Deliverables:
-  - `GOALS.md`: Phase 6 section populated with P6.A..P6.E; out-of-
-    scope (per-expense FX) explicitly documented; TD.6 status note
-    updated to "promotes to P6.E".
-  - `logs/iter-025.md` (planning summary + sequencing recommendation).
-  - `logs/latest.md` refreshed.
-  - `.loop/state.json` bumped to iter 25.
+Last-iter shipped (PR #61):
+- P6.A: new `src/lib/recurringCsv.{ts,test.ts}` (15 specs);
+  `useRecurringTemplates.addMany` (+ 4 specs); new
+  `<RecurringExport>` + `<RecurringImport>` (8 specs);
+  `<RecurringManager>` renders both inline (+ 2 specs).
+- P6.E: `categoryMessages.inUse(count)` factory in
+  `errorMessages.ts`; `useCategories.setError` exposed
+  (domain-pure — no useExpenses dep); `<CategoryManager>`
+  optional `getInUseCount` prop + disable/annotation (+ 5
+  component specs + 2 hook specs); App.tsx orchestrates the
+  count-guard + filter-reset flow.
+- App.test.tsx: prior delete-cascade test rewritten to use
+  Transport (unused); new P6.E in-use-block test added.
 
-Operational notes for iter-026:
-  - **Cadence:** 600s (impl-iter — two concrete features).
+Operational notes for iter-027:
+  - **Cadence:** 600s (impl-iter — single feature).
   - **Process-fix held**: explicit-path staging on every commit.
     Thirteen-iter streak. Keep it up.
   - `vite.config.ts` `fileParallelism: false` still load-bearing.
   - **localStorage shim centralised** in `src/test/setup.ts`.
-  - **Seams in play:** `store.ts` (IDB seam), `useStoredCollection`
-    (hook seam), `errorMessages.ts` (messaging seam), `currency.ts`
-    (formatter seam). P6.A and P6.E both extend existing seams; no
-    new seams expected.
-  - **Sub-agent split for iter-026 fat-iter:**
-    - Class B #1 (P6.A): owns `src/lib/recurringCsv.{ts,test.ts}` (new);
-      `src/hooks/useRecurringTemplates.ts` (+addMany); new
-      `src/components/RecurringExport.{tsx,test.tsx,css}` +
-      `RecurringImport.{tsx,test.tsx,css}`;
-      `src/components/RecurringManager.{tsx,test.tsx}` (wire the
-      two new buttons); App.tsx (if RecurringManager call-site
-      needs new props).
-    - Class B #2 (P6.E): owns `src/hooks/useCategories.{ts,test.ts}`
-      (in-use check); `src/lib/errorMessages.ts` (add inUse message
-      to categoryMessages); `src/components/CategoryManager.{tsx,
-      test.tsx,css}` (disable + count UI). May need a one-line
-      App.tsx edit if a predicate is passed in; flag if so.
-  - **DB version is 5**, backup `BACKUP_SCHEMA_VERSION` is 2 — both
-    untouched by Phase 6 P6.A + P6.E (no new entities; no snapshot
-    shape change). P6.B may or may not need a DB bump depending
-    on whether trends are derived-on-the-fly vs cached.
+  - **Seams in play:** `store.ts` (IDB), `useStoredCollection`
+    (hook), `errorMessages.ts` (messaging), `currency.ts`
+    (formatter). P6.B adds NO new seam; introduces a new pure
+    lib file (`trends.ts`) and reuses existing component
+    patterns.
+  - **DB version still 5**, backup `BACKUP_SCHEMA_VERSION`
+    still 2 — P6.B is read-only over `useExpenses.expenses`;
+    no new IDB store or schema bump expected.
+  - **3rd-consumer-rule:** TD.13 (`makeDownloadBlob`) + TD.14
+    (`useFileRestoreFlow`) now have 3 consumers each thanks
+    to P6.A (`<RecurringExport>` / `<RecurringImport>`). The
+    Phase-6 → Phase-7 arch pass should pick them up.
 
-Open questions for iter-026:
-  (1) `useRecurringTemplates.addMany` shape — mirror
-      `useExpenses.addMany` `{added, skipped, errors}`? Lean yes.
-  (2) Recurring CSV column set — include `frequency` or assume
-      monthly? Today `RecurringTemplate.frequency` is always
-      `'monthly'`. Lean: omit until 2nd frequency exists.
-  (3) P6.E in-use check — hook-internal vs caller-injected
-      predicate? Lean: hook-internal. The hook already wraps
-      `useStoredCollection`; adding a pre-mutation guard fits the
-      existing pattern. App.tsx wires the expenses array as a dep
-      via `useCategories({ expensesUsingCategory: ... })` or
-      similar.
-  (4) Apply the carry-forward CSV-injection prefix-escape (`=`/`+`/
-      `-`/`@`) at csv.ts level so both expense + recurring CSVs
-      benefit. Cheap to bundle into P6.A.
+Open questions for iter-027:
+  (1) Year-view: derive from in-memory `useExpenses.expenses` vs
+      a new DB query? Lean: in-memory.
+  (2) TrendsChart x-axis labels: "Jan"/"Feb" (abbreviated) vs
+      "2026-01" (numeric)? Lean: abbreviated for clarity.
+  (3) YearSwitcher coexist with MonthSwitcher or replace
+      contextually? Lean: coexist — mode toggle hides
+      MonthSwitcher when in year view.
+  (4) Color palette for the trends bars — match SpendingChart's
+      category-color scheme, or use a single accent color
+      (since trends are about time not category)? Lean: single
+      accent.
