@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { ThemeToggle } from './ThemeToggle'
+import { THEME_STORAGE_KEY } from '../lib/theme'
 
 // Install a working Storage to work around Node 25's broken built-in
 // shadowing jsdom's Storage in the vitest jsdom env.
@@ -48,6 +49,17 @@ describe('<ThemeToggle />', () => {
     ).toBeInTheDocument()
   })
 
+  it('loads a persisted "dark" theme from localStorage on mount', () => {
+    localStorage.setItem(THEME_STORAGE_KEY, 'dark')
+    render(<ThemeToggle />)
+
+    // When persisted is dark, the button offers to switch to light.
+    expect(
+      screen.getByRole('button', { name: 'Light mode' }),
+    ).toBeInTheDocument()
+    expect(document.documentElement.dataset.theme).toBe('dark')
+  })
+
   it('clicking toggles to dark — updates data-theme and localStorage', async () => {
     const user = userEvent.setup()
     render(<ThemeToggle />)
@@ -55,7 +67,7 @@ describe('<ThemeToggle />', () => {
     await user.click(screen.getByRole('button', { name: 'Dark mode' }))
 
     expect(document.documentElement.dataset.theme).toBe('dark')
-    expect(localStorage.getItem('expense-tracker:theme')).toBe('dark')
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark')
     expect(
       screen.getByRole('button', { name: 'Light mode' }),
     ).toBeInTheDocument()
@@ -70,7 +82,7 @@ describe('<ThemeToggle />', () => {
     await user.click(screen.getByRole('button', { name: 'Light mode' }))
 
     expect(document.documentElement.dataset.theme).toBe('light')
-    expect(localStorage.getItem('expense-tracker:theme')).toBe('light')
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('light')
     expect(
       screen.getByRole('button', { name: 'Dark mode' }),
     ).toBeInTheDocument()
