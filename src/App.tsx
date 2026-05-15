@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { type Expense, type ExpenseInput } from './lib/expense'
 import { dueTemplatesForMonth, generateDueExpenses } from './lib/recurring'
 import { ExpenseForm } from './components/ExpenseForm'
@@ -6,9 +6,17 @@ import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
 import { SpendingByCategory } from './components/SpendingByCategory'
 import { SpendingChart } from './components/SpendingChart'
-import { CategoryManager } from './components/CategoryManager'
 import { CategoryBudgetManager } from './components/CategoryBudgetManager'
-import { RecurringManager } from './components/RecurringManager'
+// P6.D — three rare-use management surfaces are code-split. They live below
+// the fold (Categories / Recurring / BackupRestore), are unlikely to be the
+// user's first interaction, and pull in their own UI + helpers. lazy()
+// gives Vite a dynamic-import boundary so each becomes its own chunk.
+const CategoryManager = lazy(() =>
+  import('./components/CategoryManager').then((m) => ({ default: m.CategoryManager })),
+)
+const RecurringManager = lazy(() =>
+  import('./components/RecurringManager').then((m) => ({ default: m.RecurringManager })),
+)
 import { CategoryFilter } from './components/CategoryFilter'
 import { MonthSwitcher } from './components/MonthSwitcher'
 import { YearSwitcher } from './components/YearSwitcher'
@@ -23,7 +31,12 @@ import { CurrencySelector } from './components/CurrencySelector'
 import { ExportButton } from './components/ExportButton'
 import { ImportButton } from './components/ImportButton'
 import { BackupExport } from './components/BackupExport'
-import { BackupRestore } from './components/BackupRestore'
+// P6.D — BackupRestore pulls in parseBackup + restoreBackup + a native
+// <dialog> flow; rare-use surface, code-split for the same reason as
+// CategoryManager and RecurringManager.
+const BackupRestore = lazy(() =>
+  import('./components/BackupRestore').then((m) => ({ default: m.BackupRestore })),
+)
 import { Spinner } from './components/Spinner'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
@@ -251,24 +264,26 @@ function App() {
               recurringTemplates={recurringHook.templates}
               categoryBudgets={categoryBudgetsHook.categoryBudgets}
             />
-            <BackupRestore
-              onRestore={async () => {
-                // After the multi-store IDB write commits, pull every
-                // hook back into sync. Parallel because each refresh is
-                // an independent store read. allSettled so a refresh
-                // failure (which is just a UI-sync miss, not a data
-                // loss) doesn't make BackupRestore show "Restore
-                // failed" — the DB write already committed.
-                await Promise.allSettled([
-                  expensesHook.refresh(),
-                  categoriesHook.refresh(),
-                  budgetsHook.refresh(),
-                  recurringHook.refresh(),
-                  categoryBudgetsHook.refresh(),
-                ])
-                return true
-              }}
-            />
+            <Suspense fallback={<Spinner size="sm" />}>
+              <BackupRestore
+                onRestore={async () => {
+                  // After the multi-store IDB write commits, pull every
+                  // hook back into sync. Parallel because each refresh is
+                  // an independent store read. allSettled so a refresh
+                  // failure (which is just a UI-sync miss, not a data
+                  // loss) doesn't make BackupRestore show "Restore
+                  // failed" — the DB write already committed.
+                  await Promise.allSettled([
+                    expensesHook.refresh(),
+                    categoriesHook.refresh(),
+                    budgetsHook.refresh(),
+                    recurringHook.refresh(),
+                    categoryBudgetsHook.refresh(),
+                  ])
+                  return true
+                }}
+              />
+            </Suspense>
           </div>
           <ExpenseList
             expenses={visibleExpenses}
@@ -343,28 +358,32 @@ function App() {
             aria-labelledby="heading-categories"
           >
             <h2 id="heading-categories">Categories</h2>
-            <CategoryManager
-              categories={categoriesHook.categories}
-              onAdd={categoriesHook.add}
-              onRename={categoriesHook.rename}
-              onDelete={handleDeleteCategory}
-              getInUseCount={(id) =>
-                expensesHook.expenses.filter((e) => e.categoryId === id).length
-              }
-            />
+            <Suspense fallback={<Spinner size="sm" />}>
+              <CategoryManager
+                categories={categoriesHook.categories}
+                onAdd={categoriesHook.add}
+                onRename={categoriesHook.rename}
+                onDelete={handleDeleteCategory}
+                getInUseCount={(id) =>
+                  expensesHook.expenses.filter((e) => e.categoryId === id).length
+                }
+              />
+            </Suspense>
           </section>
           <section
             className="app__recurring"
             aria-labelledby="heading-recurring"
           >
             <h2 id="heading-recurring">Recurring expenses</h2>
-            <RecurringManager
-              templates={recurringHook.templates}
-              categories={categoriesHook.categories}
-              onAdd={recurringHook.add}
-              onAddMany={recurringHook.addMany}
-              onDelete={recurringHook.remove}
-            />
+            <Suspense fallback={<Spinner size="sm" />}>
+              <RecurringManager
+                templates={recurringHook.templates}
+                categories={categoriesHook.categories}
+                onAdd={recurringHook.add}
+                onAddMany={recurringHook.addMany}
+                onDelete={recurringHook.remove}
+              />
+            </Suspense>
           </section>
         </>
       )}

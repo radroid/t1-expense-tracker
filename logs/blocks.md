@@ -1176,3 +1176,49 @@ forbidden-file touches. Verified:
 backup schema v2, DB v5 — all UNTOUCHED.
 
 **Source:** super-reviewer (Class A).
+
+---
+
+## iter-029 — super-reviewer (P6.D perf / bundle pass)
+
+**Verdict:** APPROVE — confidence **high**.
+
+Narrowly-scoped bundle-split delivery. Three rare-use management
+surfaces (`CategoryManager`, `RecurringManager`, `BackupRestore`)
+converted to `React.lazy` with per-component `<Suspense>` boundaries
+sitting inside the existing `!loading` branch. No other changes —
+explicit decision to skip `React.memo` / `useMemo` for aggregations
+pending profiler evidence; no Vite config changes; lazy() boundaries
+alone produce the chunk split.
+
+**Bundle measurements (verified locally):**
+
+| | Before | After | Δ |
+|---|---|---|---|
+| Main JS (raw) | 242.80 kB | 231.67 kB | **−11.13 kB** |
+| Main JS (gzip) | 72.92 kB | 71.37 kB | **−1.55 kB** |
+| Main CSS (raw) | 26.74 kB | 21.40 kB | **−5.34 kB** |
+| Main CSS (gzip) | 4.38 kB | 3.84 kB | **−0.54 kB** |
+
+Three lazy chunks (loaded only when user navigates to those
+sections):
+- RecurringManager: 6.43 kB raw / 2.25 kB gzip JS + 2.44/0.73 CSS
+- BackupRestore: 4.80 kB / 1.67 kB JS + 1.81/0.62 CSS
+- CategoryManager: 2.23 kB / 0.85 kB JS + 1.08/0.43 CSS
+
+**Verified:**
+- `lazy()` factory shape correct for named-export modules.
+- Each Suspense wraps EXACTLY its corresponding lazy component
+  (granular, non-blocking).
+- All boundaries inside `!loading` — a11y-012 preserved.
+- `parseBackup` + `db/restoreBackup` imported ONLY by
+  BackupRestore — cleanly moved out of main chunk. No
+  cross-chunk duplication.
+- 588 tests pass without modification (RTL `findBy*` handles the
+  lazy resolve transparently).
+
+**Forbidden-file audit:** `src/db/*`, `src/lib/*`, `src/hooks/*`,
+`vite.config.ts`, `package.json` UNTOUCHED. Only `src/App.tsx`
+changed.
+
+**Source:** super-reviewer (Class A).
