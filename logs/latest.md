@@ -1,88 +1,79 @@
 # Latest
 
-Latest: iter-021 — P5.D (per-category budgets) shipped (PR #54). Four
-of five Phase 5 features done. New `categoryBudgets` store (DB v4→v5),
-composite-string id, independent from month-total budgets, backup
-schema bumped 1→2.
+Latest: iter-022 — P5.E (multi-currency) shipped (PR #56). **Phase 5
+CLOSED**: all 5 items done (P5.A URL filters, P5.B JSON backup
+export, P5.C JSON backup restore, P5.D per-category budgets, P5.E
+multi-currency).
 
-Stage: S3 (Phase 5 in flight — 4/5 features done) — see
-  `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-022 — **P5.E (multi-currency)** as the Phase 5 closer.
-  v1 lean: single user-pref currency (no per-expense override), ISO
-  4217 allowlist (USD/EUR/GBP/JPY), localStorage-backed preference hook
-  (mirror `theme.ts`). Touches `src/lib/expense.ts` (optional
-  `currency?: string`), `src/lib/currency.ts` (expand formatUSD to
-  format(amount, currency)), `src/lib/csv.ts` (column), `src/lib/backup.ts`
-  (schemaVersion 2→3), all the components consuming `formatUSD`
-  (RunningTotal, MonthlySummary, SpendingByCategory, etc.).
-  After P5.E ships, Phase 5 closes and **iter-023 MUST run the
-  mandatory phase-boundary arch pass** before Phase 6 — hard rule from
-  loop protocol.
-Open first: `GOALS.md` (P5.E), `src/lib/expense.ts` (the new optional
-  field), `src/lib/currency.ts` (the formatter to expand),
-  `src/lib/theme.ts` (mirror its localStorage seam),
-  `src/lib/backup.ts` (schema version bump),
-  `src/components/RunningTotal.tsx` (representative formatUSD consumer).
-Open blocks: none open — see `logs/blocks.md` for iter-021 super-
-  reviewer notes (APPROVE high confidence; categoryBudgetId is the
-  sole composite-format site, STORES tuple covers all 5 stores
-  atomically).
-Carry-forward: TD.6 (category-deletion cascade); TD.9 (makeStore
-  factory — sequencing constraint cleared, not yet picked); TD.10
-  (expenseVisibility.ts); TD.11 (drop vestigial Expense.recurring);
-  TD.12 (useStoredCollection refresh-after-mutation error isolation);
-  deferred `useSpendingByCategory` typing pair-up; P3.D chart text
-  aria-hidden; centralise localStorage test shim (P5.E currency-pref
-  hook may be the 2nd consumer that triggers this); DateRangeFilter
-  from>to normalize; CSV-injection prefix-escape; empty-state
-  trailing-period normalize; P4.G follow-up: spinner covers insights;
-  CSV export/import of recurring templates; Blob-revoke race in
-  Export/BackupExport; filename-vs-exportedAt timezone skew.
-Test gate: 496 tests pass; `npm run build` + `npm run lint` clean.
+Stage: S3 (Phase 5 → Phase 6 boundary) — see `.loop/state.json`
+  (`pr_mode: true`, `pr_size_policy: fat`)
+Next step: iter-023 — **MANDATORY PHASE-BOUNDARY ARCH PASS**. Hard
+  rule from the loop protocol: before any Phase 6 feature work,
+  invoke the `improve-codebase-architecture` skill (an actual tool
+  call, not a concept), surface deepening opportunities, and log
+  results to `logs/blocks.md` with `**Source:** arch-pass`. The arch
+  pass output drives any pre-Phase-6 refactor and shapes the Phase 6
+  backlog in `GOALS.md` (currently empty — Phase 5 was the last
+  defined phase).
+Open first (for arch-pass context): `GOALS.md` (Phase 6 stub TBD;
+  arch-pass produces it); `logs/iter-017.md` (the previous phase-
+  boundary arch pass — useful reference for the candidate-list
+  pattern); `logs/blocks.md` ## iter-017 section.
+Open blocks: none open — see `logs/blocks.md` for iter-022 super-
+  reviewer notes (APPROVE high confidence; forbidden-file audit
+  clean; localStorage shim centralisation verified).
+Carry-forward candidates the iter-023 arch pass should consider
+  (already on TD radar):
+  - TD.9 (`makeStore<T>` factory) — sequencing constraint cleared
+    3 iters ago; STRONG arch-pass-driven pickup candidate.
+  - TD.10 (`expenseVisibility.ts` pipeline) — still no non-React
+    consumer; recheck.
+  - TD.11 (drop vestigial `Expense.recurring`) — DB-cleanup; bundle
+    with TD.9?
+  - TD.12 (useStoredCollection refresh-after-mutation error
+    isolation) — preserves pre-iter-018 behavior; seam is now stable.
+  - formatUSD shim removal — no shipping caller remains; one-PR
+    drop.
+  - Centralise localStorage test shim — DONE in iter-022 (after
+    useCurrency became 2nd consumer).
+Test gate: 527 tests pass; `npm run build` + `npm run lint` clean.
 Push: n/a — pr_mode, all work merged via PRs.
 
 Last-iter shipped:
-- P5.D (#54): `src/lib/categoryBudget.{ts,test.ts}` (composite-id
-  factory + validator); `src/db/categoryBudgetStore.{ts,test.ts}` (put
-  upsert keyed by composite); `src/hooks/useCategoryBudgets.{ts,test.ts}`
-  (binds into useStoredCollection); `src/components/CategoryBudgetManager.{tsx,test.tsx,css}`
-  (per-row UI). DB v4→v5 + migration test extended. Backup
-  schemaVersion bumped 1→2; BackupSnapshot + parseBackup +
-  restoreBackup + BackupExport carry the new entity. App.tsx wires
-  useCategoryBudgets + new section. +45 tests.
+- P5.E (#56): `src/lib/currency.ts` expanded (CurrencyCode +
+  formatCurrency + storage seam + @deprecated formatUSD shim);
+  `src/hooks/useCurrency.{ts,test.ts}` (lazy-init + setCurrency);
+  `src/components/CurrencySelector.{tsx,test.tsx,css}` (labeled
+  select, 44px touch target); 6 money-rendering components grew a
+  `currency` prop; `src/App.tsx` wired useCurrency + selector;
+  `src/test/setup.ts` centralised the localStorage shim + added
+  global afterEach cleanup. +31 tests (496 → 527).
 
-Operational notes for iter-022:
-  - **DB version is now 5**. P5.E may NOT need a DB bump (currency is
-    type-level addition to Expense; IDB is schema-less). If it does
-    (e.g. preference table in IDB instead of localStorage), bump to 6
-    and extend dbMigration.test.ts.
-  - **Backup schemaVersion is now 2**. P5.E may bump to 3 if currency
-    info needs to round-trip (e.g. per-expense currency stored on
-    each Expense — yes, but that's already implicit if the field
-    lands on Expense). Lean: bump to 3 if any new behavior depends
-    on it.
-  - **`useStoredCollection` is the seam** for new collection-shaped
-    domains. Currency pref is a single value, not a collection — use
-    a simple `useCurrency` hook mirroring `useTheme` / `theme.ts`
-    pattern (load + setter + first-paint sync).
-  - **Cadence:** 600s (impl iter).
+Operational notes for iter-023:
+  - **PHASE BOUNDARY** — Hard rule. Invoke `Skill` tool with
+    `skill: "improve-codebase-architecture"` as the FIRST action.
+    Real tool call, NOT just reading the doc and improvising.
+  - **Cadence:** 1500s (plan-iter — arch pass is thinking work).
   - **Process-fix held**: explicit-path staging on every commit.
-    Ten-iter streak.
+    Eleven-iter streak. Keep it up.
   - `vite.config.ts` `fileParallelism: false` still load-bearing.
-  - **App.test hash-reset pattern (iter-019)** still load-bearing.
-  - **TD.9 (makeStore factory)** has now had 3 iters of stability on
-    the new hook seam — sequencing constraint cleared. Available for
-    iter-023+ if not picked up sooner.
+  - **localStorage shim centralised** as of iter-022. New test files
+    don't need per-file beforeAll boilerplate; `src/test/setup.ts`
+    handles install + global afterEach cleanup.
+  - **DB version is 5**, backup `BACKUP_SCHEMA_VERSION` is 2,
+    `useStoredCollection` is the hook seam, `errorMessages.ts` is
+    the messaging seam, `currency.ts` is the formatter seam — these
+    are stable surfaces for the arch pass to evaluate.
 
-Open questions for iter-022 (P5.E):
-  (1) Single-currency app vs per-expense currency? Lean: single user-
-      pref currency for v1 (per-expense without conversion rates would
-      mislead totals).
-  (2) Default — USD or unset? Lean USD default (matches current
-      hard-coded behavior).
-  (3) ISO 4217 allowlist — USD/EUR/GBP/JPY for v1? Lean yes;
-      extensible.
-  (4) Preference storage — localStorage (sync, first-paint, matches
-      theme.ts) vs IndexedDB (consistent with the rest of the data
-      layer)? Lean localStorage. Centralise localStorage test shim if
-      this lands.
+Open questions for iter-023 (arch pass):
+  (1) Is `makeStore<T>` factory (TD.9) ready to ship now that
+      `useStoredCollection` has 4 stable consumers + 11 iters since?
+      Apply the deletion test.
+  (2) Should `formatUSD` shim be deleted in iter-024 as a small
+      cleanup, or wait for a broader currency.ts refactor?
+  (3) Has any new shallow seam emerged from Phase 5 (the 4 backup-
+      pipeline files all touch the same snapshot shape — is there a
+      `backupPipeline` deeper module hiding there)?
+  (4) Phase 6 themes — needs product input + architectural
+      perspective on what's worth shipping next (per-expense
+      currency w/ FX? analytics? a11y audit? perf pass?).
