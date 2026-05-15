@@ -11,10 +11,12 @@ describe('formatUSD', () => {
     expect(formatUSD(0.99)).toBe('$0.99')
   })
 
-  it('rounds halves to even (banker) per Intl.NumberFormat default for USD', () => {
-    // Intl.NumberFormat defaults to "halfExpand" rounding for USD; just verify
-    // that the result is stable and 2dp.
-    expect(formatUSD(0.005)).toMatch(/^\$\d+\.\d{2}$/)
+  it('rounds amounts with more than 2 decimal places', () => {
+    // Intl.NumberFormat uses 'halfExpand' rounding for USD by default — .555
+    // rounds up to .56, .554 stays at .55. Pin the behaviour so a future
+    // locale or rounding-mode swap fails loudly.
+    expect(formatUSD(10.556)).toBe('$10.56')
+    expect(formatUSD(10.554)).toBe('$10.55')
   })
 
   it('formats zero as $0.00', () => {
