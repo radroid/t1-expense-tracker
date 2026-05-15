@@ -323,3 +323,56 @@ file (vitest isolates per file), so it doesn't leak. Worth extracting to
 recurring expense state is a likely trigger).
 
 
+
+
+---
+
+## iter-014 super-reviewer notes
+
+### PR #39 (P4.C + P4.D — CSV export + import) — APPROVE
+
+**Findings (all low / info):**
+
+- **CSV-injection (non-blocking):** `formatExpensesCsv` does not prefix
+  `=`, `+`, `-`, `@` fields with `'` or wrap them. For a local-only
+  single-user app this is acceptable; flag if export ever surfaces in shared
+  spreadsheets. Logged as carry-forward.
+- `createExpense(input)` is called for validation but the validated object
+  is discarded; tokenized fields are then re-cleaned manually. Slightly
+  wasteful; CR proposed using the validated object directly. Declined as
+  cosmetic — current shape is explicit.
+
+**CodeRabbit critical finding applied:**
+
+- `useExpenses.addMany` no longer prefixes errors with "Row N:". The
+  prefix was off-by-N once a CSV parser had already dropped invalid rows.
+  addMany has no notion of source-row coordinates; callers add row context.
+
+### PR #40 (P4.I — themability sweep) — APPROVE
+
+**Findings (all low / info):**
+
+- **Brand-accent hue shift in light mode** — Original component CSS had
+  blue highlights (`#2d6cdf`, `#1d4ed8`). P4.I collapses both onto the
+  single `--app-accent` (`#aa3bff`, purple — the legacy palette's brand
+  color). Intentional given P4.F made `--app-accent` the canonical brand
+  color. Worth a visual checkpoint screenshot — buttons and edit-link will
+  read purple instead of blue in light mode.
+- `.expense-list__edit` text contrast on `--app-surface-2` increased
+  (`#444` → `#1a1a1a`). Net positive for a11y.
+- `:hover` swapped from a hand-picked darker blue to `filter:
+  brightness(0.92)` (BudgetForm). On dark mode the purple accent gets
+  darker on hover which can feel subtle; acceptable.
+
+**Contrast checks (AA: 4.5:1 normal, 3:1 large/UI):**
+- `--app-fg` on `--app-bg`: ~14.5:1
+- `--app-fg` on `--app-card-bg`: ~12.4:1
+- `--app-accent-fg` on `--app-accent`: ~7.6:1
+- `--app-error` on `--app-bg`: ~5.4:1
+- `--app-muted-fg` on `--app-bg`: ~7.0:1
+All pass AA+.
+
+**CodeRabbit a11y findings applied:** `:focus-visible` on
+`.category-filter__select` and `.expense-list__delete` — both were
+missing; in dark mode the browser-default outline would have been
+near-invisible.

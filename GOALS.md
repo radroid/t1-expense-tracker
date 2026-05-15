@@ -48,18 +48,22 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] P4.B — Date-range filter — `DateRangeFilter` + `filterExpensesByDateRange`
   (inclusive YYYY-MM-DD compare). Narrows visibleExpenses but NOT
   monthlyExpenses (budget-coherence). — iter-013 / PR #36
-- [ ] P4.C — CSV export — Export the currently-filtered expenses to a CSV download.
-- [ ] P4.D — CSV import — Import expenses from a CSV file (with validation + error report).
+- [done] P4.C — CSV export — `ExportButton` triggers a Blob download
+  (`expenses-YYYY-MM-DD.csv`) of the currently-visible (filtered) slice
+  via `formatExpensesCsv`. — iter-014 / PR #39
+- [done] P4.D — CSV import — `ImportButton` parses via `parseExpensesCsv`
+  (header-required) and persists via `useExpenses.addMany` (skip-and-report
+  policy). Header-error vs row-errors surface separately. — iter-014 / PR #39
 - [ ] P4.E — Recurring expenses — Mark an expense recurring; auto-generate it on month rollover.
 - [done] P4.F — Dark mode — `ThemeToggle` + `src/lib/theme.ts` + CSS custom
   properties; persisted to localStorage; first-paint applied in `main.tsx`.
   Component CSS not yet themable — see P4.I follow-up. — iter-013 / PR #37
 - [ ] P4.G — Empty + loading states — Polished empty and loading states across surfaces.
 - [ ] P4.H — Responsive layout — Mobile-friendly layout down to 480px.
-- [ ] P4.I — Themability sweep — Migrate per-component CSS (ExpenseList,
-  CategoryFilter, MonthSwitcher, ExpenseForm, BudgetForm, etc.) to use the
-  CSS custom properties introduced by P4.F so dark mode renders coherently.
-  Surfaced in iter-013 super-review.
+- [done] P4.I — Themability sweep — 16 component CSS files + `src/index.css`
+  migrated from hard-coded hex/rgb to `var(--app-*)`. 3 new vars added
+  (`--app-accent-fg`, `--app-surface-2`, `--app-surface-hover`). Light
+  palette preserved; dark palette AA+ on all surfaces. — iter-014 / PR #40
 
 ## Tech debt
 
