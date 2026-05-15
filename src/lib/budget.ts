@@ -27,6 +27,5 @@ function validateBudgetInput(input: MonthlyBudgetInput): MonthlyBudgetInput {
 }
 
 export function createMonthlyBudget(input: MonthlyBudgetInput): MonthlyBudget {
-  const cleaned = validateBudgetInput(input);
-  return { ...cleaned };
+  return validateBudgetInput(input);
 }
