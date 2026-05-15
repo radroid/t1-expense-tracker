@@ -15,7 +15,7 @@ export function MonthSwitcher({ value, onChange }: MonthSwitcherProps) {
         aria-label="Previous month"
         onClick={() => onChange(prevMonth(value))}
       >
-        ←
+        <span aria-hidden="true">←</span>
       </button>
       <span className="month-switcher__label">{formatMonthLabel(value)}</span>
       <button
@@ -24,7 +24,7 @@ export function MonthSwitcher({ value, onChange }: MonthSwitcherProps) {
         aria-label="Next month"
         onClick={() => onChange(nextMonth(value))}
       >
-        →
+        <span aria-hidden="true">→</span>
       </button>
     </div>
   )

@@ -75,7 +75,15 @@ export function RecurringImport({ onImport }: RecurringImportProps) {
         </p>
       )}
       {summary !== null && (
-        <p role="status" className="recurring-import__result">
+        // P6.C a11y-028: `<p>` cannot legally contain `<details>` (block
+        // child) — the browser auto-closes the `<p>`, breaking the live
+        // region. Switch the root to a `<div>` so the live region stays
+        // intact when the disclosure is toggled.
+        <div
+          role="status"
+          aria-live="polite"
+          className="recurring-import__result"
+        >
           Imported {summary.added}. Skipped {summary.skipped}.
           {summary.errors.length > 0 && (
             <details className="recurring-import__errors">
@@ -87,7 +95,7 @@ export function RecurringImport({ onImport }: RecurringImportProps) {
               </ul>
             </details>
           )}
-        </p>
+        </div>
       )}
     </div>
   )

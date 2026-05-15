@@ -1131,3 +1131,48 @@ recurringCsv, backup, parseBackup}.ts`,
 `src/db/restoreBackup.ts` all UNTOUCHED.
 
 **Source:** super-reviewer (Class A).
+
+---
+
+## iter-028 — audit + super-reviewer (P6.C a11y sweep)
+
+**Audit:** Class A audit pass enumerated 13 P0 + 8 P1 + 8 P2
+findings across all components + App.tsx. P0 cluster (14 — added
+a11y-015 SearchBox to the cluster as a 1-line change) shipped this
+iter. P1 form-error-association cluster (a11y-016/017/018/019)
+deferred as a focused follow-up sweep. a11y-004 skip-link +
+a11y-007 persistent error live region deferred as larger feature
+work.
+
+**Super-reviewer verdict:** APPROVE-WITH-NITS — confidence **high**.
+
+All 14 P0 fixes match spec; no behavioral regressions; no
+forbidden-file touches. Verified:
+
+- Section landmarks: 5 use `aria-labelledby` + matching h2 id;
+  `app__insights` uses `aria-label="Insights"` (multi-h2 inside —
+  correct call). All ids unique.
+- BudgetVsActual `role="progressbar"` with clamped valuenow + named
+  aria-valuetext.
+- BackupRestore `<dialog>` aria-labelledby + `onClose` resets
+  `pending` + `dialogError` for clean Escape.
+- All 6 bottom sections (insights through recurring) moved inside
+  `!loading` branch so empty zero-state doesn't flash pre-load.
+- TrendsChart `data-month-index` + <480px alternate-hide CSS;
+  per-bar aria-label preserves month info for SR at narrow widths.
+- Global `prefers-reduced-motion` rule uses 0.01ms (keeps
+  `transitionend` events firing — well-considered).
+- `<p>` → `<div role="status">` HTML-validity fix; both call-sites
+  have explicit `margin: 0` so layout unchanged.
+
+**Nits (non-blocking, captured as TD candidates for follow-up):**
+- `BudgetVsActual.aria-valuenow` could `Math.max(0, …)` defensively
+  (ratio is non-negative by construction, so currently harmless).
+- App.test.tsx Rent-test rescope uses `document.querySelector`
+  rather than RTL's `within(list).findByText` — equivalent, less
+  idiomatic.
+
+**Forbidden-file audit:** `src/db/*`, `src/lib/*`, `src/hooks/*`,
+backup schema v2, DB v5 — all UNTOUCHED.
+
+**Source:** super-reviewer (Class A).

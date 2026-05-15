@@ -37,7 +37,15 @@ export function BudgetVsActual({ status, currency }: BudgetVsActualProps) {
         </span>
       </div>
 
-      <div className="budget-vs-actual__bar-track">
+      <div
+        className="budget-vs-actual__bar-track"
+        role="progressbar"
+        aria-label="Budget used"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.min(100, Math.round(status.ratio * 100))}
+        aria-valuetext={`${formatCurrency(status.actual, currency)} of ${formatCurrency(status.budget, currency)}`}
+      >
         <div
           className={
             status.isOver

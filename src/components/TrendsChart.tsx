@@ -88,6 +88,8 @@ export function TrendsChart({ data, currency, yearLabel }: TrendsChartProps) {
               x={labelX}
               y={PLOT_BOTTOM + LABEL_BAND_HEIGHT / 2 + 4}
               textAnchor="middle"
+              aria-hidden="true"
+              data-month-index={i}
             >
               {monthLabel}
             </text>

@@ -32,7 +32,7 @@ afterEach(() => {
 // connection outlives the test (the next beforeEach deletes the database).
 async function renderApp(): Promise<void> {
   render(<App />)
-  await screen.findByText('No expenses yet.')
+  await screen.findByText('No expenses yet')
 }
 
 async function addExpenseViaForm(
@@ -61,7 +61,7 @@ describe('App', () => {
 
   it('persists added expenses across remounts', async () => {
     const { unmount } = render(<App />)
-    await screen.findByText('No expenses yet.')
+    await screen.findByText('No expenses yet')
     await addExpenseViaForm('30', 'Groceries')
     await screen.findByText(/Groceries/)
     unmount()
@@ -135,7 +135,7 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: /delete lunch/i }))
 
-    expect(await screen.findByText('No expenses yet.')).toBeInTheDocument()
+    expect(await screen.findByText('No expenses yet')).toBeInTheDocument()
   })
 
   it('shows an error and keeps the expense when delete fails', async () => {
@@ -248,7 +248,7 @@ describe('App', () => {
     // Step back one month — the current-month expense should disappear.
     await user.click(screen.getByRole('button', { name: /previous month/i }))
     expect(
-      await screen.findByText('No expenses yet.'),
+      await screen.findByText('No expenses yet'),
     ).toBeInTheDocument()
 
     // Step forward again — it returns.
@@ -341,7 +341,15 @@ describe('App', () => {
 
     const { unmount } = render(<App />)
     // The auto-generated expense should appear in the list (no manual add).
-    expect(await screen.findByText(/Rent/)).toBeInTheDocument()
+    // P6.C a11y-012: insights/recurring/etc. now mount together with the
+    // expense list after data loads, so /Rent/ matches both the expense
+    // list entry AND the RecurringManager template at the same tick.
+    // Scope the assertion to the expense list specifically.
+    await waitFor(() => {
+      const list = document.querySelector('.expense-list')
+      expect(list).not.toBeNull()
+      expect(list!.textContent ?? '').toMatch(/Rent/)
+    })
     // Settle: idempotent — the post-addMany rollover re-fire must observe
     // Rent and bail. We scope to the expense list because RecurringManager
     // also renders "Rent" as a template; the unscoped match would always

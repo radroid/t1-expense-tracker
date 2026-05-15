@@ -21,7 +21,7 @@ function category(id: string, name: string, color = '#000000'): Category {
 describe('SpendingByCategory', () => {
   it('renders an empty-state message when there are no expenses', () => {
     render(<SpendingByCategory expenses={[]} categories={[]} currency="USD" />)
-    expect(screen.getByText('No spending yet.')).toBeInTheDocument()
+    expect(screen.getByText('No spending yet')).toBeInTheDocument()
   })
 
   it('renders one row per non-zero group with name + currency total', () => {
@@ -114,6 +114,6 @@ describe('SpendingByCategory', () => {
     )
     expect(screen.getByText('Uncategorized')).toBeInTheDocument()
     expect(screen.getByText('$10.00')).toBeInTheDocument()
-    expect(screen.queryByText('No spending yet.')).not.toBeInTheDocument()
+    expect(screen.queryByText('No spending yet')).not.toBeInTheDocument()
   })
 })

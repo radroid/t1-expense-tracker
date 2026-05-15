@@ -22,7 +22,7 @@ describe('MonthlySummary', () => {
 
   it('renders the empty state when expenses is []', () => {
     render(<MonthlySummary expenses={[]} currency="USD" />)
-    expect(screen.getByText('No expenses this period.')).toBeInTheDocument()
+    expect(screen.getByText('No expenses this period')).toBeInTheDocument()
     expect(screen.queryByText('Total')).not.toBeInTheDocument()
     expect(screen.queryByText('Average')).not.toBeInTheDocument()
     expect(screen.queryByText('Count')).not.toBeInTheDocument()

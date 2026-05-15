@@ -56,6 +56,18 @@ describe('BudgetVsActual', () => {
     expect(screen.getByText('$12.50')).toBeInTheDocument()
   })
 
+  it('exposes the bar track as role="progressbar" with valuenow reflecting the spend ratio (P6.C a11y-005)', () => {
+    // 50% used: $50 spent of $100. The role + aria-valuenow give SR users
+    // the same progress information sighted users get from the bar width.
+    const status = computeBudgetStatus(100, 50)
+    render(<BudgetVsActual status={status} currency="USD" />)
+    const bar = screen.getByRole('progressbar', { name: /budget used/i })
+    expect(bar).toHaveAttribute('aria-valuenow', '50')
+    expect(bar).toHaveAttribute('aria-valuemin', '0')
+    expect(bar).toHaveAttribute('aria-valuemax', '100')
+    expect(bar).toHaveAttribute('aria-valuetext', '$50.00 of $100.00')
+  })
+
   it('re-renders without errors when props are unchanged', () => {
     const status = computeBudgetStatus(100, 40)
     const { rerender } = render(<BudgetVsActual status={status} currency="USD" />)
