@@ -124,28 +124,24 @@ Phase-6 → Phase-7 arch pass. Four feature items + one cleanup
 bundle picked; calendar-view deferred to Phase 8 (cosmetic, low
 locality leverage).
 
-- [ ] P7.A — Recurring-template EDIT. RecurringManager today
-  supports add + remove only. Add inline Edit/Save/Cancel per row,
-  mirroring the ExpenseForm edit pattern (TD.3 consolidation
-  template). New `<RecurringForm>` (or inline editor in
-  RecurringManager) reusing the existing add-form validation
-  (`validateRecurringTemplateInput`). `useRecurringTemplates.update`
-  exists via `useStoredCollection`; verify it surfaces correctly.
-  No schema change. Estimate: 1 iter (small/medium fat-iter slot).
+- [done] P7.A — Recurring-template EDIT. `applyRecurringTemplateEdit`
+  lib helper (id + frequency preservation), `putRecurringTemplate`
+  store method, `useRecurringTemplates.update(existing, input)`
+  via `useStoredCollection.validateUpdate`. RecurringManager
+  gained inline Edit/Save/Cancel per row + per-field a11y wiring
+  (`aria-invalid`, `aria-describedby`, `<FieldError>`); shared
+  `parseDraft` helper between add + edit forms. — iter-034 / PR #69.
 
-- [ ] P7.B — Undo stack (single-step last-mutation). Local-only
-  UX win that touches every mutation surface. Pattern: new
-  `useUndoStack` hook holds last `UndoAction = {label, inverse:
-  () => Promise<void>}`; every mutation pushes its inverse. New
-  `<UndoToast>` component (snackbar with "Undo" button +
-  auto-dismiss after ~6s). Scope: expense add/delete/edit,
-  category add/delete/rename, budget set, categoryBudget set,
-  recurring-template add/delete/edit. RESTORE is intentionally
-  NOT undoable (already destructive-with-dialog confirmation).
-  No schema change. Decision pending iter-034: per-domain
-  (each hook owns its inverse) vs centralized (App threads
-  `undo.push` into every handler) — lean: centralized push,
-  per-domain inverse closures.
+- [done] P7.B — Undo stack (single-step last-mutation). New
+  `useUndoStack({pending, push, undo, dismiss})` — `push`
+  REPLACES, `undo` invokes inverse. New `<UndoToast>` snackbar
+  (`role="status"`, `aria-live="polite"`, auto-dismiss 6s,
+  bottom-center fixed). App.tsx wraps 8 mutation surfaces with
+  undo closures: expense delete/edit, category rename/delete,
+  monthly-budget set, category-budget set, recurring delete/edit.
+  Add + bulk import + restore intentionally OUT of scope (no
+  easy inverse / already gated). Centralized push at App
+  handlers; per-domain inverse closures. — iter-034 / PR #69.
 
 - [ ] P7.C — Bank-CSV import presets. ImportButton currently
   requires the app's 4-column CSV format. Add a preset selector
