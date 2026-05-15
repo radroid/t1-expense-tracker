@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import App from './App'
 import * as expenseStore from './db/expenseStore'
+import { addRecurringTemplate } from './db/recurringTemplateStore'
+import { createRecurringTemplate } from './lib/recurring'
 
 beforeEach(async () => {
   await new Promise<void>((resolve, reject) => {
@@ -313,6 +315,34 @@ describe('App', () => {
     expect(
       screen.getByText('2', { selector: '.monthly-summary__value' }),
     ).toBeInTheDocument()
+  })
+
+  it('auto-generates a recurring expense for the current month on mount (P4.E)', async () => {
+    // Seed a recurring template directly via the store BEFORE mount, so the
+    // rollover effect fires on the first useEffect tick. We use dayOfMonth=1
+    // so the generated date is always YYYY-MM-01 of the current month.
+    // We then UNMOUNT the seeding connection's children explicitly before
+    // mounting App to avoid concurrent IndexedDB transactions across tests.
+    const template = createRecurringTemplate({
+      description: 'Rent',
+      amount: 1500,
+      frequency: 'monthly',
+      dayOfMonth: 1,
+    })
+    await addRecurringTemplate(template)
+
+    const { unmount } = render(<App />)
+    // The auto-generated expense should appear in the list (no manual add).
+    expect(await screen.findByText(/Rent/)).toBeInTheDocument()
+    // Settle: idempotent — the post-addMany rollover re-fire must observe
+    // Rent and bail. Multiple Rents here would mean the dedupe is broken.
+    await waitFor(() => {
+      expect(screen.getAllByText(/Rent/)).toHaveLength(1)
+    })
+    // Explicit unmount + microtask flush so the trailing IndexedDB close()
+    // settles before the next test's deleteDatabase tries to evict it.
+    unmount()
+    await new Promise<void>((r) => setTimeout(r, 0))
   })
 
   it('resets the filter to "All" when the filtered-on category is deleted', async () => {

@@ -5,6 +5,11 @@ export interface Expense {
   date: string;
   categoryId?: string;
   recurring?: boolean;
+  // Set when an expense was auto-generated from a RecurringTemplate. Used by
+  // the rollover idempotency check (lib/recurring.ts). Manual expenses leave
+  // this undefined. `recurring?: boolean` from the original schema is now
+  // vestigial — kept to avoid a breaking change to persisted records.
+  sourceTemplateId?: string;
 }
 
 export interface ExpenseInput {
@@ -13,6 +18,7 @@ export interface ExpenseInput {
   date: string;
   categoryId?: string;
   recurring?: boolean;
+  sourceTemplateId?: string;
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -30,7 +36,7 @@ function isRealCalendarDate(date: string): boolean {
 // Validates input (amount > 0 finite, non-empty trimmed description, real
 // YYYY-MM-DD date); returns the cleaned fields. Throws on invalid.
 function validateExpenseInput(input: ExpenseInput): ExpenseInput {
-  const { amount, description, date, categoryId, recurring } = input;
+  const { amount, description, date, categoryId, recurring, sourceTemplateId } = input;
 
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error(`Invalid amount: must be a finite number greater than 0`);
@@ -53,6 +59,7 @@ function validateExpenseInput(input: ExpenseInput): ExpenseInput {
 
   if (categoryId !== undefined) cleaned.categoryId = categoryId;
   if (recurring !== undefined) cleaned.recurring = recurring;
+  if (sourceTemplateId !== undefined) cleaned.sourceTemplateId = sourceTemplateId;
 
   return cleaned;
 }
@@ -79,6 +86,9 @@ export function applyExpenseEdit(existing: Expense, input: ExpenseInput): Expens
   }
   if (cleaned.recurring === undefined && existing.recurring !== undefined) {
     merged.recurring = existing.recurring;
+  }
+  if (cleaned.sourceTemplateId === undefined && existing.sourceTemplateId !== undefined) {
+    merged.sourceTemplateId = existing.sourceTemplateId;
   }
   return merged;
 }
