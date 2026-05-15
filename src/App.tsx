@@ -11,17 +11,14 @@ import { MonthSwitcher } from './components/MonthSwitcher'
 import { MonthlySummary } from './components/MonthlySummary'
 import { BudgetForm } from './components/BudgetForm'
 import { BudgetVsActual } from './components/BudgetVsActual'
-import {
-  filterExpensesByCategory,
-  filterExpensesByMonth,
-  type CategoryFilterValue,
-} from './lib/expenseFilter'
+import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
 import { totalAmount } from './lib/totals'
 import { computeBudgetStatus } from './lib/budgetStatus'
 import { useExpenses } from './hooks/useExpenses'
 import { useCategories } from './hooks/useCategories'
 import { useMonthlyBudgets } from './hooks/useMonthlyBudgets'
+import { useVisibleExpenses } from './hooks/useVisibleExpenses'
 import './App.css'
 
 function App() {
@@ -34,18 +31,17 @@ function App() {
   // selectedMonth is a 'YYYY-MM' string — not a function reference.
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth)
 
-  // Filter pipeline: all expenses → narrow to selected month → narrow by
-  // category. Both filters compose against the visible slice that flows to
-  // ExpenseList, RunningTotal, SpendingByCategory, and MonthlySummary.
-  const monthlyExpenses = filterExpensesByMonth(
-    expensesHook.expenses,
+  // Filter pipeline lives in useVisibleExpenses. New view-state (P4.A search,
+  // P4.B date-range) will plug into that hook's signature rather than scattering
+  // through App. monthlyExpenses is the month-only slice (used by BudgetVsActual
+  // — budget is month-scoped regardless of category filter); visibleExpenses is
+  // the user-visible slice flowing to everything else.
+  const { monthlyExpenses, visibleExpenses } = useVisibleExpenses({
+    expenses: expensesHook.expenses,
     selectedMonth,
-  )
-  const visibleExpenses = filterExpensesByCategory(
-    monthlyExpenses,
-    filter,
-    categoriesHook.categories,
-  )
+    categoryFilter: filter,
+    categories: categoriesHook.categories,
+  })
   // Budget vs actual is scoped to the month, NOT the category filter — the
   // budget covers all spending for the month, regardless of which categories
   // the user is currently filtering by in the list.
