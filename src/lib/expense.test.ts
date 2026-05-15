@@ -135,6 +135,42 @@ describe('applyExpenseEdit', () => {
     expect(updated.recurring).toBe(true);
   });
 
+  it('preserves existing categoryId when the input omits it (TD.2)', () => {
+    const withCategory: Expense = { ...existing, categoryId: 'cat-food' };
+    const updated = applyExpenseEdit(withCategory, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+    });
+    expect(updated.categoryId).toBe('cat-food');
+  });
+
+  it('preserves existing recurring flag when the input omits it (TD.2)', () => {
+    const withRecurring: Expense = { ...existing, recurring: true };
+    const updated = applyExpenseEdit(withRecurring, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+    });
+    expect(updated.recurring).toBe(true);
+  });
+
+  it('treats explicit undefined the same as omission (preserves categoryId)', () => {
+    const withCategory: Expense = { ...existing, categoryId: 'cat-food' };
+    const updated = applyExpenseEdit(withCategory, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+      categoryId: undefined,
+    });
+    // Spreading `categoryId: undefined` keeps the existing value — the form
+    // path (App.tsx) emits an explicit string id or simply omits the field;
+    // it never sends `undefined` to clear. Documenting the contract: omit OR
+    // pass undefined => preserve. Use '' upstream if a clearing API is ever
+    // wanted, with an explicit branch.
+    expect(updated.categoryId).toBe('cat-food');
+  });
+
   it('does not mutate the existing expense', () => {
     const snapshot: Expense = { ...existing };
     applyExpenseEdit(existing, {
