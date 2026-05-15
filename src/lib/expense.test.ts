@@ -155,7 +155,7 @@ describe('applyExpenseEdit', () => {
     expect(updated.recurring).toBe(true);
   });
 
-  it('lets the input clear categoryId by passing undefined explicitly', () => {
+  it('treats explicit undefined the same as omission (preserves categoryId)', () => {
     const withCategory: Expense = { ...existing, categoryId: 'cat-food' };
     const updated = applyExpenseEdit(withCategory, {
       amount: 20,
