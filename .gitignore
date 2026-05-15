@@ -16,6 +16,9 @@ dist-ssr
 # ephemera is ignored.
 /.loop/claims/
 
+# Scheduled-wakeup runtime lock (in-session mode)
+/.claude/scheduled_tasks.lock
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

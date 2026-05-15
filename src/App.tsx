@@ -28,6 +28,11 @@ import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
 import { SpendingByCategory } from './components/SpendingByCategory'
 import { CategoryManager } from './components/CategoryManager'
+import { CategoryFilter } from './components/CategoryFilter'
+import {
+  filterExpensesByCategory,
+  type CategoryFilterValue,
+} from './lib/expenseFilter'
 import './App.css'
 
 function App() {
@@ -36,6 +41,9 @@ function App() {
   const [editing, setEditing] = useState<Expense | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [filter, setFilter] = useState<CategoryFilterValue>('all')
+
+  const visibleExpenses = filterExpensesByCategory(expenses, filter, categories)
 
   useEffect(() => {
     Promise.all([getAllExpenses(), seedDefaultCategories()])
@@ -135,7 +143,7 @@ function App() {
     <main className="app">
       <header className="app__header">
         <h1>Expense Tracker</h1>
-        <RunningTotal expenses={expenses} />
+        <RunningTotal expenses={visibleExpenses} />
       </header>
       {editing ? (
         <ExpenseForm
@@ -168,16 +176,26 @@ function App() {
       {loading ? (
         <p className="loading">Loading…</p>
       ) : (
-        <ExpenseList
-          expenses={expenses}
-          categories={categories}
-          onDelete={handleDelete}
-          onEdit={setEditing}
-        />
+        <>
+          <CategoryFilter
+            value={filter}
+            categories={categories}
+            onChange={setFilter}
+          />
+          <ExpenseList
+            expenses={visibleExpenses}
+            categories={categories}
+            onDelete={handleDelete}
+            onEdit={setEditing}
+          />
+        </>
       )}
       <section className="app__insights">
         <h2>Spending by category</h2>
-        <SpendingByCategory expenses={expenses} categories={categories} />
+        <SpendingByCategory
+          expenses={visibleExpenses}
+          categories={categories}
+        />
       </section>
       <section className="app__categories">
         <h2>Categories</h2>

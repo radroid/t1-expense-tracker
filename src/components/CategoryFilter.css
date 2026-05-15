@@ -1,0 +1,20 @@
+.category-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.category-filter__label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.category-filter__select {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.95rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  min-height: 44px;
+}
