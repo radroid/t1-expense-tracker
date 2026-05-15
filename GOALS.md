@@ -47,20 +47,18 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 
 ## Tech debt
 
-- [ ] TD.1 — Extract a shared `formatCurrency` helper into `src/lib/` — the
-  `Intl.NumberFormat` USD `currencyFormatter` is duplicated verbatim in
-  `ExpenseList.tsx` and `RunningTotal.tsx` (flagged in iter-002 peer review).
-- [ ] TD.2 — `applyExpenseEdit` carries through only `input` fields, dropping
-  `existing.categoryId` / `recurring`. Harmless until P2.C (category edit UI) —
-  fix when categories get an edit path (iter-003 peer review).
+- [done] TD.1 — Extract a shared `formatUSD` helper into `src/lib/currency.ts`;
+  three components import it instead of constructing their own
+  `Intl.NumberFormat`. — iter-009 / PR #23
+- [done] TD.2 — `applyExpenseEdit` now preserves `categoryId` / `recurring`
+  from `existing` when the input doesn't supply them. Contract: omit OR
+  explicit-undefined → preserve. — iter-009 / PR #24
 - [done] TD.3 — Deepen `AddExpenseForm` + `EditExpenseForm` into one `ExpenseForm`
   module — ~90% identical; differ only in initial values, submit label, Cancel,
   post-submit clear. Puts the form-validation guards in one place. — iter-005 / PR #14
-- [ ] TD.4 — Deepen expense orchestration into a `useExpenses` hook — `App.tsx`
-  repeats `store op → getAllExpenses() refresh → setState` across 3 handlers and
-  couples directly to `expenseStore`; a hook concentrates it + becomes testable
-  via `renderHook` (iter-003 arch pass). Note: iter-004 added the same pattern for
-  categories (3 more handlers) — a `useCategories` hook is the parallel cleanup.
+- [done] TD.4 — `useExpenses` + `useCategories` hooks own state + load +
+  mutations + error. Methods return `Promise<boolean>` so callers chain
+  view-state. App.tsx no longer imports `src/db/`. — iter-009 / PR #25
 - [ ] TD.5 — Add an explicit DB-migration test — open `expense-tracker` at v1 with
   data, reopen at v2, assert `expenses` data survives and `categories` store exists
   (iter-004 peer review; currently only covered indirectly).
