@@ -37,11 +37,10 @@ describe('ExportButton', () => {
       const el = originalCreate(tag)
       if (tag === 'a') {
         const a = el as HTMLAnchorElement
-        const originalClick = a.click.bind(a)
+        // Replace click with a recording stub — calling the real click()
+        // in jsdom logs "Not implemented: navigation to another Document".
         a.click = vi.fn(() => {
           clicks.push(a)
-          // don't actually navigate
-          void originalClick
         })
       }
       return el

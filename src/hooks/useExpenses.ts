@@ -74,12 +74,14 @@ export function useExpenses(): UseExpenses {
 
     const errors: string[] = []
     const valid: Expense[] = []
-    inputs.forEach((input, idx) => {
+    // Errors are message-only — addMany has no notion of source row numbers
+    // (the caller maps inputs to CSV/UI lines). Adding "Row N:" here would
+    // be off-by-N once a CSV parser has already dropped invalid rows.
+    inputs.forEach((input) => {
       try {
         valid.push(createExpense(input))
       } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Invalid expense.'
-        errors.push(`Row ${idx + 1}: ${msg}`)
+        errors.push(e instanceof Error ? e.message : 'Invalid expense.')
       }
     })
 

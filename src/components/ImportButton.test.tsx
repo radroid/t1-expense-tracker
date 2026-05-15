@@ -63,7 +63,7 @@ describe('ImportButton', () => {
       .mockResolvedValue({
         added: 1,
         skipped: 1,
-        errors: ['Row 1: persistence failure for Lunch'],
+        errors: ['persistence failure for Coffee'],
       })
 
     const user = userEvent.setup()
