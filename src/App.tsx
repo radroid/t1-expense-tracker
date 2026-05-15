@@ -4,6 +4,7 @@ import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
 import { SpendingByCategory } from './components/SpendingByCategory'
+import { SpendingChart } from './components/SpendingChart'
 import { CategoryManager } from './components/CategoryManager'
 import { CategoryFilter } from './components/CategoryFilter'
 import { MonthSwitcher } from './components/MonthSwitcher'
@@ -134,6 +135,10 @@ function App() {
         <MonthlySummary expenses={visibleExpenses} />
         <h2>Spending by category</h2>
         <SpendingByCategory
+          expenses={visibleExpenses}
+          categories={categoriesHook.categories}
+        />
+        <SpendingChart
           expenses={visibleExpenses}
           categories={categoriesHook.categories}
         />
