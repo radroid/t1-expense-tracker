@@ -478,3 +478,104 @@ super-reviewer's prop-tightening nit.
 iter-017 MUST start with the `improve-codebase-architecture` skill
 invocation (real tool call, not a concept). Result MUST be logged here
 with `**Source:** arch-pass`. This is a hard rule from the loop protocol.
+
+---
+
+## iter-017 — Phase-4 → Phase-5 arch pass
+
+**Source:** arch-pass (mandatory phase-boundary; `improve-codebase-architecture` skill invoked).
+
+The Explore agent walked the codebase organically and surfaced five
+deepening opportunities. Recommendation: pick #1 (`useStoredCollection<T>`)
+for iter-018; bundle #2 (error-messages map) into the same PR if scope
+allows; defer #3, #4, #5.
+
+### Candidate #1 — Generic `useStoredCollection<T, TInput>` hook  [PICKED FOR iter-018]
+
+**Files:** `src/hooks/useExpenses.ts`, `useCategories.ts`,
+`useMonthlyBudgets.ts`, `useRecurringTemplates.ts`.
+
+All four hooks follow identical shape: `useState({ items, loading, error })`
++ `useEffect` load + async mutation orchestration (validate → store write
+→ refresh → set last-error string). Methods return `Promise<boolean>`;
+error clears on success. The pattern is **deep enough to earn extraction**
+(it orchestrates three concerns: validation, persistence, refresh) but
+currently smeared across four files.
+
+**Deletion test:** Deleting the generic would force all four hooks to
+re-expand. Complexity concentrates in one place rather than smeared
+across N callers. ✓ Worth it.
+
+**Risk:** Over-fitting if future hooks diverge (optimistic updates,
+partial refresh). Mitigation: design for composition, not universality
+— generic handles the baseline; domain hooks layer specifics (e.g.
+`useCategories.rename`) on top.
+
+**Test impact:** Coverage equal-or-improves — testing the generic
+surface once beats testing the same pattern four times.
+
+### Candidate #2 — `src/lib/errorMessages.ts` map  [BUNDLE INTO #1 IF SCOPE ALLOWS]
+
+12+ "Failed to load/add/save/delete X." strings hardcoded across hooks.
+Hygiene lift, not architectural — but lifts compound. Single source of
+truth for UX copy, single place to retune voice.
+
+**Deletion test:** Deleting it just pushes strings back. Not a deep
+seam. Skip if iter-018 scope is tight.
+
+### Candidate #3 — Generic `makeStore<T>(storeName, options?)` factory
+
+**Files:** `src/db/expenseStore.ts`, `categoryStore.ts`, `budgetStore.ts`,
+`recurringTemplateStore.ts`.
+
+Each wraps `withStore` identically (add/getAll/update/remove + a couple
+of domain helpers — categoryStore has `seedDefaultCategories`, budgetStore
+keys by `month` instead of `id`). The CRUD layer is uniform; the
+specifics earn their domain modules.
+
+**Deletion test:** Concentrates IDB boilerplate. ✓ Worth it.
+
+**Defer rationale:** pairs naturally with #1 (refactor stores at the same
+time as hooks if the hook generic exposes the store seam clearly), but
+adds review surface. Sequencing: ship #1 first; revisit #3 after the
+hook generic is stable.
+
+### Candidate #4 — Pure `src/lib/expenseVisibility.ts` pipeline
+
+`useVisibleExpenses` chains 4 memoized filter stages + a budget-coherence
+carveout (`monthlyExpenses` bypasses date-range). The hook is "5
+`useMemo` calls and pass intermediate results"; the pipeline could live
+in `src/lib/` as a pure function that the hook wraps in a single
+`useMemo`.
+
+**Deletion test:** Marginal. The hook IS already thin — it composes
+existing pure filters from `src/lib/expenseFilter.ts`. Lifting the
+orchestration as well would unlock standalone use (CSV without UI, etc.)
+but no current consumer demands it.
+
+**Defer rationale:** No active need. Revisit if a non-React consumer
+appears.
+
+### Candidate #5 — Drop vestigial `Expense.recurring?: boolean`
+
+Field is now unused — superseded by `sourceTemplateId` + RecurringTemplate
+in iter-016. Kept to avoid touching persisted records. IDB is
+schema-less, so leaving the type narrows is safe; first edit on any
+historical record drops it via `applyExpenseEdit`'s cleaning.
+
+**Defer rationale:** Low value, low urgency. Pair with a future DB
+cleanup iter.
+
+### Decision summary
+
+| # | Title | Priority | Target iter | Status |
+|---|---|---|---|---|
+| 1 | `useStoredCollection<T>` | HIGH | iter-018 | TD.7 (open) |
+| 2 | `errorMessages.ts` map | LOW | iter-018 (bundle) | TD.8 (open) |
+| 3 | `makeStore<T>` factory | MEDIUM | post-iter-018 | TD.9 (open) |
+| 4 | `expenseVisibility.ts` pipeline | DEFERRED | when 2nd consumer lands | TD.10 (open) |
+| 5 | drop vestigial `recurring` | DEFERRED | DB cleanup iter | TD.11 (open) |
+
+iter-018 is a single-feature impl iter shipping TD.7 (+ TD.8 if scope
+permits). The arch-pass itself produces no code changes — only this
+log entry, GOALS.md TD additions, and the iter-017 closeout PR.

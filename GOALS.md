@@ -113,6 +113,32 @@ Candidate themes (to be triaged in the arch pass):
   reference its id (form silently falls back to Uncategorized). Decide: orphan + treat
   as uncategorized, or block deletion while in use, or reassign. Product decision
   (iter-006 peer review).
+- [ ] TD.7 — Generic `useStoredCollection<T, TInput>` hook — extract the
+  shared shape across `useExpenses`, `useCategories`, `useMonthlyBudgets`,
+  `useRecurringTemplates` (state machine + load + mutation orchestration
+  + last-error semantics). Domain hooks become thin wrappers that bind
+  the validator + store and expose domain-named methods. **Picked for
+  iter-018 by iter-017 arch pass.**
+- [ ] TD.8 — `src/lib/errorMessages.ts` constants map — lift the 12+
+  "Failed to load/add/save/delete X." strings out of hook
+  implementations. Bundle into TD.7's PR if scope allows. (iter-017 arch
+  pass)
+- [ ] TD.9 — Generic `makeStore<T>` IndexedDB factory — fold the
+  uniform CRUD wrappers in `expenseStore`, `categoryStore`,
+  `budgetStore`, `recurringTemplateStore` into one. Domain helpers
+  (e.g. `seedDefaultCategories`) stay in their domain module.
+  Sequencing: ship after TD.7 lands and the hook generic is stable.
+  (iter-017 arch pass)
+- [ ] TD.10 — Pure `src/lib/expenseVisibility.ts` pipeline — orchestrate
+  the 4-stage filter chain + budget-coherence carveout as a pure
+  function. `useVisibleExpenses` collapses to a single `useMemo`.
+  **Deferred** — no non-React consumer demands it yet. Revisit if one
+  appears. (iter-017 arch pass)
+- [ ] TD.11 — Drop vestigial `Expense.recurring?: boolean` — field
+  superseded by `sourceTemplateId` in iter-016 P4.E. Schema-less IDB
+  means leaving the type narrows is safe; first edit on a historical
+  record drops it via `applyExpenseEdit`. **Deferred** to a future DB
+  cleanup iter. (iter-017 arch pass)
 
 ## Open dependencies (waiting on user)
 
