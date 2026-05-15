@@ -631,3 +631,60 @@ log entry, GOALS.md TD additions, and the iter-017 closeout PR.
   update fallback) — high signal-to-noise.
 - 15 new tests on the generic + 5 frozen/string-pinning tests give a
   strong contract anchor without polluting domain test files.
+
+---
+
+## iter-019 super-reviewer notes (PR #50 — P5.A + P5.B)
+
+**Verdict: APPROVE (high confidence).**
+
+### Verified
+
+- **Round-trip purity** on `urlFilters`: `parseFilters(serializeFilters(state))`
+  recovers all fields for full state; minimal state round-trips through
+  the documented "omit defaults" path.
+- **Lazy-init pattern** in App.tsx: `parseFilters(...)` is called once
+  per render but consumed only on first render via `useState`. Pure
+  string parse; cost negligible.
+- **Write effect deps** correct: `[selectedMonth, filter, searchTerm,
+  dateRange]`. Uses `replaceState` (keeps back stack clean).
+- **CR's MAJOR fix applied**: `replaceState` clear target is now
+  `${pathname}${search}` not a literal space.
+- **Hash reset in App.test beforeEach** unblocked 6 pre-existing tests
+  that were failing because jsdom's `location` outlives a single test.
+- **`BACKUP_SCHEMA_VERSION === 1`** exported + asserted.
+- **Snapshot shape** in declared key order (positional substring assert
+  in tests).
+- **Determinism** via injectable `now`.
+- **JSON pretty-print** + round-trip via `JSON.parse`.
+- **BackupExport** mirrors ExportButton's Blob/anchor/click/revoke pattern.
+- **Empty data** still produces a valid download (no disabled state).
+- **App.tsx wiring**: `BackupExport` receives all four arrays;
+  field names align with `BackupExportProps`.
+- **No infinite-loop risk** from URL-driven month changes triggering
+  rollover — `dueTemplatesForMonth` dedupe via `sourceTemplateId` keeps
+  the next-tick `due` empty.
+
+### Findings (all nit / info — no action this iter)
+
+1. `parseFilters` runs on every render even though only the first uses
+   it. `useState(() => parseFilters(...))` callback form would be
+   crisper. Negligible cost; non-blocking.
+2. `urlFilters` parser accepts `cat=all` as `filter: 'all'`, while the
+   serializer omits `cat=all`. Asymmetric but harmless (default).
+   Worth a comment if it confuses a future maintainer.
+3. `BackupExport.todayIsoDate` uses local-time YYYY-MM-DD; `exportedAt`
+   inside the snapshot is UTC ISO. Possible 1-day skew near midnight
+   UTC for negative-timezone users. Filename is cosmetic.
+
+### Strengths
+
+- Pure libs with injectable `now`; tests cover round-trip + edge cases
+  (special chars, partial date range, both-invalid).
+- BackupExport mirrors a well-tested existing component (ExportButton)
+  rather than inventing a new download pattern.
+- Key-order determinism for the JSON snapshot uses position-aware
+  substring asserts — more robust than `JSON.parse`-and-compare for
+  intent verification.
+- CR's MAJOR finding was caught + remediated during the same iter; the
+  fix preserves base URL on clear instead of leaving a literal space.
