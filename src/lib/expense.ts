@@ -62,7 +62,23 @@ export function createExpense(input: ExpenseInput): Expense {
   return { id: crypto.randomUUID(), ...cleaned };
 }
 
+// Applies an edit, preserving optional fields the input doesn't mention.
+//
+// Contract: `categoryId` and `recurring` survive an edit unless the input
+// *explicitly* supplies a new value. Omitting them (or passing `undefined`)
+// keeps the existing value — important for forms that don't render every
+// field (e.g. a recurring toggle absent from the basic edit form would
+// silently wipe the flag otherwise). To replace a value, pass the new one;
+// to clear it, the form must do so through an explicit upstream branch
+// rather than relying on undefined-equals-clear.
 export function applyExpenseEdit(existing: Expense, input: ExpenseInput): Expense {
   const cleaned = validateExpenseInput(input);
-  return { id: existing.id, ...cleaned };
+  const merged: Expense = { id: existing.id, ...cleaned };
+  if (cleaned.categoryId === undefined && existing.categoryId !== undefined) {
+    merged.categoryId = existing.categoryId;
+  }
+  if (cleaned.recurring === undefined && existing.recurring !== undefined) {
+    merged.recurring = existing.recurring;
+  }
+  return merged;
 }
