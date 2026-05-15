@@ -1,28 +1,5 @@
-import { useEffect, useState } from 'react'
-import {
-  applyExpenseEdit,
-  createExpense,
-  type Expense,
-  type ExpenseInput,
-} from './lib/expense'
-import {
-  createCategory,
-  type Category,
-  type CategoryInput,
-} from './lib/category'
-import {
-  addExpense,
-  getAllExpenses,
-  removeExpense,
-  updateExpense,
-} from './db/expenseStore'
-import {
-  addCategory,
-  getAllCategories,
-  removeCategory,
-  seedDefaultCategories,
-  updateCategory,
-} from './db/categoryStore'
+import { useState } from 'react'
+import { type Expense, type ExpenseInput } from './lib/expense'
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
@@ -33,114 +10,35 @@ import {
   filterExpensesByCategory,
   type CategoryFilterValue,
 } from './lib/expenseFilter'
+import { useExpenses } from './hooks/useExpenses'
+import { useCategories } from './hooks/useCategories'
 import './App.css'
 
 function App() {
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const expensesHook = useExpenses()
+  const categoriesHook = useCategories()
   const [editing, setEditing] = useState<Expense | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [filter, setFilter] = useState<CategoryFilterValue>('all')
 
-  const visibleExpenses = filterExpensesByCategory(expenses, filter, categories)
-
-  useEffect(() => {
-    Promise.all([getAllExpenses(), seedDefaultCategories()])
-      .then(([loadedExpenses, loadedCategories]) => {
-        setExpenses(loadedExpenses)
-        setCategories(loadedCategories)
-      })
-      .catch(() => setError('Failed to load data.'))
-      .finally(() => setLoading(false))
-  }, [])
-
-  async function handleAdd(input: ExpenseInput) {
-    let expense: Expense
-    try {
-      expense = createExpense(input)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid expense.')
-      return
-    }
-    setError('')
-    await addExpense(expense)
-    setExpenses(await getAllExpenses())
-  }
-
-  async function handleDelete(id: string) {
-    try {
-      await removeExpense(id)
-      setExpenses(await getAllExpenses())
-      setError('')
-    } catch {
-      setError('Failed to delete expense.')
-    }
-  }
+  const visibleExpenses = filterExpensesByCategory(
+    expensesHook.expenses,
+    filter,
+    categoriesHook.categories,
+  )
+  const loading = expensesHook.loading || categoriesHook.loading
+  const error = expensesHook.error || categoriesHook.error
 
   async function handleUpdate(input: ExpenseInput) {
     if (!editing) return
-    let updated: Expense
-    try {
-      updated = applyExpenseEdit(editing, input)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid expense.')
-      return
-    }
-    try {
-      await updateExpense(updated)
-      setExpenses(await getAllExpenses())
-      setError('')
-      setEditing(null)
-    } catch {
-      setError('Failed to save changes.')
-    }
-  }
-
-  async function handleAddCategory(input: CategoryInput) {
-    let category: Category
-    try {
-      category = createCategory(input)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid category.')
-      return
-    }
-    try {
-      await addCategory(category)
-      setCategories(await getAllCategories())
-      setError('')
-    } catch {
-      setError('Failed to add category.')
-    }
-  }
-
-  async function handleRenameCategory(id: string, name: string) {
-    const existing = categories.find((c) => c.id === id)
-    if (!existing) {
-      setError('Category not found.')
-      return
-    }
-    try {
-      await updateCategory({ ...existing, name })
-      setCategories(await getAllCategories())
-      setError('')
-    } catch {
-      setError('Failed to rename category.')
-    }
+    const ok = await expensesHook.update(editing, input)
+    if (ok) setEditing(null)
   }
 
   async function handleDeleteCategory(id: string) {
-    try {
-      await removeCategory(id)
-      setCategories(await getAllCategories())
-      // Deleting the category currently being filtered on would leave the
-      // <select> orphaned (no matching <option>) and silently produce an empty
-      // list + $0 totals. Snap back to 'all'.
-      if (filter === id) setFilter('all')
-      setError('')
-    } catch {
-      setError('Failed to delete category.')
-    }
+    const ok = await categoriesHook.remove(id)
+    // The filter pointing at a now-deleted category would orphan the <select>
+    // and silently produce an empty list + $0 totals. Snap back to 'all'.
+    if (ok && filter === id) setFilter('all')
   }
 
   return (
@@ -158,7 +56,7 @@ function App() {
             date: editing.date,
             categoryId: editing.categoryId,
           }}
-          categories={categories}
+          categories={categoriesHook.categories}
           submitLabel="Save"
           onSubmit={handleUpdate}
           onCancel={() => setEditing(null)}
@@ -166,9 +64,9 @@ function App() {
       ) : (
         <ExpenseForm
           key="new"
-          categories={categories}
+          categories={categoriesHook.categories}
           submitLabel="Add expense"
-          onSubmit={handleAdd}
+          onSubmit={expensesHook.add}
           clearOnSubmit
         />
       )}
@@ -183,13 +81,13 @@ function App() {
         <>
           <CategoryFilter
             value={filter}
-            categories={categories}
+            categories={categoriesHook.categories}
             onChange={setFilter}
           />
           <ExpenseList
             expenses={visibleExpenses}
-            categories={categories}
-            onDelete={handleDelete}
+            categories={categoriesHook.categories}
+            onDelete={expensesHook.remove}
             onEdit={setEditing}
           />
         </>
@@ -198,15 +96,15 @@ function App() {
         <h2>Spending by category</h2>
         <SpendingByCategory
           expenses={visibleExpenses}
-          categories={categories}
+          categories={categoriesHook.categories}
         />
       </section>
       <section className="app__categories">
         <h2>Categories</h2>
         <CategoryManager
-          categories={categories}
-          onAdd={handleAddCategory}
-          onRename={handleRenameCategory}
+          categories={categoriesHook.categories}
+          onAdd={categoriesHook.add}
+          onRename={categoriesHook.rename}
           onDelete={handleDeleteCategory}
         />
       </section>
