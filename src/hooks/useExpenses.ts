@@ -31,6 +31,10 @@ export interface UseExpenses {
   addMany: (inputs: ExpenseInput[]) => Promise<BulkAddResult>
   update: (existing: Expense, input: ExpenseInput) => Promise<boolean>
   remove: (id: string) => Promise<boolean>
+  // Re-reads the store and updates state. Used by the backup-restore
+  // flow (P5.C) to refresh after a multi-store bulk overwrite that
+  // bypasses the hook's normal {validate → write → refresh} pipeline.
+  refresh: () => Promise<void>
 }
 
 // Orchestrates expense persistence on top of `expenseStore`. The single-row
@@ -123,5 +127,6 @@ export function useExpenses(): UseExpenses {
     addMany,
     update,
     remove,
+    refresh,
   }
 }

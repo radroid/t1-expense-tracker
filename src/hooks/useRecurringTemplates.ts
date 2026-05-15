@@ -21,6 +21,8 @@ export interface UseRecurringTemplates {
   error: string
   add: (input: RecurringTemplateInput) => Promise<boolean>
   remove: (id: string) => Promise<boolean>
+  // Re-reads the store. Used by the backup-restore flow (P5.C).
+  refresh: () => Promise<void>
 }
 
 // Persistence-layer hook for recurring templates. Simplest of the four —
@@ -50,7 +52,7 @@ export function useRecurringTemplates(): UseRecurringTemplates {
     messages: recurringTemplateMessages,
   })
 
-  const { items, loading, error, add, remove } = collection
+  const { items, loading, error, add, remove, refresh } = collection
 
   return {
     templates: items,
@@ -58,5 +60,6 @@ export function useRecurringTemplates(): UseRecurringTemplates {
     error,
     add,
     remove,
+    refresh,
   }
 }

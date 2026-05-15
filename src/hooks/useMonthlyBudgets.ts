@@ -20,6 +20,8 @@ export interface UseMonthlyBudgets {
   remove: (month: string) => Promise<boolean>
   // Convenience: returns the budget for the given month, or undefined.
   getFor: (month: string) => MonthlyBudget | undefined
+  // Re-reads the store. Used by the backup-restore flow (P5.C).
+  refresh: () => Promise<void>
 }
 
 interface BudgetInput {
@@ -50,7 +52,7 @@ export function useMonthlyBudgets(): UseMonthlyBudgets {
     messages: budgetMessages,
   })
 
-  const { items, loading, error, add, remove } = collection
+  const { items, loading, error, add, remove, refresh } = collection
 
   const set = useCallback(
     (month: string, amount: number): Promise<boolean> => add({ month, amount }),
@@ -70,5 +72,6 @@ export function useMonthlyBudgets(): UseMonthlyBudgets {
     set,
     remove,
     getFor,
+    refresh,
   }
 }
