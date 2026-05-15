@@ -1,8 +1,10 @@
 import type { Expense } from '../lib/expense';
+import type { Category } from '../lib/category';
 import './ExpenseList.css';
 
 interface ExpenseListProps {
   expenses: Expense[];
+  categories: Category[];
   onDelete?: (id: string) => void;
   onEdit?: (expense: Expense) => void;
 }
@@ -14,7 +16,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 });
 
-export function ExpenseList({ expenses, onDelete, onEdit }: ExpenseListProps) {
+export function ExpenseList({ expenses, categories, onDelete, onEdit }: ExpenseListProps) {
   if (expenses.length === 0) {
     return <p className="expense-list__empty">No expenses yet.</p>;
   }
@@ -23,37 +25,59 @@ export function ExpenseList({ expenses, onDelete, onEdit }: ExpenseListProps) {
   // Array.prototype.sort is stable, so equal dates keep input order.
   const sorted = [...expenses].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
+  const categoryById = new Map(categories.map((c) => [c.id, c]));
+
   return (
     <ul className="expense-list">
-      {sorted.map((expense) => (
-        <li key={expense.id} className="expense-list__item">
-          <span className="expense-list__amount">
-            {currencyFormatter.format(expense.amount)}
-          </span>
-          <span className="expense-list__description">{expense.description}</span>
-          <span className="expense-list__date">{expense.date}</span>
-          {onEdit && (
-            <button
-              type="button"
-              className="expense-list__edit"
-              aria-label={`Edit ${expense.description}`}
-              onClick={() => onEdit(expense)}
-            >
-              Edit
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              className="expense-list__delete"
-              aria-label={`Delete ${expense.description}`}
-              onClick={() => onDelete(expense.id)}
-            >
-              Delete
-            </button>
-          )}
-        </li>
-      ))}
+      {sorted.map((expense) => {
+        const category = expense.categoryId
+          ? categoryById.get(expense.categoryId)
+          : undefined;
+        return (
+          <li key={expense.id} className="expense-list__item">
+            <span className="expense-list__amount">
+              {currencyFormatter.format(expense.amount)}
+            </span>
+            <span className="expense-list__description">{expense.description}</span>
+            {category ? (
+              <span
+                className="expense-list__badge"
+                aria-label={`Category: ${category.name}`}
+              >
+                <span
+                  className="expense-list__badge-swatch"
+                  style={{ backgroundColor: category.color }}
+                  aria-hidden="true"
+                />
+                <span className="expense-list__badge-name">{category.name}</span>
+              </span>
+            ) : (
+              <span aria-hidden="true" />
+            )}
+            <span className="expense-list__date">{expense.date}</span>
+            {onEdit && (
+              <button
+                type="button"
+                className="expense-list__edit"
+                aria-label={`Edit ${expense.description}`}
+                onClick={() => onEdit(expense)}
+              >
+                Edit
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                className="expense-list__delete"
+                aria-label={`Delete ${expense.description}`}
+                onClick={() => onDelete(expense.id)}
+              >
+                Delete
+              </button>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
