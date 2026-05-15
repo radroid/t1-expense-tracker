@@ -22,8 +22,8 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] P2.B — Category management UI — Add / rename / delete categories. — iter-004 / PR #12
 - [done] P2.C — Assign category to expense — Category picker in the add/edit form. — iter-006 / PR #16
 - [ ] P2.D — Filter by category — Filter control above the expense list.
-- [ ] P2.E — Category badges — Colored category badge on each expense row.
-- [ ] P2.F — Spending by category — Totals grouped by category.
+- [done] P2.E — Category badges — Colored category badge on each expense row. — iter-007 / PR #18
+- [done] P2.F — Spending by category — Totals grouped by category. — iter-007 / PR #19
 
 ## Phase 3 — Budgets & insights
 
