@@ -27,11 +27,14 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 
 ## Phase 3 — Budgets & insights
 
-- [ ] P3.A — Monthly budget model — Per-month budget amount, persisted (`MonthlyBudget`).
+- [done] P3.A — Monthly budget model — `MonthlyBudget` + IndexedDB store (DB v3),
+  upsert semantics keyed by month. — iter-010 / PR #27
 - [ ] P3.B — Budget vs actual — This month's spend against budget with a progress bar.
-- [ ] P3.C — Month switcher — Navigate between months; list + totals scope to the selected month.
+- [done] P3.C — Month switcher — `MonthSwitcher` + `selectedMonth` state in App;
+  filter pipeline composes `byMonth → byCategory`. — iter-010 / PR #29
 - [ ] P3.D — Spending chart — Simple bar chart of spend per category for the selected month.
-- [ ] P3.E — Monthly summary — Total / average / count for the selected month.
+- [done] P3.E — Monthly summary — `summarizeExpenses` + `MonthlySummary`
+  (total / average / count) wired to the visible slice. — iter-010 / PRs #28 & #29
 - [ ] P3.F — Over-budget warning — Visual warning when spend exceeds the month's budget.
 
 ## Phase 4 — Polish & power features
@@ -59,9 +62,10 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] TD.4 — `useExpenses` + `useCategories` hooks own state + load +
   mutations + error. Methods return `Promise<boolean>` so callers chain
   view-state. App.tsx no longer imports `src/db/`. — iter-009 / PR #25
-- [ ] TD.5 — Add an explicit DB-migration test — open `expense-tracker` at v1 with
-  data, reopen at v2, assert `expenses` data survives and `categories` store exists
-  (iter-004 peer review; currently only covered indirectly).
+- [done] TD.5 — DB-migration test added (`src/db/dbMigration.test.ts`). Opens DB
+  at v2 directly, seeds an expenses row, reopens via `openDb()` at v3, asserts
+  the expense survives + `monthlyBudgets` store exists + a budget round-trips.
+  — iter-010 / PR #27
 - [ ] TD.6 — Category-deletion cascade — deleting a category orphans expenses that
   reference its id (form silently falls back to Uncategorized). Decide: orphan + treat
   as uncategorized, or block deletion while in use, or reassign. Product decision
