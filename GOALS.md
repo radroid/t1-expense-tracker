@@ -264,22 +264,21 @@ local-only, adding a network dependency violates that charter.
   the type + `ExpenseInput` + `validateExpenseInput` + `applyExpenseEdit`
   preservation branch. CSV format narrowed 5→4 columns. `sourceTemplateId`
   is the canonical recurring-template marker. — iter-024 / PR #59
-- [ ] TD.13 — `downloadFile({filename, mime, body})` adapter —
-  3rd-consumer-rule MET (ExportButton, BackupExport, RecurringExport
-  + `todayIsoDate` helper duplicated in all three). Lift the Blob +
-  anchor + revoke dance into `src/lib/downloadFile.ts`; inject
-  `document`/`URL` for testability. Pair the revoke-race fix here
-  too (Safari has historically blocked synchronous revoke).
-  (iter-023 arch pass; iter-030 promote to pick.)
-- [ ] TD.14 — **Split into two helpers** (not one fat
-  `useFileRestoreFlow`). (a) `useFilePicker({ onFile }): { inputRef,
-  onChange }` owns ref-reset + `file.text()` boilerplate, used by
-  all 3 consumers. (b) `parsedFileImporter<T, R>(parse, importFn)`
-  orchestrator owns the headerErr/summary state-shape shared
-  between `ImportButton` + `RecurringImport`. `BackupRestore` adopts
-  only (a); its dialog/atomic-restore logic stays in-place.
-  3rd-consumer-rule MET (iter-026: RecurringImport). (iter-023 arch
-  pass; iter-030 promote to pick + reshape.)
+- [done] TD.13 — `downloadFile({filename, mime, body}, env?)` adapter
+  in `src/lib/downloadFile.ts` lifts Blob+anchor+revoke from 3 export
+  components. Safari/Firefox revoke-race fix landed at the seam
+  (deferred `URL.revokeObjectURL` via `setTimeout(fn, 0)`).
+  `isoDateToday()` added to `src/lib/month.ts` replacing 3 duplicated
+  local-date helpers (UTC). — iter-031 / PR #67.
+- [done] TD.14 — File-picker seam split. (a) `useFilePicker({onFile})`
+  in `src/hooks/useFilePicker.ts` owns ref-reset + `file.text()`; all
+  3 components adopt. Reset happens BEFORE awaiting onFile so
+  same-file re-pick fires onChange. (b) `useParsedFileImporter<T>`
+  in `src/hooks/useParsedFileImporter.ts` orchestrates
+  headerError/summary/rowErrors; only ImportButton + RecurringImport
+  adopt. BackupRestore keeps its dialog/atomic-restore logic
+  in-place. ImportButton 94→62 LOC; RecurringImport 102→76 LOC.
+  — iter-031 / PR #67.
 - [ ] TD.15 — `src/lib/backupPipeline.ts` barrel — three lib files
   (`backup.ts` + `parseBackup.ts` + `restoreBackup.ts`) + two
   components touch the snapshot shape. Single barrel re-exporting
