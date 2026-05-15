@@ -1222,3 +1222,82 @@ sections):
 changed.
 
 **Source:** super-reviewer (Class A).
+
+---
+
+## iter-030 — Phase-6 → Phase-7 arch pass
+
+**Source:** arch-pass (mandatory phase-boundary;
+`improve-codebase-architecture` skill invoked on entry).
+
+The Explore agent walked the codebase organically: 5 stores +
+factory + 19 lib modules + 5 domain hooks + 27 components +
+App.tsx integration hub. Output: 7 deepening candidates +
+existing-TD verdicts + 5 Phase 7 theme proposals.
+
+### Existing-TD verdicts (one-line each)
+
+- **TD.10** (`expenseVisibility` pipeline) — **DEFER**. Still no
+  non-React consumer; useMemo granularity is a feature not smell.
+- **TD.12** (refresh-after-mutation isolation) — **DEFER**.
+  5 consumers, 12 iters stable, zero reports.
+- **TD.13** (`downloadFile` adapter) — **PROMOTE TO PICK** 🟢.
+  3 consumers MET (ExportButton, BackupExport, RecurringExport).
+- **TD.14** (file-picker / file-restore-flow) — **PROMOTE TO
+  PICK** 🟢; sharper to split as a thin `useFilePicker` hook
+  plus an `parsedFileImporter` orchestrator. BackupRestore
+  keeps its dialog logic in-place.
+- **TD.15** (backupPipeline barrel) — **DEFER**. No schema-
+  evolution pressure; v2 stable since iter-021.
+- **TD.17** (App.handleDeleteCategory test gap) — **REAFFIRM**
+  as small follow-up; low priority.
+- **TD.18** (form-error-association sweep) — **PROMOTE TO PICK**
+  🟢. Pair with TD.19 + TD.20.
+- **TD.19** (skip-link), **TD.20** (persistent error region) —
+  **REAFFIRM** as a11y polish; bundle with TD.18.
+
+### NEW deepening candidates surfaced (TD.21..TD.24)
+
+| # | TD | Candidate | Verdict |
+|---|---|---|---|
+| 1 | — | TD.13 reshape (`downloadFile` adapter) | 🟢 pick iter-031 |
+| 2 | — | TD.14 split (`useFilePicker` + `parsedFileImporter`) | 🟢 pick iter-031 |
+| 3 | TD.21 | CSV core concentration (`csv.ts` + `recurringCsv.ts` share 60-LOC tokenizer + helpers) | 🟡 promote when 3rd CSV consumer lands |
+| 4 | TD.22 | App.tsx integration-hub split (`useAppFilters` + `useRecurringRollover` hooks) | 🟡 reassess at P7→P8 unless P7 adds another effect |
+| 5 | TD.23 | Multi-hook error consolidation (replace string-cascade with `errors[]`) | 🟡 bundle with TD.20 |
+| 6 | TD.24 | `bindStore<T, K>(mod, methodMap)` helper to remove the spy-friendly closure boilerplate from 5 domain hooks | 🟡 cleanup-bundle only |
+
+### Recommendation
+
+- **iter-031:** ship TD.13 + TD.14 together (sibling export/import
+  seams, same testing pattern, both unblocked by the 3-consumer
+  rule).
+- **iter-032:** a11y-P1 bundle — TD.18 (form-error-association)
+  + TD.19 (skip-link) + TD.20 (persistent error region) +
+  TD.23 (multi-error consolidation).
+- **TD.21 (CSV core)** promoted to pick once a 3rd CSV consumer
+  lands (likely with the Phase 7 bank-CSV-preset theme).
+- **TD.22 (App split)** parked; pick if Phase 7 adds another
+  App-level effect.
+
+### Phase 7 theme proposals
+
+Constraint: local-only by CLAUDE.md charter. No network deps.
+
+1. **Recurring-template EDIT** (currently add+remove only) —
+   closes obvious UX gap; small surface; reuses ExpenseForm
+   consolidation pattern (TD.3).
+2. **Undo stack for mutations** — local-only, high UX leverage;
+   `useStoredCollection` seam already invested.
+3. **Bank-CSV import format presets** — concrete user value;
+   locks in TD.21 (CSV core).
+4. **Local-only categorization heuristics** (rule-based, e.g.
+   "description contains STARBUCKS → Coffee") — pure-function
+   lib; well within charter.
+5. **Calendar-view tab** — pure-render on existing data;
+   concentrates date-axis logic currently smeared across
+   Trends + Month switchers.
+
+Recommendation: pick 2-3 feature items + 1 polish bundle (iter-032
+a11y-P1) for Phase 7 rather than full polish-phase. Feature
+momentum is strong and the codebase is healthy.

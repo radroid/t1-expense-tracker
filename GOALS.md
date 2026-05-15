@@ -117,6 +117,30 @@ the post-arch handoff into concrete items below.
   rendering components. NOT per-expense for v1 (per-expense without
   conversion rates would mislead totals). — iter-022 / PR #56
 
+## Phase 7 — TBD (themes triaged; concrete items defined at iter-033 planning)
+
+iter-030 Phase-6 → Phase-7 arch pass triaged candidates. iter-031 +
+iter-032 are arch-driven refactors (TD.13 + TD.14, then a11y-P1
+bundle) before Phase 7 feature work starts. Phase 7 themes from
+the arch pass:
+
+1. **Recurring-template EDIT** — currently add+remove only;
+   reuses ExpenseForm consolidation pattern (TD.3).
+2. **Undo stack for mutations** — local-only UX; `useStoredCollection`
+   seam already invested.
+3. **Bank-CSV import format presets** — concrete user value; unlocks
+   TD.21 (CSV core).
+4. **Local-only categorization heuristics** — rule-based ("description
+   contains STARBUCKS → Coffee"); pure-function lib; well within
+   the local-only charter.
+5. **Calendar-view tab** — pure-render on existing data; concentrates
+   date-axis logic.
+
+Recommendation: pick 2-3 feature items + the iter-032 a11y-P1
+polish bundle for Phase 7. Concrete `P7.A`...`P7.E` items written
+by iter-033 planning iter. Phase 7 is OPEN; iter-031 + iter-032
+ship pre-Phase-7 refactors.
+
 ## Phase 6 — Analytics, data portability, polish
 
 iter-025 planning iter triaged the iter-022 candidate themes plus a
@@ -240,15 +264,22 @@ local-only, adding a network dependency violates that charter.
   the type + `ExpenseInput` + `validateExpenseInput` + `applyExpenseEdit`
   preservation branch. CSV format narrowed 5→4 columns. `sourceTemplateId`
   is the canonical recurring-template marker. — iter-024 / PR #59
-- [ ] TD.13 — `makeDownloadBlob(filename, mime, body)` seam —
-  `ExportButton` + `BackupExport` duplicate the Blob+anchor+revoke
-  dance. Only 2 consumers today; **deferred** until a 3rd consumer
-  lands (PDF/zip export in Phase 6+). (iter-023 arch pass)
-- [ ] TD.14 — `useFileRestoreFlow` hook — `ImportButton` +
-  `BackupRestore` share file-picker → parse → execute. `BackupRestore`
-  adds a confirmation `<dialog>` branch; hook would need a "no dialog"
-  knob. Only 2 consumers; **deferred** until a 3rd consumer (e.g.
-  bulk-replace CSV import) commits. (iter-023 arch pass)
+- [ ] TD.13 — `downloadFile({filename, mime, body})` adapter —
+  3rd-consumer-rule MET (ExportButton, BackupExport, RecurringExport
+  + `todayIsoDate` helper duplicated in all three). Lift the Blob +
+  anchor + revoke dance into `src/lib/downloadFile.ts`; inject
+  `document`/`URL` for testability. Pair the revoke-race fix here
+  too (Safari has historically blocked synchronous revoke).
+  (iter-023 arch pass; iter-030 promote to pick.)
+- [ ] TD.14 — **Split into two helpers** (not one fat
+  `useFileRestoreFlow`). (a) `useFilePicker({ onFile }): { inputRef,
+  onChange }` owns ref-reset + `file.text()` boilerplate, used by
+  all 3 consumers. (b) `parsedFileImporter<T, R>(parse, importFn)`
+  orchestrator owns the headerErr/summary state-shape shared
+  between `ImportButton` + `RecurringImport`. `BackupRestore` adopts
+  only (a); its dialog/atomic-restore logic stays in-place.
+  3rd-consumer-rule MET (iter-026: RecurringImport). (iter-023 arch
+  pass; iter-030 promote to pick + reshape.)
 - [ ] TD.15 — `src/lib/backupPipeline.ts` barrel — three lib files
   (`backup.ts` + `parseBackup.ts` + `restoreBackup.ts`) + two
   components touch the snapshot shape. Single barrel re-exporting
@@ -276,6 +307,36 @@ local-only, adding a network dependency violates that charter.
   region. Helps keyboard users bypass the header toolbar
   (ThemeToggle, CurrencySelector, MonthSwitcher) which currently
   has no grouping. (iter-028 a11y audit a11y-004.)
+- [ ] TD.21 — CSV core concentration — `src/lib/csv.ts` and
+  `src/lib/recurringCsv.ts` share a bit-identical 60-LOC
+  `tokenizeCsv` state machine + `csvQuote` + `headerMatches` +
+  parse-result shape. Lift to `src/lib/csvCore.ts` exporting
+  `tokenizeCsv`, `csvQuote`, and a `parseCsvWithHeader<T>(...)`
+  shell. Two consumers today (below the 3-adapter rule); promote
+  to pick when the 3rd consumer (Phase 7 bank-CSV preset) lands.
+  (iter-030 arch pass.)
+- [ ] TD.22 — `App.tsx` integration-hub split — extract
+  `useAppFilters()` (URL hash lazy-init + serialize effect +
+  filter state setters) and `useRecurringRollover(recurringHook,
+  expensesHook, selectedMonth)` (the idempotent rollover effect)
+  out of App.tsx into named hooks. Today App.tsx is 392 lines with
+  ~180 lines of render plus 4 effects + 2 handlers; pulling these
+  two seams shrinks the orchestration footprint. **Reassess at
+  P7→P8** unless P7 adds another App-level effect. (iter-030 arch
+  pass.)
+- [ ] TD.23 — Multi-hook error consolidation — `App.tsx`'s
+  `error = a || b || c || d || e` cascade hides errors when
+  multiple hooks fail simultaneously (only the first non-falsy
+  surfaces). Replace with `errors: string[]` collector (filter
+  falsy, join " · " or render as `<ul>`). Pair with TD.20's
+  persistent live-region slot. (iter-030 arch pass.)
+- [ ] TD.24 — `bindStore<T, K>(mod, methodMap)` helper to remove
+  the spy-friendly closure boilerplate from 5 domain hooks. Each
+  hook currently declares an identical `useMemo<Store<T>>` wrapping
+  module-level store functions in closures so `vi.spyOn` works
+  through ESM bindings; the rationale comment is copy-pasted in
+  4-5 places. Cleanup-bundle only — pick during a future
+  cleanup-week iter, not standalone. (iter-030 arch pass.)
 - [ ] TD.20 — A11y persistent error live region — current
   `{error && <p role="alert">…}` renders the region only when an
   error appears; cleaner pattern is a persistent slot. Also:
