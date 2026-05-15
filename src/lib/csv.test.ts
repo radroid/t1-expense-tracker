@@ -60,7 +60,7 @@ describe('formatExpensesCsv', () => {
     ])
   })
 
-  it('renders missing categoryId / recurring as empty cells', () => {
+  it('renders missing categoryId as an empty cell', () => {
     const expenses: Expense[] = [
       {
         id: 'e1',
@@ -72,10 +72,10 @@ describe('formatExpensesCsv', () => {
     const text = formatExpensesCsv(expenses)
     // header + 1 data row + trailing \n => lines = ['header','data','']
     const lines = text.split('\n')
-    expect(lines[1]).toBe('2026-05-15,10,Coffee,,')
+    expect(lines[1]).toBe('2026-05-15,10,Coffee,')
   })
 
-  it('renders categoryId and recurring when present', () => {
+  it('renders categoryId when present', () => {
     const expenses: Expense[] = [
       {
         id: 'e1',
@@ -83,18 +83,17 @@ describe('formatExpensesCsv', () => {
         description: 'Coffee',
         date: '2026-05-15',
         categoryId: 'cat-1',
-        recurring: true,
       },
     ]
     const text = formatExpensesCsv(expenses)
     const lines = text.split('\n')
-    expect(lines[1]).toBe('2026-05-15,10,Coffee,cat-1,true')
+    expect(lines[1]).toBe('2026-05-15,10,Coffee,cat-1')
   })
 })
 
 describe('parseExpensesCsv', () => {
   it('rejects missing header — returns header error and no rows', () => {
-    const result = parseExpensesCsv('2026-05-15,10,Coffee,,\n')
+    const result = parseExpensesCsv('2026-05-15,10,Coffee,\n')
     expect(result.rows).toEqual([])
     expect(result.errors).toEqual([
       { row: 0, message: 'Invalid or missing header' },
@@ -102,7 +101,7 @@ describe('parseExpensesCsv', () => {
   })
 
   it('accepts header with mixed case and extra spaces around columns', () => {
-    const text = ' Date , Amount , Description , CategoryId , Recurring \n2026-05-15,10,Coffee,,\n'
+    const text = ' Date , Amount , Description , CategoryId \n2026-05-15,10,Coffee,\n'
     const { rows, errors } = parseExpensesCsv(text)
     expect(errors).toEqual([])
     expect(rows).toEqual([
@@ -116,7 +115,7 @@ describe('parseExpensesCsv', () => {
   })
 
   it('reports an error and skips rows with invalid amount', () => {
-    const text = `${CSV_HEADER}\n2026-05-15,-5,Bad,,\n2026-05-15,10,Coffee,,\n`
+    const text = `${CSV_HEADER}\n2026-05-15,-5,Bad,\n2026-05-15,10,Coffee,\n`
     const { rows, errors } = parseExpensesCsv(text)
     expect(rows).toEqual([
       { amount: 10, description: 'Coffee', date: '2026-05-15' },
@@ -127,7 +126,7 @@ describe('parseExpensesCsv', () => {
   })
 
   it('reports an error and skips rows with invalid date', () => {
-    const text = `${CSV_HEADER}\n2026-13-40,10,Coffee,,\n`
+    const text = `${CSV_HEADER}\n2026-13-40,10,Coffee,\n`
     const { rows, errors } = parseExpensesCsv(text)
     expect(rows).toEqual([])
     expect(errors).toHaveLength(1)
@@ -135,34 +134,16 @@ describe('parseExpensesCsv', () => {
     expect(errors[0].message).toMatch(/date/i)
   })
 
-  it('reports an error and skips rows with invalid recurring value (not silently false)', () => {
-    const text = `${CSV_HEADER}\n2026-05-15,10,Coffee,,maybe\n`
-    const { rows, errors } = parseExpensesCsv(text)
-    expect(rows).toEqual([])
-    expect(errors).toHaveLength(1)
-    expect(errors[0].row).toBe(2)
-    expect(errors[0].message).toMatch(/recurring/i)
-  })
-
-  it('parses recurring true/false (case-insensitive)', () => {
-    const text = `${CSV_HEADER}\n2026-05-15,10,A,,TRUE\n2026-05-15,11,B,,False\n`
-    const { rows, errors } = parseExpensesCsv(text)
-    expect(errors).toEqual([])
-    expect(rows[0].recurring).toBe(true)
-    expect(rows[1].recurring).toBe(false)
-  })
-
-  it('omits categoryId and recurring when their cells are empty', () => {
-    const text = `${CSV_HEADER}\n2026-05-15,10,Coffee,,\n`
+  it('omits categoryId when its cell is empty', () => {
+    const text = `${CSV_HEADER}\n2026-05-15,10,Coffee,\n`
     const { rows, errors } = parseExpensesCsv(text)
     expect(errors).toEqual([])
     expect(rows).toHaveLength(1)
     expect(Object.prototype.hasOwnProperty.call(rows[0], 'categoryId')).toBe(false)
-    expect(Object.prototype.hasOwnProperty.call(rows[0], 'recurring')).toBe(false)
   })
 
   it('ignores trailing empty lines', () => {
-    const text = `${CSV_HEADER}\n2026-05-15,10,Coffee,,\n\n\n`
+    const text = `${CSV_HEADER}\n2026-05-15,10,Coffee,\n\n\n`
     const { rows, errors } = parseExpensesCsv(text)
     expect(errors).toEqual([])
     expect(rows).toHaveLength(1)
@@ -171,9 +152,9 @@ describe('parseExpensesCsv', () => {
   it('handles quoted fields containing commas, newlines, and escaped quotes', () => {
     const text =
       `${CSV_HEADER}\n` +
-      `2026-05-15,10,"has, comma",,\n` +
-      `2026-05-15,11,"line1\nline2",,\n` +
-      `2026-05-15,12,"has ""quotes""",,\n`
+      `2026-05-15,10,"has, comma",\n` +
+      `2026-05-15,11,"line1\nline2",\n` +
+      `2026-05-15,12,"has ""quotes""",\n`
     const { rows, errors } = parseExpensesCsv(text)
     expect(errors).toEqual([])
     expect(rows.map((r) => r.description)).toEqual([
@@ -186,9 +167,9 @@ describe('parseExpensesCsv', () => {
   it('uses 1-indexed row numbers with header = row 1, first data row = row 2', () => {
     const text =
       `${CSV_HEADER}\n` +
-      `2026-05-15,10,Coffee,,\n` + // row 2 - ok
-      `2026-13-40,10,Bad,,\n` + // row 3 - bad
-      `2026-05-15,12,Good,,\n` // row 4 - ok
+      `2026-05-15,10,Coffee,\n` + // row 2 - ok
+      `2026-13-40,10,Bad,\n` + // row 3 - bad
+      `2026-05-15,12,Good,\n` // row 4 - ok
     const { rows, errors } = parseExpensesCsv(text)
     expect(rows).toHaveLength(2)
     expect(errors).toHaveLength(1)
@@ -203,7 +184,6 @@ describe('parseExpensesCsv', () => {
         description: 'a,b',
         date: '2026-05-15',
         categoryId: 'cat-1',
-        recurring: true,
       },
       {
         id: 'e2',
@@ -221,7 +201,6 @@ describe('parseExpensesCsv', () => {
         description: 'a,b',
         date: '2026-05-15',
         categoryId: 'cat-1',
-        recurring: true,
       },
       {
         amount: 25.5,

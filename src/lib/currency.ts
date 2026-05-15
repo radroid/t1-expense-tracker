@@ -38,9 +38,8 @@ export function isCurrencyCode(v: unknown): v is CurrencyCode {
 }
 
 // Cache formatters per code — Intl.NumberFormat construction is non-trivial
-// and the set is fixed at 4. Locale stays 'en-US' (same locale the legacy
-// formatUSD used) so changing CURRENCY doesn't secretly change number-grouping
-// conventions in the same release.
+// and the set is fixed at 4. Locale stays 'en-US' so changing CURRENCY
+// doesn't secretly change number-grouping conventions in the same release.
 const formatterCache = new Map<CurrencyCode, Intl.NumberFormat>()
 
 function formatterFor(code: CurrencyCode): Intl.NumberFormat {
@@ -87,14 +86,4 @@ export function saveCurrency(code: CurrencyCode): void {
   } catch {
     // ignore
   }
-}
-
-/**
- * Backwards-compat shim. Kept temporarily so the multi-currency refactor
- * can land without a flag day across every consumer site.
- *
- * @deprecated Use formatCurrency(amount, currency) via useCurrency().
- */
-export function formatUSD(amount: number): string {
-  return formatCurrency(amount, 'USD')
 }

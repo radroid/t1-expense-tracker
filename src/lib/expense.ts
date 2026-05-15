@@ -4,11 +4,9 @@ export interface Expense {
   description: string;
   date: string;
   categoryId?: string;
-  recurring?: boolean;
   // Set when an expense was auto-generated from a RecurringTemplate. Used by
   // the rollover idempotency check (lib/recurring.ts). Manual expenses leave
-  // this undefined. `recurring?: boolean` from the original schema is now
-  // vestigial — kept to avoid a breaking change to persisted records.
+  // this undefined.
   sourceTemplateId?: string;
 }
 
@@ -17,7 +15,6 @@ export interface ExpenseInput {
   description: string;
   date: string;
   categoryId?: string;
-  recurring?: boolean;
   sourceTemplateId?: string;
 }
 
@@ -36,7 +33,7 @@ function isRealCalendarDate(date: string): boolean {
 // Validates input (amount > 0 finite, non-empty trimmed description, real
 // YYYY-MM-DD date); returns the cleaned fields. Throws on invalid.
 function validateExpenseInput(input: ExpenseInput): ExpenseInput {
-  const { amount, description, date, categoryId, recurring, sourceTemplateId } = input;
+  const { amount, description, date, categoryId, sourceTemplateId } = input;
 
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error(`Invalid amount: must be a finite number greater than 0`);
@@ -58,7 +55,6 @@ function validateExpenseInput(input: ExpenseInput): ExpenseInput {
   };
 
   if (categoryId !== undefined) cleaned.categoryId = categoryId;
-  if (recurring !== undefined) cleaned.recurring = recurring;
   if (sourceTemplateId !== undefined) cleaned.sourceTemplateId = sourceTemplateId;
 
   return cleaned;
@@ -71,21 +67,17 @@ export function createExpense(input: ExpenseInput): Expense {
 
 // Applies an edit, preserving optional fields the input doesn't mention.
 //
-// Contract: `categoryId` and `recurring` survive an edit unless the input
-// *explicitly* supplies a new value. Omitting them (or passing `undefined`)
-// keeps the existing value — important for forms that don't render every
-// field (e.g. a recurring toggle absent from the basic edit form would
-// silently wipe the flag otherwise). To replace a value, pass the new one;
-// to clear it, the form must do so through an explicit upstream branch
-// rather than relying on undefined-equals-clear.
+// Contract: `categoryId` and `sourceTemplateId` survive an edit unless the
+// input *explicitly* supplies a new value. Omitting them (or passing
+// `undefined`) keeps the existing value — important for forms that don't
+// render every field. To replace a value, pass the new one; to clear it,
+// the form must do so through an explicit upstream branch rather than
+// relying on undefined-equals-clear.
 export function applyExpenseEdit(existing: Expense, input: ExpenseInput): Expense {
   const cleaned = validateExpenseInput(input);
   const merged: Expense = { id: existing.id, ...cleaned };
   if (cleaned.categoryId === undefined && existing.categoryId !== undefined) {
     merged.categoryId = existing.categoryId;
-  }
-  if (cleaned.recurring === undefined && existing.recurring !== undefined) {
-    merged.recurring = existing.recurring;
   }
   if (cleaned.sourceTemplateId === undefined && existing.sourceTemplateId !== undefined) {
     merged.sourceTemplateId = existing.sourceTemplateId;

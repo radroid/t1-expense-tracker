@@ -28,7 +28,7 @@ describe('MonthlySummary', () => {
     expect(screen.queryByText('Count')).not.toBeInTheDocument()
   })
 
-  it('formats total and average with formatUSD', () => {
+  it('formats total and average with formatCurrency', () => {
     render(
       <MonthlySummary
         expenses={[expense(20, 'a'), expense(30, 'b')]}

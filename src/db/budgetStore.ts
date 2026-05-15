@@ -1,22 +1,10 @@
 import type { MonthlyBudget } from '../lib/budget'
-import { withStore } from './db'
+import { makeStore } from './store'
 
-const STORE_NAME = 'monthlyBudgets'
+const store = makeStore<MonthlyBudget>('monthlyBudgets')
 
-export async function setBudget(budget: MonthlyBudget): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.put(budget))
-}
-
-export function getBudget(month: string): Promise<MonthlyBudget | undefined> {
-  return withStore<MonthlyBudget | undefined>(STORE_NAME, 'readonly', (store) =>
-    store.get(month),
-  )
-}
-
-export function getAllBudgets(): Promise<MonthlyBudget[]> {
-  return withStore<MonthlyBudget[]>(STORE_NAME, 'readonly', (store) => store.getAll())
-}
-
-export async function removeBudget(month: string): Promise<void> {
-  await withStore(STORE_NAME, 'readwrite', (store) => store.delete(month))
-}
+export const setBudget = (b: MonthlyBudget): Promise<void> => store.put(b)
+export const getBudget = (month: string): Promise<MonthlyBudget | undefined> =>
+  store.get(month)
+export const getAllBudgets = (): Promise<MonthlyBudget[]> => store.getAll()
+export const removeBudget = (month: string): Promise<void> => store.remove(month)
