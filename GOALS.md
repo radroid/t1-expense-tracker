@@ -117,16 +117,70 @@ the post-arch handoff into concrete items below.
   rendering components. NOT per-expense for v1 (per-expense without
   conversion rates would mislead totals). — iter-022 / PR #56
 
-## Phase 6 — TBD
+## Phase 6 — Analytics, data portability, polish
 
-iter-023 phase-boundary arch pass triaged candidates. iter-024 is a
-**cleanup-week** (TD.9 + TD.11 + TD.16) before Phase 6 features
-start. Phase 6 themes from the iter-022 handoff worth triaging once
-cleanup-week lands: per-expense currency with conversion rates
-(needs external FX dependency), analytics polish (trends, year
-view), recurring-template CSV export/import, accessibility audit,
-performance pass (Lighthouse + bundle splitting). Concrete items
-TBD by iter-025 planning.
+iter-025 planning iter triaged the iter-022 candidate themes plus a
+long-standing UX gap (TD.6 category-deletion cascade). Five items
+picked; one candidate (per-expense currency with external FX rates)
+explicitly **out-of-charter** for this testbed — the app is
+local-only, adding a network dependency violates that charter.
+
+- [ ] P6.A — Recurring-template CSV export/import — parallel to
+  P4.C/P4.D but for `recurringTemplates`. `formatTemplatesCsv` +
+  `parseTemplatesCsv` (header: `name,amount,description,dayOfMonth,
+  categoryId`); `<RecurringExport>` + `<RecurringImport>` buttons in
+  `RecurringManager`. Re-uses `useRecurringTemplates` for bulk add
+  (may need `addMany` on the hook, mirroring `useExpenses`).
+  Creates the 3rd consumer for the deferred `makeDownloadBlob` seam
+  (TD.13) + `useFileRestoreFlow` (TD.14) — arch-feedback loop. Skip-
+  and-report policy on row errors, matching expenses CSV import.
+- [ ] P6.B — Time-series analytics — new `src/lib/trends.ts` exposes
+  `summarizeByMonth(expenses): Array<{month, total, count}>` (sorted
+  ascending). New `<TrendsChart>` component (pure SVG, parallels
+  `SpendingChart` style) + new `<YearSwitcher>` (year-view filter
+  alongside `MonthSwitcher`). Two display modes: month-detail (today)
+  vs. year-summary. The year filter narrows visibleExpenses; budget
+  pipeline still month-scoped (preserve the P4.B carveout pattern).
+- [ ] P6.C — Accessibility audit pass — sweep all components. Targets:
+  (a) ARIA roles + labels on every interactive element; (b) keyboard
+  navigation across all surfaces (Tab order, Escape closes modals,
+  Enter submits); (c) focus management around `<dialog>` + after
+  delete/add (return focus to caller); (d) screen-reader landmarks
+  (`<main>`, `<nav>`, `aria-live` regions where missing); (e) form
+  labels (`<label htmlFor>` over wrapper-label only); (f) AA color
+  contrast verified component-by-component (app surfaces already AA;
+  individual states like disabled buttons + placeholder text need a
+  recheck). May ship across 2 PRs if the sweep is wide. Class A
+  `design-review` agent gates the visual side.
+- [ ] P6.D — Performance / bundle pass — Lighthouse-guided. Measure
+  first (current bundle: 234.21 kB / gzip 71.33 kB). Targets:
+  (a) code-split `RecurringManager`, `CategoryManager`, `BackupRestore`
+  via `React.lazy` + `<Suspense>` since they're rare-use surfaces;
+  (b) audit re-render hotspots via React DevTools profiler;
+  (c) memoize expensive aggregations (`summarizeByMonth` etc.);
+  (d) defer non-critical CSS if Lighthouse flags it. Ship measurement
+  + improvement together; report before/after numbers in the iter log.
+- [ ] P6.E — Category-deletion cascade UX resolution (TD.6 promote) —
+  **product decision made:** **block deletion while in use**. The
+  alternatives (silent orphan-to-Uncategorized, force-reassign-on-delete)
+  both surprise the user; blocking matches "no destructive surprise"
+  UX. Impl: `useCategories.remove(id)` checks
+  `expenses.some(e => e.categoryId === id)` and rejects with
+  `categoryMessages.inUse` ("Category is used by N expenses; remove
+  or recategorize them first"); `<CategoryManager>` row shows the
+  count + disables Delete when > 0. The check sits in App.tsx where
+  both hooks are wired (alternative: pass an `isInUse(id)` predicate
+  into `<CategoryManager>`). Closes TD.6.
+
+### Deferred (out of Phase 6 scope)
+
+- **Per-expense currency with FX conversion rates** — would require
+  fetching live exchange rates from a network API. This app is
+  **local-only by charter** (CLAUDE.md: "no backend, no server,
+  single-user, local-only"). Revisit only if a snapshot-bundle FX
+  pattern emerges that doesn't break the local-only invariant. The
+  iter-022 P5.E single-pref-currency is the current ceiling for
+  currency support.
 
 ## Tech debt
 
