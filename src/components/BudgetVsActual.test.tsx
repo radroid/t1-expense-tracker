@@ -49,7 +49,7 @@ describe('BudgetVsActual', () => {
     expect(screen.getByText(/\$50\.00 over/)).toBeInTheDocument()
   })
 
-  it('formats budget and actual via formatUSD ($X.XX, not raw numbers)', () => {
+  it('formats budget and actual via formatCurrency on the currency prop ($X.XX, not raw numbers)', () => {
     const status = computeBudgetStatus(50, 12.5)
     render(<BudgetVsActual status={status} currency="USD" />)
     expect(screen.getByText('$50.00')).toBeInTheDocument()

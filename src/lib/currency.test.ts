@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import {
   CURRENCIES,
   CURRENCY_STORAGE_KEY,
@@ -135,5 +135,29 @@ describe('loadCurrency / saveCurrency', () => {
     expect(loadCurrency()).toBe('GBP')
     saveCurrency('JPY')
     expect(loadCurrency()).toBe('JPY')
+  })
+})
+
+describe('currency storage — defensive try/catch paths', () => {
+  // localStorage in real browsers can throw on getItem/setItem (e.g.
+  // SecurityError in private mode, QuotaExceededError on writes). The
+  // shim never throws on its own, so we spy on the prototype to drive
+  // the catch branches.
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('loadCurrency returns "USD" when localStorage.getItem throws', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('SecurityError')
+    })
+    expect(loadCurrency()).toBe('USD')
+  })
+
+  it('saveCurrency silently swallows a setItem throw', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError')
+    })
+    expect(() => saveCurrency('EUR')).not.toThrow()
   })
 })

@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import 'fake-indexeddb/auto'
+import { afterEach } from 'vitest'
 
 // Node 25 ships an experimental webstorage built-in that shadows jsdom's
 // Storage and is missing setItem/getItem/clear in the vitest jsdom env.
@@ -10,7 +11,7 @@ import 'fake-indexeddb/auto'
 {
   const store = new Map<string, string>()
   const storage: Storage = {
-    getItem: (k) => (store.has(k) ? store.get(k)! : null),
+    getItem: (k) => store.get(k) ?? null,
     setItem: (k, v) => {
       store.set(k, String(v))
     },
@@ -36,3 +37,10 @@ import 'fake-indexeddb/auto'
     writable: true,
   })
 }
+
+// Global isolation: any test that wrote to localStorage gets a clean
+// slate on the next test. Keeps test files from inheriting state from
+// each other without each one having to remember its own beforeEach.
+afterEach(() => {
+  localStorage.clear()
+})
