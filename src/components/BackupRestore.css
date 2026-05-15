@@ -1,0 +1,117 @@
+.backup-restore {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.backup-restore__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.backup-restore__label:hover {
+  background: var(--app-surface-hover);
+}
+
+.backup-restore__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.backup-restore__error {
+  color: var(--app-danger, #c0392b);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.backup-restore__status {
+  color: var(--app-fg);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.backup-restore__dialog {
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
+  padding: 1.25rem;
+  max-width: 28rem;
+}
+
+.backup-restore__dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.backup-restore__dialog h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.backup-restore__warning {
+  color: var(--app-danger, #c0392b);
+  margin: 0.5rem 0;
+}
+
+.backup-restore__counts {
+  margin: 0.5rem 0;
+}
+
+.backup-restore__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.backup-restore__button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.backup-restore__button--danger {
+  background: var(--app-danger, #c0392b);
+  color: #fff;
+  border-color: var(--app-danger, #c0392b);
+}
+
+.backup-restore__button:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.backup-restore__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .backup-restore__label {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+  }
+}

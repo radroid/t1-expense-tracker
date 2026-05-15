@@ -19,6 +19,7 @@ import { ThemeToggle } from './components/ThemeToggle'
 import { ExportButton } from './components/ExportButton'
 import { ImportButton } from './components/ImportButton'
 import { BackupExport } from './components/BackupExport'
+import { BackupRestore } from './components/BackupRestore'
 import { Spinner } from './components/Spinner'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
@@ -217,6 +218,23 @@ function App() {
               categories={categoriesHook.categories}
               monthlyBudgets={budgetsHook.budgets}
               recurringTemplates={recurringHook.templates}
+            />
+            <BackupRestore
+              onRestore={async () => {
+                // After the multi-store IDB write commits, pull every
+                // hook back into sync. Parallel because each refresh is
+                // an independent store read. allSettled so a refresh
+                // failure (which is just a UI-sync miss, not a data
+                // loss) doesn't make BackupRestore show "Restore
+                // failed" — the DB write already committed.
+                await Promise.allSettled([
+                  expensesHook.refresh(),
+                  categoriesHook.refresh(),
+                  budgetsHook.refresh(),
+                  recurringHook.refresh(),
+                ])
+                return true
+              }}
             />
           </div>
           <ExpenseList

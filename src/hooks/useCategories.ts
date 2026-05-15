@@ -24,6 +24,9 @@ export interface UseCategories {
   add: (input: CategoryInput) => Promise<boolean>
   rename: (id: string, name: string) => Promise<boolean>
   remove: (id: string) => Promise<boolean>
+  // Re-reads the store. Used by the backup-restore flow (P5.C) after a
+  // multi-store overwrite. See useExpenses.refresh.
+  refresh: () => Promise<void>
 }
 
 // Validator used by the generic's update path. Categories are renamed by id
@@ -68,7 +71,8 @@ export function useCategories(): UseCategories {
     },
   })
 
-  const { items, loading, error, add, update, remove, setError } = collection
+  const { items, loading, error, add, update, remove, setError, refresh } =
+    collection
 
   const rename = useCallback(
     async (id: string, name: string): Promise<boolean> => {
@@ -89,5 +93,6 @@ export function useCategories(): UseCategories {
     add,
     rename,
     remove,
+    refresh,
   }
 }

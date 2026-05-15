@@ -419,4 +419,51 @@ describe('App', () => {
       screen.getByRole('button', { name: /export backup \(json\)/i }),
     ).toBeInTheDocument()
   })
+
+  it('restoring a backup replaces existing expenses with the snapshot content (P5.C)', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    // Seed: one expense via the form. After restore, this must be gone
+    // and the restored expense must appear instead.
+    await addExpenseViaForm('11', 'Pre-restore expense')
+    await screen.findByText(/Pre-restore expense/)
+
+    const snapshot = {
+      schemaVersion: 1,
+      exportedAt: '2026-05-15T10:00:00.000Z',
+      expenses: [
+        {
+          id: 'restored-1',
+          amount: 99,
+          description: 'From-backup',
+          date: '2026-05-15',
+        },
+      ],
+      // Categories array is empty — the seed-default-categories bootstrap
+      // only runs on initial mount, so a post-restore empty categories
+      // store is fine for this integration check.
+      categories: [],
+      monthlyBudgets: [],
+      recurringTemplates: [],
+    }
+    const file = new File([JSON.stringify(snapshot)], 'backup.json', {
+      type: 'application/json',
+    })
+
+    const fileInput = document.querySelector(
+      'input[type="file"][accept*="json"]',
+    ) as HTMLInputElement
+    expect(fileInput).not.toBeNull()
+    await user.upload(fileInput, file)
+
+    // Confirm the modal dialog.
+    const restoreBtn = await screen.findByRole('button', {
+      name: /^restore$/i,
+    })
+    await user.click(restoreBtn)
+
+    expect(await screen.findByText(/From-backup/)).toBeInTheDocument()
+    expect(screen.queryByText(/Pre-restore expense/)).not.toBeInTheDocument()
+  })
 })
