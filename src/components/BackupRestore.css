@@ -23,6 +23,14 @@
   background: var(--app-surface-hover);
 }
 
+/* P6.C a11y-009: visually-hidden file input doesn't carry a default focus
+   ring users can see. Lift the focus to the styled label wrapper so
+   keyboard users get an outline when the inner input gains focus. */
+.backup-restore__label:focus-within {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
 .backup-restore__input {
   position: absolute;
   width: 1px;

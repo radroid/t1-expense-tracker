@@ -19,7 +19,8 @@ export function SpendingByCategory({
   currency,
 }: SpendingByCategoryProps) {
   if (expenses.length === 0) {
-    return <EmptyState title="No spending yet." />
+    // P6.C a11y-001: trailing period dropped — empty-state titles read as labels.
+    return <EmptyState title="No spending yet" />
   }
 
   const rows = spendingByCategory(expenses, categories)

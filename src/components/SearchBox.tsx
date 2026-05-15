@@ -26,7 +26,7 @@ export function SearchBox({ value, onChange }: SearchBoxProps) {
           aria-label="Clear search"
           onClick={() => onChange('')}
         >
-          ×
+          <span aria-hidden="true">×</span>
         </button>
       )}
     </div>

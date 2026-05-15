@@ -15,7 +15,7 @@ export function YearSwitcher({ value, onChange }: YearSwitcherProps) {
         aria-label="Previous year"
         onClick={() => onChange(prevYear(value))}
       >
-        ←
+        <span aria-hidden="true">←</span>
       </button>
       <span className="year-switcher__label">{formatYearLabel(value)}</span>
       <button
@@ -24,7 +24,7 @@ export function YearSwitcher({ value, onChange }: YearSwitcherProps) {
         aria-label="Next year"
         onClick={() => onChange(nextYear(value))}
       >
-        →
+        <span aria-hidden="true">→</span>
       </button>
     </div>
   )

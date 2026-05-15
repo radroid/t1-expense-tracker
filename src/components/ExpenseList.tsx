@@ -14,11 +14,12 @@ interface ExpenseListProps {
 
 export function ExpenseList({ expenses, categories, currency, onDelete, onEdit }: ExpenseListProps) {
   if (expenses.length === 0) {
-    // Title keeps the existing "No expenses yet." copy so App-level integration
-    // tests (which findByText that string) keep working.
+    // P6.C a11y-001: trailing period dropped — empty-state titles read as
+    // labels, not sentences, so the period is incorrect punctuation that
+    // SR engines sometimes voice as "dot".
     return (
       <EmptyState
-        title="No expenses yet."
+        title="No expenses yet"
         hint="Add one with the form above"
       />
     );

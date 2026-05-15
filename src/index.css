@@ -190,3 +190,17 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* P6.C a11y-021: honour OS reduced-motion. Squash transitions/animations
+   so vestibular-sensitive users don't get hit by hover fades or bar
+   transitions. Using 0.01ms (not 0) keeps any logic that depends on the
+   transitionend event firing — a 0-duration transition never dispatches
+   the event on some engines. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

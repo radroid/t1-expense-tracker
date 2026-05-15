@@ -277,75 +277,97 @@ function App() {
             onDelete={expensesHook.remove}
             onEdit={setEditing}
           />
+          {/* P6.C a11y-012: insights/trends/budget/categories/recurring all
+              depend on data the hooks are still loading. Rendering them
+              with empty/zero state during mount flashes "$0", "No budget",
+              and "No expenses" cards before the real values land. Gate
+              them on `!loading` so the loading spinner above is the only
+              thing visible until data resolves. Also wires up the a11y-003
+              section landmarks (aria-labelledby/aria-label). */}
+          <section className="app__insights" aria-label="Insights">
+            <h2>Budget vs actual</h2>
+            <BudgetVsActual status={budgetStatus} currency={currency} />
+            <h2>Monthly summary</h2>
+            <MonthlySummary expenses={visibleExpenses} currency={currency} />
+            <h2>Spending by category</h2>
+            <SpendingByCategory
+              expenses={visibleExpenses}
+              categories={categoriesHook.categories}
+              currency={currency}
+            />
+            <SpendingChart
+              expenses={visibleExpenses}
+              categories={categoriesHook.categories}
+              currency={currency}
+            />
+          </section>
+          <section
+            className="app__trends"
+            aria-labelledby="heading-trends"
+          >
+            <h2 id="heading-trends">Trends</h2>
+            <YearSwitcher value={selectedYear} onChange={setSelectedYear} />
+            <TrendsChart
+              data={yearTrendsData}
+              currency={currency}
+              yearLabel={selectedYear}
+            />
+          </section>
+          <section
+            className="app__budget"
+            aria-labelledby="heading-budget"
+          >
+            <h2 id="heading-budget">Monthly budget</h2>
+            <BudgetForm
+              key={selectedMonth}
+              month={selectedMonth}
+              currentAmount={budgetsHook.getFor(selectedMonth)?.amount}
+              onSubmit={budgetsHook.set}
+            />
+          </section>
+          <section
+            className="app__category-budgets"
+            aria-labelledby="heading-category-budgets"
+          >
+            <h2 id="heading-category-budgets">Per-category budgets</h2>
+            <CategoryBudgetManager
+              month={selectedMonth}
+              categories={categoriesHook.categories}
+              categoryBudgets={categoryBudgetsHook.categoryBudgets}
+              onSet={categoryBudgetsHook.set}
+              onRemove={categoryBudgetsHook.remove}
+            />
+          </section>
+          <section
+            className="app__categories"
+            aria-labelledby="heading-categories"
+          >
+            <h2 id="heading-categories">Categories</h2>
+            <CategoryManager
+              categories={categoriesHook.categories}
+              onAdd={categoriesHook.add}
+              onRename={categoriesHook.rename}
+              onDelete={handleDeleteCategory}
+              getInUseCount={(id) =>
+                expensesHook.expenses.filter((e) => e.categoryId === id).length
+              }
+            />
+          </section>
+          <section
+            className="app__recurring"
+            aria-labelledby="heading-recurring"
+          >
+            <h2 id="heading-recurring">Recurring expenses</h2>
+            <RecurringManager
+              templates={recurringHook.templates}
+              categories={categoriesHook.categories}
+              onAdd={recurringHook.add}
+              onAddMany={recurringHook.addMany}
+              onDelete={recurringHook.remove}
+            />
+          </section>
         </>
       )}
-      <section className="app__insights">
-        <h2>Budget vs actual</h2>
-        <BudgetVsActual status={budgetStatus} currency={currency} />
-        <h2>Monthly summary</h2>
-        <MonthlySummary expenses={visibleExpenses} currency={currency} />
-        <h2>Spending by category</h2>
-        <SpendingByCategory
-          expenses={visibleExpenses}
-          categories={categoriesHook.categories}
-          currency={currency}
-        />
-        <SpendingChart
-          expenses={visibleExpenses}
-          categories={categoriesHook.categories}
-          currency={currency}
-        />
-      </section>
-      <section className="app__trends">
-        <h2>Trends</h2>
-        <YearSwitcher value={selectedYear} onChange={setSelectedYear} />
-        <TrendsChart
-          data={yearTrendsData}
-          currency={currency}
-          yearLabel={selectedYear}
-        />
-      </section>
-      <section className="app__budget">
-        <h2>Monthly budget</h2>
-        <BudgetForm
-          key={selectedMonth}
-          month={selectedMonth}
-          currentAmount={budgetsHook.getFor(selectedMonth)?.amount}
-          onSubmit={budgetsHook.set}
-        />
-      </section>
-      <section className="app__category-budgets">
-        <h2>Per-category budgets</h2>
-        <CategoryBudgetManager
-          month={selectedMonth}
-          categories={categoriesHook.categories}
-          categoryBudgets={categoryBudgetsHook.categoryBudgets}
-          onSet={categoryBudgetsHook.set}
-          onRemove={categoryBudgetsHook.remove}
-        />
-      </section>
-      <section className="app__categories">
-        <h2>Categories</h2>
-        <CategoryManager
-          categories={categoriesHook.categories}
-          onAdd={categoriesHook.add}
-          onRename={categoriesHook.rename}
-          onDelete={handleDeleteCategory}
-          getInUseCount={(id) =>
-            expensesHook.expenses.filter((e) => e.categoryId === id).length
-          }
-        />
-      </section>
-      <section className="app__recurring">
-        <h2>Recurring expenses</h2>
-        <RecurringManager
-          templates={recurringHook.templates}
-          categories={categoriesHook.categories}
-          onAdd={recurringHook.add}
-          onAddMany={recurringHook.addMany}
-          onDelete={recurringHook.remove}
-        />
-      </section>
     </main>
   )
 }

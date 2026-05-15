@@ -28,6 +28,13 @@
   background: var(--app-surface-hover);
 }
 
+/* P6.C a11y-009: visually-hidden file input has no visible focus ring of
+   its own. Lift to the styled label wrapper for keyboard users. */
+.recurring-import__label:focus-within {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
 .recurring-import__input {
   position: absolute;
   width: 1px;

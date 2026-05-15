@@ -13,10 +13,10 @@ export function MonthlySummary({ expenses, currency }: MonthlySummaryProps) {
   const { total, average, count } = summarizeExpenses(expenses)
 
   if (count === 0) {
-    // Keeps the existing "No expenses this period." copy so callers querying by
-    // that string continue to work, while delegating presentation/a11y to the
-    // shared EmptyState (role=status, dashed-border zero-data card).
-    return <EmptyState title="No expenses this period." />
+    // P6.C a11y-001: trailing period dropped — empty-state titles read as
+    // labels, not sentences. Presentation/a11y delegated to the shared
+    // EmptyState (role=status, dashed-border zero-data card).
+    return <EmptyState title="No expenses this period" />
   }
 
   return (

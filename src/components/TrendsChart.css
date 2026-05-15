@@ -23,4 +23,16 @@
   .trends-chart__month-label {
     font-size: 10px;
   }
+
+  /* P6.C a11y-013: at narrow widths, 12 month labels crowd into each other.
+     Hide every-other label (odd indices) — bar `aria-label` still carries
+     the month info for SR users, and visual users get a clean axis. */
+  .trends-chart__month-label[data-month-index='1'],
+  .trends-chart__month-label[data-month-index='3'],
+  .trends-chart__month-label[data-month-index='5'],
+  .trends-chart__month-label[data-month-index='7'],
+  .trends-chart__month-label[data-month-index='9'],
+  .trends-chart__month-label[data-month-index='11'] {
+    display: none;
+  }
 }

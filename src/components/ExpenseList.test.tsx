@@ -98,7 +98,7 @@ describe('ExpenseList', () => {
 
   it('shows an empty-state message when expenses is empty', () => {
     render(<ExpenseList expenses={[]} categories={CATEGORIES} currency="USD" />);
-    expect(screen.getByText('No expenses yet.')).toBeInTheDocument();
+    expect(screen.getByText('No expenses yet')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
   });
 

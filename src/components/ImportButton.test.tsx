@@ -52,8 +52,11 @@ describe('ImportButton', () => {
     const text = `foo,bar,baz\n2026-05-15,10,Coffee\n`
     await user.upload(input, fileFromText(text))
 
-    const status = await screen.findByRole('status')
-    expect(status).toHaveTextContent(/invalid or missing header/i)
+    // P6.C a11y-029: header error now uses role="alert" (parity with
+    // RecurringImport) — a rejected header is an immediate error, not a
+    // passive status update.
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent(/invalid or missing header/i)
     expect(onImport).not.toHaveBeenCalled()
   })
 

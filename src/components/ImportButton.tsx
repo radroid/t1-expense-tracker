@@ -64,12 +64,18 @@ export function ImportButton({ onImport }: ImportButtonProps) {
         />
       </label>
       {headerError !== '' && (
-        <p role="status" className="import-button__result import-button__result--error">
+        // P6.C a11y-029: a rejected CSV header is an immediate error, not a
+        // status update — match RecurringImport's role="alert" parity.
+        <p role="alert" className="import-button__result import-button__result--error">
           {headerError}
         </p>
       )}
       {summary !== null && (
-        <p role="status" className="import-button__result">
+        // P6.C a11y-028: `<p>` cannot legally contain a `<details>`
+        // (block-level child); the browser auto-closes the `<p>` and that
+        // breaks the live region. Use a `<div>` so the live-region root
+        // stays intact across the details disclosure.
+        <div role="status" aria-live="polite" className="import-button__result">
           Imported {summary.added}. Skipped {summary.skipped}.
           {summary.errors.length > 0 && (
             <details className="import-button__errors">
@@ -81,7 +87,7 @@ export function ImportButton({ onImport }: ImportButtonProps) {
               </ul>
             </details>
           )}
-        </p>
+        </div>
       )}
     </div>
   )

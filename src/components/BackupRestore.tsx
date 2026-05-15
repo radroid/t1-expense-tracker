@@ -36,6 +36,12 @@ function closeDialog(d: HTMLDialogElement | null) {
   }
 }
 
+// P6.C a11y-011: inline pluralization helper. Local to this file — promote
+// to a shared util only when a second caller earns it (future TD).
+function pluralize(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`
+}
+
 function reasonToMessage(reason: BackupParseError['reason']): string {
   switch (reason) {
     case 'invalid-json':
@@ -96,6 +102,15 @@ export function BackupRestore({ onRestore }: BackupRestoreProps) {
     setDialogError('')
   }
 
+  // P6.C a11y-006: when the user dismisses the dialog via Escape, the
+  // browser fires the native `close` event without going through our
+  // handleCancel button click. Reset pending state + any dialog-scoped
+  // error so a subsequent file pick starts clean.
+  function handleClose() {
+    setPending(null)
+    setDialogError('')
+  }
+
   async function handleConfirm() {
     if (!pending) return
     setBusy(true)
@@ -141,18 +156,34 @@ export function BackupRestore({ onRestore }: BackupRestoreProps) {
           {status}
         </p>
       )}
-      <dialog ref={dialogRef} className="backup-restore__dialog">
-        <h2>Restore from backup?</h2>
+      <dialog
+        ref={dialogRef}
+        className="backup-restore__dialog"
+        aria-labelledby="backup-restore-dialog-heading"
+        onClose={handleClose}
+      >
+        <h2 id="backup-restore-dialog-heading">Restore from backup?</h2>
         <p className="backup-restore__warning">
           This replaces all data — current expenses, categories, budgets,
           recurring templates, and per-category budgets will be deleted.
         </p>
         {pending && (
           <p className="backup-restore__counts">
-            {pending.expenses.length} expenses, {pending.categories.length}{' '}
-            categories, {pending.monthlyBudgets.length} budgets,{' '}
-            {pending.recurringTemplates.length} recurring templates,{' '}
-            {pending.categoryBudgets.length} per-category budgets.
+            {pluralize(pending.expenses.length, 'expense', 'expenses')},{' '}
+            {pluralize(pending.categories.length, 'category', 'categories')},{' '}
+            {pluralize(pending.monthlyBudgets.length, 'budget', 'budgets')},{' '}
+            {pluralize(
+              pending.recurringTemplates.length,
+              'recurring template',
+              'recurring templates',
+            )}
+            ,{' '}
+            {pluralize(
+              pending.categoryBudgets.length,
+              'per-category budget',
+              'per-category budgets',
+            )}
+            .
           </p>
         )}
         {dialogError !== '' && (

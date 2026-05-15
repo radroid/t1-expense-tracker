@@ -62,6 +62,7 @@ export function SpendingChart({ expenses, categories, currency }: SpendingChartP
               y={textY}
               textAnchor="end"
               dominantBaseline="middle"
+              aria-hidden="true"
             >
               {name}
             </text>
@@ -90,6 +91,7 @@ export function SpendingChart({ expenses, categories, currency }: SpendingChartP
               x={BAR_TRACK_X + BAR_TRACK_WIDTH + 8}
               y={textY}
               dominantBaseline="middle"
+              aria-hidden="true"
             >
               {formatted}
             </text>
