@@ -1,79 +1,68 @@
 # Latest
 
-Latest: iter-022 — P5.E (multi-currency) shipped (PR #56). **Phase 5
-CLOSED**: all 5 items done (P5.A URL filters, P5.B JSON backup
-export, P5.C JSON backup restore, P5.D per-category budgets, P5.E
-multi-currency).
+Latest: iter-023 — **Phase 5 → Phase 6 mandatory arch pass**. Six
+candidates surfaced; three picked for iter-024 (cleanup-week:
+TD.9 `makeStore<T,K>` factory + TD.11 drop `Expense.recurring` +
+TD.16 delete `formatUSD` shim). No production code shipped this
+iter. Phase 5 stays CLOSED; Phase 6 stub added to GOALS.md
+(themes triaged at iter-025).
 
-Stage: S3 (Phase 5 → Phase 6 boundary) — see `.loop/state.json`
-  (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-023 — **MANDATORY PHASE-BOUNDARY ARCH PASS**. Hard
-  rule from the loop protocol: before any Phase 6 feature work,
-  invoke the `improve-codebase-architecture` skill (an actual tool
-  call, not a concept), surface deepening opportunities, and log
-  results to `logs/blocks.md` with `**Source:** arch-pass`. The arch
-  pass output drives any pre-Phase-6 refactor and shapes the Phase 6
-  backlog in `GOALS.md` (currently empty — Phase 5 was the last
-  defined phase).
-Open first (for arch-pass context): `GOALS.md` (Phase 6 stub TBD;
-  arch-pass produces it); `logs/iter-017.md` (the previous phase-
-  boundary arch pass — useful reference for the candidate-list
-  pattern); `logs/blocks.md` ## iter-017 section.
-Open blocks: none open — see `logs/blocks.md` for iter-022 super-
-  reviewer notes (APPROVE high confidence; forbidden-file audit
-  clean; localStorage shim centralisation verified).
-Carry-forward candidates the iter-023 arch pass should consider
-  (already on TD radar):
-  - TD.9 (`makeStore<T>` factory) — sequencing constraint cleared
-    3 iters ago; STRONG arch-pass-driven pickup candidate.
-  - TD.10 (`expenseVisibility.ts` pipeline) — still no non-React
-    consumer; recheck.
-  - TD.11 (drop vestigial `Expense.recurring`) — DB-cleanup; bundle
-    with TD.9?
-  - TD.12 (useStoredCollection refresh-after-mutation error
-    isolation) — preserves pre-iter-018 behavior; seam is now stable.
-  - formatUSD shim removal — no shipping caller remains; one-PR
-    drop.
-  - Centralise localStorage test shim — DONE in iter-022 (after
-    useCurrency became 2nd consumer).
-Test gate: 527 tests pass; `npm run build` + `npm run lint` clean.
-Push: n/a — pr_mode, all work merged via PRs.
+Stage: S3 (Phase 5 closed; cleanup-week pending) — see
+  `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
+Next step: iter-024 — **cleanup-week**. Ship TD.9 + TD.11 + TD.16
+  in a single coherent refactor PR (bundle TD.15 backupPipeline
+  barrel IF diff stays under ~600 LOC net; otherwise defer).
+Open first (for iter-024): `src/db/db.ts`; `src/db/expenseStore.ts`,
+  `src/db/categoryStore.ts` (the factory's first 3 callers);
+  `src/lib/expense.ts` (TD.11); `src/lib/currency.ts` +
+  `currency.test.ts` (TD.16); `logs/blocks.md` ## iter-023 section
+  for the candidate rationale + decisions; `logs/iter-023.md`
+  wake-up handoff.
+Open blocks: none open. Arch pass logged under `## iter-023 —
+  Phase-5 → Phase-6 arch pass` with `**Source:** arch-pass`.
 
-Last-iter shipped:
-- P5.E (#56): `src/lib/currency.ts` expanded (CurrencyCode +
-  formatCurrency + storage seam + @deprecated formatUSD shim);
-  `src/hooks/useCurrency.{ts,test.ts}` (lazy-init + setCurrency);
-  `src/components/CurrencySelector.{tsx,test.tsx,css}` (labeled
-  select, 44px touch target); 6 money-rendering components grew a
-  `currency` prop; `src/App.tsx` wired useCurrency + selector;
-  `src/test/setup.ts` centralised the localStorage shim + added
-  global afterEach cleanup. +31 tests (496 → 527).
+Test gate: 527 tests pass (unchanged — thinking iter, no code).
+Push: PR #58 (iter-023 closeout) — see `gh pr view 58` after
+  merge.
 
-Operational notes for iter-023:
-  - **PHASE BOUNDARY** — Hard rule. Invoke `Skill` tool with
-    `skill: "improve-codebase-architecture"` as the FIRST action.
-    Real tool call, NOT just reading the doc and improvising.
-  - **Cadence:** 1500s (plan-iter — arch pass is thinking work).
+Last-iter shipped: nothing (thinking-iter). Deliverables were:
+  - `logs/blocks.md` ## iter-023 section (6 candidates +
+    deletion-test analysis + decision summary table + iter-017
+    deferral re-evaluation).
+  - `GOALS.md`: TD.9 + TD.11 amended with iter-023-arch-pass
+    pickup markers; TD.13, TD.14, TD.15, TD.16 added; Phase 6
+    stub section appended.
+  - `logs/iter-023.md` (wake-up handoff for iter-024).
+  - `.loop/state.json` bumped to iter 23.
+
+Operational notes for iter-024:
+  - **Cadence:** 600s (impl-iter — concrete refactor work).
   - **Process-fix held**: explicit-path staging on every commit.
-    Eleven-iter streak. Keep it up.
+    Twelve-iter streak. Keep it up.
   - `vite.config.ts` `fileParallelism: false` still load-bearing.
-  - **localStorage shim centralised** as of iter-022. New test files
-    don't need per-file beforeAll boilerplate; `src/test/setup.ts`
-    handles install + global afterEach cleanup.
+  - **localStorage shim centralised** in `src/test/setup.ts`.
   - **DB version is 5**, backup `BACKUP_SCHEMA_VERSION` is 2,
-    `useStoredCollection` is the hook seam, `errorMessages.ts` is
-    the messaging seam, `currency.ts` is the formatter seam — these
-    are stable surfaces for the arch pass to evaluate.
+    `useStoredCollection` is the hook seam, `errorMessages.ts`
+    is the messaging seam, `currency.ts` is the formatter seam
+    — all stable as of the arch pass.
+  - **iter-024 is solo-agent** OR **two parallel sub-agents** at
+    most. TD.9 is the primary; TD.11 + TD.16 are pure
+    subtractions and small. Allowlists must stay disjoint if
+    parallel: TD.9 owns `src/db/*`; TD.11+TD.16 owns
+    `src/lib/expense.ts` + `src/lib/csv.ts` + `src/lib/currency.ts`
+    + their tests + the two stale test-description files.
 
-Open questions for iter-023 (arch pass):
-  (1) Is `makeStore<T>` factory (TD.9) ready to ship now that
-      `useStoredCollection` has 4 stable consumers + 11 iters since?
-      Apply the deletion test.
-  (2) Should `formatUSD` shim be deleted in iter-024 as a small
-      cleanup, or wait for a broader currency.ts refactor?
-  (3) Has any new shallow seam emerged from Phase 5 (the 4 backup-
-      pipeline files all touch the same snapshot shape — is there a
-      `backupPipeline` deeper module hiding there)?
-  (4) Phase 6 themes — needs product input + architectural
-      perspective on what's worth shipping next (per-expense
-      currency w/ FX? analytics? a11y audit? perf pass?).
+Open questions for iter-024:
+  (1) `makeStore<T, K>`: does `categoryBudgetStore` (composite-key
+      `${month}|${categoryId}`) require an override hook on the
+      factory, or does the factory accept the natural store key
+      type as the K type-param and the domain module passes the
+      composite-id-builder result as the key? Lean: type-param
+      only; domain modules build the id; factory stays IDB-thin.
+  (2) Should the `formatUSD`-pinned test in `currency.test.ts`
+      be deleted along with the shim, or retained as a "shim
+      removed" tombstone test? Lean: delete cleanly — the test's
+      reason to exist disappears with the shim.
+  (3) TD.15 bundle decision: gate on diff size after TD.9 +
+      TD.11 + TD.16 land. If under ~600 LOC net, bundle the
+      barrel. If over, defer to a backup-schema-evolution iter.

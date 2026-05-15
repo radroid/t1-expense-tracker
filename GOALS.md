@@ -117,6 +117,17 @@ the post-arch handoff into concrete items below.
   rendering components. NOT per-expense for v1 (per-expense without
   conversion rates would mislead totals). — iter-022 / PR #56
 
+## Phase 6 — TBD
+
+iter-023 phase-boundary arch pass triaged candidates. iter-024 is a
+**cleanup-week** (TD.9 + TD.11 + TD.16) before Phase 6 features
+start. Phase 6 themes from the iter-022 handoff worth triaging once
+cleanup-week lands: per-expense currency with conversion rates
+(needs external FX dependency), analytics polish (trends, year
+view), recurring-template CSV export/import, accessibility audit,
+performance pass (Lighthouse + bundle splitting). Concrete items
+TBD by iter-025 planning.
+
 ## Tech debt
 
 - [done] TD.1 — Extract a shared `formatUSD` helper into `src/lib/currency.ts`;
@@ -148,12 +159,14 @@ the post-arch handoff into concrete items below.
   per-domain message bundles (`expenseMessages`, `categoryMessages`,
   `budgetMessages`, `recurringTemplateMessages`). Bundled with TD.7.
   — iter-018 / PR #48
-- [ ] TD.9 — Generic `makeStore<T>` IndexedDB factory — fold the
+- [ ] TD.9 — Generic `makeStore<T, K>` IndexedDB factory — fold the
   uniform CRUD wrappers in `expenseStore`, `categoryStore`,
-  `budgetStore`, `recurringTemplateStore` into one. Domain helpers
-  (e.g. `seedDefaultCategories`) stay in their domain module.
-  Sequencing: ship after TD.7 lands and the hook generic is stable.
-  (iter-017 arch pass)
+  `budgetStore`, `recurringTemplateStore`, `categoryBudgetStore` into
+  one factory returning `{ add, getAll, update, remove }`. Domain
+  helpers (e.g. `seedDefaultCategories`) stay in their domain module.
+  Sequencing constraint cleared (5 iters of stability on
+  `useStoredCollection`). (iter-017 arch pass) **iter-023 arch pass:
+  pick for iter-024 cleanup-week — primary refactor.**
 - [ ] TD.10 — Pure `src/lib/expenseVisibility.ts` pipeline — orchestrate
   the 4-stage filter chain + budget-coherence carveout as a pure
   function. `useVisibleExpenses` collapses to a single `useMemo`.
@@ -173,8 +186,30 @@ the post-arch handoff into concrete items below.
 - [ ] TD.11 — Drop vestigial `Expense.recurring?: boolean` — field
   superseded by `sourceTemplateId` in iter-016 P4.E. Schema-less IDB
   means leaving the type narrows is safe; first edit on a historical
-  record drops it via `applyExpenseEdit`. **Deferred** to a future DB
-  cleanup iter. (iter-017 arch pass)
+  record drops it via `applyExpenseEdit`. (iter-017 arch pass)
+  **iter-023 arch pass: pick for iter-024 cleanup-week.**
+- [ ] TD.13 — `makeDownloadBlob(filename, mime, body)` seam —
+  `ExportButton` + `BackupExport` duplicate the Blob+anchor+revoke
+  dance. Only 2 consumers today; **deferred** until a 3rd consumer
+  lands (PDF/zip export in Phase 6+). (iter-023 arch pass)
+- [ ] TD.14 — `useFileRestoreFlow` hook — `ImportButton` +
+  `BackupRestore` share file-picker → parse → execute. `BackupRestore`
+  adds a confirmation `<dialog>` branch; hook would need a "no dialog"
+  knob. Only 2 consumers; **deferred** until a 3rd consumer (e.g.
+  bulk-replace CSV import) commits. (iter-023 arch pass)
+- [ ] TD.15 — `src/lib/backupPipeline.ts` barrel — three lib files
+  (`backup.ts` + `parseBackup.ts` + `restoreBackup.ts`) + two
+  components touch the snapshot shape. Single barrel re-exporting
+  `BackupSnapshot` + build/parse/validate concentrates future
+  schema bumps. Bundle into iter-024 IF the cleanup-week diff stays
+  small; otherwise defer to a backup-schema-evolution iter.
+  (iter-023 arch pass)
+- [ ] TD.16 — Delete `formatUSD` shim from `src/lib/currency.ts` —
+  zero shipping callers as of P5.E (iter-022). Two stale test
+  descriptions in `MonthlySummary.test.tsx` + `SpendingChart.test.tsx`
+  reference the old name but bodies already use `formatCurrency`.
+  Pure subtraction. **iter-023 arch pass: pick for iter-024
+  cleanup-week** (pair with TD.9 + TD.11).
 
 ## Open dependencies (waiting on user)
 
