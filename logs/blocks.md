@@ -425,3 +425,56 @@ near-invisible.
 - Combined behavior at 480px: stacked header, full-width filters/buttons,
   EmptyState cards render coherently with dashed border; Spinner ("lg",
   40px ring) fits 360px viewport.
+
+---
+
+## iter-016 super-reviewer notes (PR #45 — P4.E recurring)
+
+**Verdict: APPROVE (high confidence)** after applying CR fixes and the
+super-reviewer's prop-tightening nit.
+
+### Findings (all nit / info)
+
+- **App.tsx eslint-disable for react-hooks/exhaustive-deps** — super-
+  reviewer flagged as unnecessary. **DECLINED**: `expensesHook.addMany`
+  IS referenced inside the effect body but excluded from deps on
+  purpose (addMany is a stable hook method reference; adding it would
+  be noise). The disable is load-bearing. Misleading comment was tweaked
+  but the directive stays.
+- **`dueTemplatesForMonth` uses `e.date.slice(0, 7)` for month match** —
+  super-reviewer flagged as theoretical risk if a malformed date sneaks
+  in. **DEFERRED**: `createExpense` enforces YYYY-MM-DD via DATE_RE +
+  real-calendar check. No live path would produce a malformed date.
+- **`onDelete` prop type tightened** to `Promise<boolean>` to mirror
+  `onAdd`. **APPLIED** in commit 29bd6b5. Type-only change at the seam;
+  hook already returned `Promise<boolean>`.
+
+### Strengths called out
+
+- DB migration test covers BOTH v2→v4 and v3→v4 paths with seeded data
+  for expenses + budgets (the rubric's survival check).
+- Idempotency model is clean: sourceTemplateId-keyed match + month-slice
+  filter; dedicated negation tests for different-template-id, no-
+  template-id, and other-month cases.
+- Rollover effect guard correct: both `loading` flags short-circuit at
+  the top; dep array includes `expensesHook.expenses` so post-addMany
+  re-fire observes the new expense and the next `due` is empty — no
+  infinite loop.
+- `applyExpenseEdit` mirrors `categoryId` semantics for
+  `sourceTemplateId`, including the "explicit undefined ≡ omission"
+  branch — three targeted tests prove it.
+- `dayOfMonth` capped at 28 in lib (not just UI): `generateDueExpenses`
+  can never construct an invalid ISO date.
+- `onAdd` returns `Promise<boolean>` and the form only clears on success
+  — explicit test for the failure path preserves input. (Came from CR
+  triage during this iter.)
+- Hook shape matches `useMonthlyBudgets`/`useCategories` exactly; error
+  clears on success.
+- No incidental edits to budget pipeline, CSV, theming, or responsive
+  surfaces — diff is tightly scoped to P4.E.
+
+## Phase 4 closed — iter-017 = MANDATORY ARCH PASS
+
+iter-017 MUST start with the `improve-codebase-architecture` skill
+invocation (real tool call, not a concept). Result MUST be logged here
+with `**Source:** arch-pass`. This is a hard rule from the loop protocol.
