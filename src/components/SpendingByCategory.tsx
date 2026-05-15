@@ -2,6 +2,7 @@ import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import { spendingByCategory } from '../lib/categoryTotals'
 import { formatUSD } from '../lib/currency'
+import { EmptyState } from './EmptyState'
 import './SpendingByCategory.css'
 
 interface SpendingByCategoryProps {
@@ -16,7 +17,7 @@ export function SpendingByCategory({
   categories,
 }: SpendingByCategoryProps) {
   if (expenses.length === 0) {
-    return <p className="spending-by-category__empty">No spending yet.</p>
+    return <EmptyState title="No spending yet." />
   }
 
   const rows = spendingByCategory(expenses, categories)

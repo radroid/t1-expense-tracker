@@ -21,7 +21,7 @@ function category(id: string, name: string, color = '#000000'): Category {
 describe('SpendingChart', () => {
   it('renders an empty-state message when there are no expenses', () => {
     render(<SpendingChart expenses={[]} categories={[]} />)
-    expect(screen.getByText('No spending yet.')).toBeInTheDocument()
+    expect(screen.getByText('No data to chart')).toBeInTheDocument()
   })
 
   it('renders a single bar with category color, name, and formatted value', () => {

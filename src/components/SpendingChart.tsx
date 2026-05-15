@@ -2,6 +2,7 @@ import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import { spendingByCategory } from '../lib/categoryTotals'
 import { formatUSD } from '../lib/currency'
+import { EmptyState } from './EmptyState'
 import './SpendingChart.css'
 
 interface SpendingChartProps {
@@ -27,7 +28,7 @@ export function SpendingChart({ expenses, categories }: SpendingChartProps) {
     .sort((a, b) => b.total - a.total)
 
   if (rows.length === 0 || rows.every((r) => r.total === 0)) {
-    return <p className="spending-chart__empty">No spending yet.</p>
+    return <EmptyState title="No data to chart" />
   }
 
   const maxTotal = rows.reduce((m, r) => (r.total > m ? r.total : m), 0)

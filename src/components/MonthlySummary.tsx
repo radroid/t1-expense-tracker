@@ -1,6 +1,7 @@
 import type { Expense } from '../lib/expense'
 import { summarizeExpenses } from '../lib/monthlyTotals'
 import { formatUSD } from '../lib/currency'
+import { EmptyState } from './EmptyState'
 import './MonthlySummary.css'
 
 interface MonthlySummaryProps {
@@ -11,7 +12,10 @@ export function MonthlySummary({ expenses }: MonthlySummaryProps) {
   const { total, average, count } = summarizeExpenses(expenses)
 
   if (count === 0) {
-    return <p className="monthly-summary__empty">No expenses this period.</p>
+    // Keeps the existing "No expenses this period." copy so callers querying by
+    // that string continue to work, while delegating presentation/a11y to the
+    // shared EmptyState (role=status, dashed-border zero-data card).
+    return <EmptyState title="No expenses this period." />
   }
 
   return (
