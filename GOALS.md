@@ -20,7 +20,7 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 
 - [done] P2.A — Category model + store — `Category` type (id, name, color) + IndexedDB store; seed a few defaults on first run. — iter-004 / PR #11
 - [done] P2.B — Category management UI — Add / rename / delete categories. — iter-004 / PR #12
-- [ ] P2.C — Assign category to expense — Category picker in the add/edit form.
+- [done] P2.C — Assign category to expense — Category picker in the add/edit form. — iter-006 / PR #16
 - [ ] P2.D — Filter by category — Filter control above the expense list.
 - [ ] P2.E — Category badges — Colored category badge on each expense row.
 - [ ] P2.F — Spending by category — Totals grouped by category.
@@ -64,6 +64,10 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [ ] TD.5 — Add an explicit DB-migration test — open `expense-tracker` at v1 with
   data, reopen at v2, assert `expenses` data survives and `categories` store exists
   (iter-004 peer review; currently only covered indirectly).
+- [ ] TD.6 — Category-deletion cascade — deleting a category orphans expenses that
+  reference its id (form silently falls back to Uncategorized). Decide: orphan + treat
+  as uncategorized, or block deletion while in use, or reassign. Product decision
+  (iter-006 peer review).
 
 ## Open dependencies (waiting on user)
 

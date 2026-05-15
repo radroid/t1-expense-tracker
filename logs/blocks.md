@@ -104,4 +104,16 @@ per mode (`key={editing.id}` / `key="new"`) — same idiomatic remount fix as it
 CategoryRow. Lesson: collapsing two component types into one removes the free remount
 that a type change gave you — the caller must supply `key` to preserve it.
 
+## iter-006 — Class A peer review (P2.C)
+
+**Source:** peer-review (P2.C — assign category to expense)
+**Verdict:** APPROVE — contract exact; `categoryId || undefined` keeps empty strings out
+of the data end-to-end; TD.2 genuinely resolved (edit now round-trips `categoryId` —
+App passes `editing.categoryId` into `initial`, verified by test); pre-existing 17
+ExpenseForm tests tightened, not weakened.
+**Follow-up (non-blocking):** orphaned `categoryId` — deleting a category leaves
+expenses pointing at a now-gone id; the form's `<select>` silently falls back to
+Uncategorized and a subsequent edit re-saves it as uncategorized. Out of P2.C scope.
+→ GOALS TD.6 (category-deletion cascade — orphan vs. block, a product decision).
+
 
