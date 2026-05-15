@@ -108,4 +108,114 @@ describe('useRecurringTemplates', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).not.toBe('')
   })
+
+  it('addMany([]) returns { added: 0, skipped: 0, errors: [] } and does not touch state', async () => {
+    const { result } = renderHook(() => useRecurringTemplates())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const before = result.current.templates
+    let res!: Awaited<ReturnType<typeof result.current.addMany>>
+    await act(async () => {
+      res = await result.current.addMany([])
+    })
+    expect(res).toEqual({ added: 0, skipped: 0, errors: [] })
+    expect(result.current.templates).toBe(before)
+    expect(result.current.error).toBe('')
+  })
+
+  it('addMany() with all-valid inputs persists each and reports added count', async () => {
+    const { result } = renderHook(() => useRecurringTemplates())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    let res!: Awaited<ReturnType<typeof result.current.addMany>>
+    await act(async () => {
+      res = await result.current.addMany([
+        {
+          description: 'Rent',
+          amount: 1500,
+          frequency: 'monthly',
+          dayOfMonth: 1,
+        },
+        {
+          description: 'Gym',
+          amount: 50,
+          frequency: 'monthly',
+          dayOfMonth: 15,
+        },
+      ])
+    })
+    expect(res.added).toBe(2)
+    expect(res.skipped).toBe(0)
+    expect(res.errors).toEqual([])
+    expect(result.current.templates).toHaveLength(2)
+    expect(result.current.error).toBe('')
+  })
+
+  it('addMany() with mixed validity persists the valid rows and reports skipped + errors', async () => {
+    const { result } = renderHook(() => useRecurringTemplates())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    let res!: Awaited<ReturnType<typeof result.current.addMany>>
+    await act(async () => {
+      res = await result.current.addMany([
+        {
+          description: 'Rent',
+          amount: 1500,
+          frequency: 'monthly',
+          dayOfMonth: 1,
+        },
+        {
+          description: 'Bad',
+          amount: -1,
+          frequency: 'monthly',
+          dayOfMonth: 1,
+        },
+        {
+          description: 'Gym',
+          amount: 50,
+          frequency: 'monthly',
+          dayOfMonth: 15,
+        },
+      ])
+    })
+    expect(res.added).toBe(2)
+    expect(res.skipped).toBe(1)
+    expect(res.errors).toHaveLength(1)
+    expect(result.current.templates).toHaveLength(2)
+    expect(result.current.error).not.toBe('')
+  })
+
+  it('addMany() per-row persistence failure surfaces in errors and does not block other rows', async () => {
+    const { result } = renderHook(() => useRecurringTemplates())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    // First addRecurringTemplate call fails; subsequent calls succeed.
+    vi.spyOn(templateStore, 'addRecurringTemplate').mockRejectedValueOnce(
+      new Error('store failure'),
+    )
+
+    let res!: Awaited<ReturnType<typeof result.current.addMany>>
+    await act(async () => {
+      res = await result.current.addMany([
+        {
+          description: 'Rent',
+          amount: 1500,
+          frequency: 'monthly',
+          dayOfMonth: 1,
+        },
+        {
+          description: 'Gym',
+          amount: 50,
+          frequency: 'monthly',
+          dayOfMonth: 15,
+        },
+      ])
+    })
+    expect(res.added).toBe(1)
+    expect(res.skipped).toBe(1)
+    expect(res.errors).toHaveLength(1)
+    expect(res.errors[0]).toMatch(/Rent/)
+    expect(result.current.templates).toHaveLength(1)
+    expect(result.current.error).not.toBe('')
+  })
 })

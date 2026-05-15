@@ -27,6 +27,11 @@ export interface UseCategories {
   // Re-reads the store. Used by the backup-restore flow (P5.C) after a
   // multi-store overwrite. See useExpenses.refresh.
   refresh: () => Promise<void>
+  // P6.E — exposed so the App.tsx orchestration layer can surface the
+  // "category is in use" message without the hook itself having to add a
+  // cross-domain dependency on useExpenses. The hook stays a thin CRUD
+  // wrapper; the in-use guard lives in App.tsx.
+  setError: (msg: string) => void
 }
 
 // Validator used by the generic's update path. Categories are renamed by id
@@ -94,5 +99,6 @@ export function useCategories(): UseCategories {
     rename,
     remove,
     refresh,
+    setError,
   }
 }

@@ -1,0 +1,73 @@
+.recurring-import {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.recurring-import__label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.recurring-import__cta {
+  display: inline-block;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
+  line-height: 1.6;
+}
+
+.recurring-import__label:hover .recurring-import__cta {
+  background: var(--app-surface-hover);
+}
+
+.recurring-import__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.recurring-import__result {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.recurring-import__result--error {
+  color: var(--app-error);
+}
+
+.recurring-import__errors {
+  margin-top: 0.25rem;
+}
+
+.recurring-import__errors ul {
+  margin: 0.25rem 0 0 1rem;
+  padding: 0;
+}
+
+@media (max-width: 480px) {
+  .recurring-import {
+    width: 100%;
+  }
+
+  .recurring-import__label,
+  .recurring-import__cta {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+}

@@ -1,0 +1,28 @@
+.recurring-export {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.recurring-export:hover:not(:disabled) {
+  background: var(--app-surface-hover);
+}
+
+.recurring-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .recurring-export {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+  }
+}

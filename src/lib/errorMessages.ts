@@ -16,6 +16,13 @@ export const categoryMessages = Object.freeze({
   add: 'Failed to add category.',
   update: 'Failed to rename category.',
   remove: 'Failed to delete category.',
+  // P6.E — block-while-in-use cascade. Factory because the count varies
+  // per call. The UI also renders the count separately next to the row,
+  // but the error toast still wants it inline for accessibility.
+  inUse: (count: number) =>
+    count === 1
+      ? 'Category is used by 1 expense. Remove or recategorize it first.'
+      : `Category is used by ${count} expenses. Remove or recategorize them first.`,
 })
 
 export const budgetMessages = Object.freeze({
