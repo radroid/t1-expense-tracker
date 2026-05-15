@@ -2,18 +2,29 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import type { ExpenseInput } from '../lib/expense'
+import type { Category } from '../lib/category'
 import { ExpenseForm } from './ExpenseForm'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+const categories: Category[] = [
+  { id: 'cat-food', name: 'Food', color: '#ef4444' },
+  { id: 'cat-transport', name: 'Transport', color: '#3b82f6' },
+]
+
 describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
   it('calls onSubmit once with correct ExpenseInput shape on submit', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={onSubmit} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+        clearOnSubmit
+      />,
     )
 
     await user.type(screen.getByLabelText(/amount/i), '12.5')
@@ -25,6 +36,7 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
       amount: 12.5,
       description: 'Coffee',
       date: today(),
+      categoryId: undefined,
     })
   })
 
@@ -32,7 +44,12 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={onSubmit} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+        clearOnSubmit
+      />,
     )
 
     const amount = screen.getByLabelText(/amount/i) as HTMLInputElement
@@ -54,7 +71,12 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={onSubmit} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+        clearOnSubmit
+      />,
     )
 
     await user.type(screen.getByLabelText(/description/i), 'No amount')
@@ -68,7 +90,12 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={onSubmit} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+        clearOnSubmit
+      />,
     )
 
     await user.type(screen.getByLabelText(/amount/i), '10')
@@ -82,7 +109,12 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={onSubmit} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+        clearOnSubmit
+      />,
     )
 
     await user.type(screen.getByLabelText(/amount/i), '10')
@@ -97,7 +129,12 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={onSubmit} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+        clearOnSubmit
+      />,
     )
 
     await user.type(screen.getByLabelText(/amount/i), '10')
@@ -111,7 +148,12 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
 
   it('defaults the date input to today on mount', () => {
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={vi.fn()} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={vi.fn()}
+        clearOnSubmit
+      />,
     )
     const date = screen.getByLabelText(/date/i) as HTMLInputElement
     expect(date.value).toBe(today())
@@ -119,7 +161,12 @@ describe('ExpenseForm — add mode (no initial, clearOnSubmit)', () => {
 
   it('does not render a Cancel button when onCancel is absent', () => {
     render(
-      <ExpenseForm submitLabel="Add expense" onSubmit={vi.fn()} clearOnSubmit />,
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={vi.fn()}
+        clearOnSubmit
+      />,
     )
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
   })
@@ -136,6 +183,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={vi.fn()}
         onCancel={vi.fn()}
@@ -152,6 +200,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={onSubmit}
         onCancel={vi.fn()}
@@ -177,6 +226,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
       amount: 20,
       description: 'Tea',
       date: '2026-05-15',
+      categoryId: undefined,
     })
   })
 
@@ -186,6 +236,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={onSubmit}
         onCancel={vi.fn()}
@@ -202,6 +253,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
       amount: 12.5,
       description: 'Tea',
       date: '2026-05-14',
+      categoryId: undefined,
     })
   })
 
@@ -211,6 +263,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={onSubmit}
         onCancel={vi.fn()}
@@ -234,6 +287,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={onSubmit}
         onCancel={vi.fn()}
@@ -253,6 +307,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={onSubmit}
         onCancel={vi.fn()}
@@ -272,6 +327,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={onSubmit}
         onCancel={vi.fn()}
@@ -291,6 +347,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={vi.fn()}
         onCancel={onCancel}
@@ -306,6 +363,7 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     render(
       <ExpenseForm
         initial={initial}
+        categories={categories}
         submitLabel="Save"
         onSubmit={vi.fn()}
         onCancel={vi.fn()}
@@ -313,5 +371,111 @@ describe('ExpenseForm — edit mode (initial given, onCancel given)', () => {
     )
     const cancel = screen.getByRole('button', { name: 'Cancel' })
     expect(cancel).toHaveAttribute('type', 'button')
+  })
+})
+
+describe('ExpenseForm — category picker', () => {
+  it('renders an "Uncategorized" option plus one option per category passed in', () => {
+    render(
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={vi.fn()}
+      />,
+    )
+    const select = screen.getByLabelText('Category') as HTMLSelectElement
+    const options = Array.from(select.options).map((o) => o.textContent)
+    expect(options).toEqual(['Uncategorized', 'Food', 'Transport'])
+    expect(select.options[0].value).toBe('')
+    expect(select.options[1].value).toBe('cat-food')
+    expect(select.options[2].value).toBe('cat-transport')
+  })
+
+  it('includes the selected categoryId in the onSubmit input', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    render(
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+      />,
+    )
+
+    await user.type(screen.getByLabelText(/amount/i), '12.5')
+    await user.type(screen.getByLabelText(/description/i), 'Coffee')
+    await user.selectOptions(screen.getByLabelText('Category'), 'cat-food')
+    await user.click(screen.getByRole('button', { name: /add/i }))
+
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(onSubmit).toHaveBeenCalledWith({
+      amount: 12.5,
+      description: 'Coffee',
+      date: today(),
+      categoryId: 'cat-food',
+    })
+  })
+
+  it('emits categoryId undefined when "Uncategorized" is selected', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    render(
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+      />,
+    )
+
+    await user.type(screen.getByLabelText(/amount/i), '12.5')
+    await user.type(screen.getByLabelText(/description/i), 'Coffee')
+    await user.click(screen.getByRole('button', { name: /add/i }))
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      amount: 12.5,
+      description: 'Coffee',
+      date: today(),
+      categoryId: undefined,
+    })
+  })
+
+  it('pre-selects the category from initial.categoryId', () => {
+    const initial: ExpenseInput = {
+      amount: 12.5,
+      description: 'Coffee',
+      date: '2026-05-14',
+      categoryId: 'cat-transport',
+    }
+    render(
+      <ExpenseForm
+        initial={initial}
+        categories={categories}
+        submitLabel="Save"
+        onSubmit={vi.fn()}
+      />,
+    )
+    const select = screen.getByLabelText('Category') as HTMLSelectElement
+    expect(select.value).toBe('cat-transport')
+  })
+
+  it('retains the category selection after a clearOnSubmit submit', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    render(
+      <ExpenseForm
+        categories={categories}
+        submitLabel="Add expense"
+        onSubmit={onSubmit}
+        clearOnSubmit
+      />,
+    )
+
+    const select = screen.getByLabelText('Category') as HTMLSelectElement
+    await user.type(screen.getByLabelText(/amount/i), '12.5')
+    await user.type(screen.getByLabelText(/description/i), 'Coffee')
+    await user.selectOptions(select, 'cat-food')
+    await user.click(screen.getByRole('button', { name: /add/i }))
+
+    expect(select.value).toBe('cat-food')
   })
 })
