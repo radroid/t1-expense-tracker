@@ -1,0 +1,26 @@
+.trends-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: inherit;
+}
+
+.trends-chart__bar {
+  fill: var(--app-accent);
+  transition: opacity 120ms ease-in-out;
+}
+
+.trends-chart__bar:hover {
+  opacity: 0.85;
+}
+
+.trends-chart__month-label {
+  font-size: 12px;
+  fill: var(--app-fg);
+}
+
+@media (max-width: 480px) {
+  .trends-chart__month-label {
+    font-size: 10px;
+  }
+}

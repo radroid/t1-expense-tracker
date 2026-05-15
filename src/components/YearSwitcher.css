@@ -1,0 +1,45 @@
+.year-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.year-switcher__prev,
+.year-switcher__next {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.year-switcher__prev:hover,
+.year-switcher__next:hover {
+  background: var(--app-surface-hover);
+}
+
+.year-switcher__label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  min-width: 6ch;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .year-switcher {
+    gap: 0.5rem;
+  }
+
+  .year-switcher__label {
+    font-size: 1rem;
+    min-width: 5ch;
+    flex: 1;
+  }
+}
