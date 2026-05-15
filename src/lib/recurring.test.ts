@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  applyRecurringTemplateEdit,
   createRecurringTemplate,
   dueTemplatesForMonth,
   generateDueExpenses,
@@ -233,5 +234,113 @@ describe('generateDueExpenses', () => {
 
   it('returns [] when no templates are given', () => {
     expect(generateDueExpenses([], '2026-05')).toEqual([])
+  })
+})
+
+describe('applyRecurringTemplateEdit', () => {
+  const existing: RecurringTemplate = {
+    id: 'template-keep-me',
+    description: 'Old Rent',
+    amount: 1000,
+    frequency: 'monthly',
+    dayOfMonth: 1,
+    categoryId: 'cat-old',
+  }
+
+  it('preserves existing id regardless of input', () => {
+    const next = applyRecurringTemplateEdit(existing, {
+      description: 'New Rent',
+      amount: 1500,
+      frequency: 'monthly',
+      dayOfMonth: 5,
+    })
+    expect(next.id).toBe('template-keep-me')
+  })
+
+  it('preserves frequency as monthly', () => {
+    const next = applyRecurringTemplateEdit(existing, {
+      description: 'New Rent',
+      amount: 1500,
+      frequency: 'monthly',
+      dayOfMonth: 5,
+    })
+    expect(next.frequency).toBe('monthly')
+  })
+
+  it('overwrites description, amount, dayOfMonth from input (cleaned)', () => {
+    const next = applyRecurringTemplateEdit(existing, {
+      description: '  Updated  ',
+      amount: 2000,
+      frequency: 'monthly',
+      dayOfMonth: 28,
+    })
+    expect(next.description).toBe('Updated')
+    expect(next.amount).toBe(2000)
+    expect(next.dayOfMonth).toBe(28)
+  })
+
+  it('preserves existing categoryId when input omits categoryId', () => {
+    const next = applyRecurringTemplateEdit(existing, {
+      description: 'Rent',
+      amount: 1500,
+      frequency: 'monthly',
+      dayOfMonth: 1,
+    })
+    expect(next.categoryId).toBe('cat-old')
+  })
+
+  it('preserves existing categoryId when input sets categoryId to undefined explicitly', () => {
+    const next = applyRecurringTemplateEdit(existing, {
+      description: 'Rent',
+      amount: 1500,
+      frequency: 'monthly',
+      dayOfMonth: 1,
+      categoryId: undefined,
+    })
+    expect(next.categoryId).toBe('cat-old')
+  })
+
+  it('overwrites categoryId when input supplies a new one', () => {
+    const next = applyRecurringTemplateEdit(existing, {
+      description: 'Rent',
+      amount: 1500,
+      frequency: 'monthly',
+      dayOfMonth: 1,
+      categoryId: 'cat-new',
+    })
+    expect(next.categoryId).toBe('cat-new')
+  })
+
+  it('throws on invalid amount via the shared validator', () => {
+    expect(() =>
+      applyRecurringTemplateEdit(existing, {
+        description: 'Rent',
+        amount: -5,
+        frequency: 'monthly',
+        dayOfMonth: 1,
+      }),
+    ).toThrow()
+  })
+
+  it('throws on dayOfMonth out of range', () => {
+    expect(() =>
+      applyRecurringTemplateEdit(existing, {
+        description: 'Rent',
+        amount: 100,
+        frequency: 'monthly',
+        dayOfMonth: 30,
+      }),
+    ).toThrow()
+  })
+
+  it('throws on empty description', () => {
+    expect(() =>
+      applyRecurringTemplateEdit(existing, {
+        description: '   ',
+        amount: 100,
+        frequency: 'monthly',
+        dayOfMonth: 1,
+      }),
+    ).toThrow()
   })
 })

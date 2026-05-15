@@ -64,3 +64,20 @@
   margin: 0;
   font-size: 0.875rem;
 }
+
+.recurring-manager__row--editing {
+  background: var(--surface-2, #fafafa);
+  padding: 0.75rem;
+}
+
+.recurring-manager__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.recurring-manager__edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}

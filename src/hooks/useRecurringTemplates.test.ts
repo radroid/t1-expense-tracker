@@ -185,6 +185,100 @@ describe('useRecurringTemplates', () => {
     expect(result.current.error).not.toBe('')
   })
 
+  it('update() persists changes and returns true', async () => {
+    const { result } = renderHook(() => useRecurringTemplates())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => {
+      await result.current.add({
+        description: 'Rent',
+        amount: 1500,
+        frequency: 'monthly',
+        dayOfMonth: 1,
+      })
+    })
+    const existing = result.current.templates[0]
+
+    let ok!: boolean
+    await act(async () => {
+      ok = await result.current.update(existing, {
+        description: 'Rent (updated)',
+        amount: 1600,
+        frequency: 'monthly',
+        dayOfMonth: 2,
+      })
+    })
+
+    expect(ok).toBe(true)
+    expect(result.current.templates).toHaveLength(1)
+    expect(result.current.templates[0].id).toBe(existing.id)
+    expect(result.current.templates[0].description).toBe('Rent (updated)')
+    expect(result.current.templates[0].amount).toBe(1600)
+    expect(result.current.templates[0].dayOfMonth).toBe(2)
+    expect(result.current.error).toBe('')
+  })
+
+  it('update() with invalid input surfaces validation error and returns false', async () => {
+    const { result } = renderHook(() => useRecurringTemplates())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => {
+      await result.current.add({
+        description: 'Rent',
+        amount: 1500,
+        frequency: 'monthly',
+        dayOfMonth: 1,
+      })
+    })
+    const existing = result.current.templates[0]
+
+    let ok!: boolean
+    await act(async () => {
+      ok = await result.current.update(existing, {
+        description: '',
+        amount: 1600,
+        frequency: 'monthly',
+        dayOfMonth: 2,
+      })
+    })
+    expect(ok).toBe(false)
+    expect(result.current.error).not.toBe('')
+    // Persisted item is unchanged.
+    expect(result.current.templates[0].description).toBe('Rent')
+  })
+
+  it('update() returns false and surfaces the update message on store failure', async () => {
+    const { result } = renderHook(() => useRecurringTemplates())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => {
+      await result.current.add({
+        description: 'Rent',
+        amount: 1500,
+        frequency: 'monthly',
+        dayOfMonth: 1,
+      })
+    })
+    const existing = result.current.templates[0]
+
+    vi.spyOn(templateStore, 'putRecurringTemplate').mockRejectedValueOnce(
+      new Error('store failure'),
+    )
+
+    let ok!: boolean
+    await act(async () => {
+      ok = await result.current.update(existing, {
+        description: 'Rent (updated)',
+        amount: 1600,
+        frequency: 'monthly',
+        dayOfMonth: 2,
+      })
+    })
+    expect(ok).toBe(false)
+    expect(result.current.error).toBe('Failed to update recurring template.')
+    expect(result.current.templates[0].description).toBe('Rent')
+  })
+
   it('addMany() per-row persistence failure surfaces in errors and does not block other rows', async () => {
     const { result } = renderHook(() => useRecurringTemplates())
     await waitFor(() => expect(result.current.loading).toBe(false))

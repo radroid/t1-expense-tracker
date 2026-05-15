@@ -1,6 +1,11 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { type Expense, type ExpenseInput } from './lib/expense'
-import { dueTemplatesForMonth, generateDueExpenses } from './lib/recurring'
+import {
+  dueTemplatesForMonth,
+  generateDueExpenses,
+  type RecurringTemplate,
+  type RecurringTemplateInput,
+} from './lib/recurring'
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
@@ -38,7 +43,9 @@ const BackupRestore = lazy(() =>
   import('./components/BackupRestore').then((m) => ({ default: m.BackupRestore })),
 )
 import { Spinner } from './components/Spinner'
+import { UndoToast } from './components/UndoToast'
 import { type CategoryFilterValue } from './lib/expenseFilter'
+import { categoryBudgetId } from './lib/categoryBudget'
 import { currentMonth } from './lib/month'
 import { currentYear } from './lib/year'
 import { summarizeYear } from './lib/trends'
@@ -57,6 +64,7 @@ import { useCategoryBudgets } from './hooks/useCategoryBudgets'
 import { useRecurringTemplates } from './hooks/useRecurringTemplates'
 import { useVisibleExpenses } from './hooks/useVisibleExpenses'
 import { useCurrency } from './hooks/useCurrency'
+import { useUndoStack } from './hooks/useUndoStack'
 import './App.css'
 
 function App() {
@@ -66,6 +74,10 @@ function App() {
   const categoryBudgetsHook = useCategoryBudgets()
   const recurringHook = useRecurringTemplates()
   const { currency, setCurrency } = useCurrency()
+  // P7.B — single-step undo. The hook holds at most one pending action;
+  // each in-scope mutation handler below (delete/edit/rename/set) pushes
+  // an inverse action on success. The toast renders the affordance.
+  const undoStack = useUndoStack()
   const [editing, setEditing] = useState<Expense | null>(null)
   // Lazy-init filter state from the URL hash so a bookmarked / reloaded
   // filtered view restores on first paint. parseFilters returns only the
@@ -191,8 +203,51 @@ function App() {
 
   async function handleUpdate(input: ExpenseInput) {
     if (!editing) return
+    // Snapshot the pre-edit entity so the undo inverse can replay it.
+    const before = editing
     const ok = await expensesHook.update(editing, input)
-    if (ok) setEditing(null)
+    if (ok) {
+      setEditing(null)
+      undoStack.push({
+        label: `Edited “${before.description}”`,
+        inverse: async () => {
+          // Reapply the pre-edit input shape against the current entity
+          // (same id — update preserves it), restoring all editable fields.
+          await expensesHook.update(before, {
+            amount: before.amount,
+            description: before.description,
+            date: before.date,
+            categoryId: before.categoryId,
+          })
+        },
+      })
+    }
+  }
+
+  // Wrap expense delete to capture the pre-delete entity for the undo
+  // inverse. On success we push an "Undo" that re-adds the same input
+  // shape; note this mints a fresh UUID — the user sees the row come
+  // back, just under a new id. Acceptable for v1; restoring with the
+  // original id would require a `restore(entity)` extension to the hook,
+  // which is OUT of this iter's allowlist.
+  async function handleExpenseDelete(id: string): Promise<boolean> {
+    const before = expensesHook.expenses.find((e) => e.id === id)
+    const ok = await expensesHook.remove(id)
+    if (ok && before) {
+      undoStack.push({
+        label: `Deleted “${before.description}”`,
+        inverse: async () => {
+          await expensesHook.add({
+            amount: before.amount,
+            description: before.description,
+            date: before.date,
+            categoryId: before.categoryId,
+            sourceTemplateId: before.sourceTemplateId,
+          })
+        },
+      })
+    }
+    return ok
   }
 
   async function handleDeleteCategory(id: string) {
@@ -203,10 +258,143 @@ function App() {
       categoriesHook.setError(categoryMessages.inUse(inUseCount))
       return
     }
+    const before = categoriesHook.categories.find((c) => c.id === id)
     const ok = await categoriesHook.remove(id)
     // The filter pointing at a now-deleted category would orphan the <select>
     // and silently produce an empty list + $0 totals. Snap back to 'all'.
     if (ok && filter === id) setFilter('all')
+    if (ok && before) {
+      undoStack.push({
+        label: `Deleted category “${before.name}”`,
+        inverse: async () => {
+          // Re-add via the input shape — id will be regenerated. Acceptable
+          // since category id is referenced from Expense.categoryId, but
+          // the deleted category had no in-use expenses by the guard above,
+          // so no dangling references survive.
+          await categoriesHook.add({ name: before.name, color: before.color })
+        },
+      })
+    }
+  }
+
+  // Category rename — the inverse just renames back.
+  async function handleCategoryRename(
+    id: string,
+    name: string,
+  ): Promise<boolean> {
+    const before = categoriesHook.categories.find((c) => c.id === id)
+    const ok = await categoriesHook.rename(id, name)
+    if (ok && before && before.name !== name) {
+      undoStack.push({
+        label: `Renamed “${before.name}” → “${name}”`,
+        inverse: async () => {
+          await categoriesHook.rename(id, before.name)
+        },
+      })
+    }
+    return ok
+  }
+
+  // Monthly budget set/upsert — snapshot the prior amount; the inverse
+  // either re-sets the prior amount or removes the row when there was
+  // no prior budget. useMonthlyBudgets exposes `remove(month)`, so the
+  // "unset" edge is handled cleanly without a sentinel zero.
+  async function handleSetBudget(
+    month: string,
+    amount: number,
+  ): Promise<boolean> {
+    const beforeAmount = budgetsHook.getFor(month)?.amount
+    const ok = await budgetsHook.set(month, amount)
+    if (ok) {
+      undoStack.push({
+        label:
+          beforeAmount === undefined
+            ? `Set budget for ${month}`
+            : `Changed budget for ${month}`,
+        inverse: async () => {
+          if (beforeAmount === undefined) {
+            await budgetsHook.remove(month)
+          } else {
+            await budgetsHook.set(month, beforeAmount)
+          }
+        },
+      })
+    }
+    return ok
+  }
+
+  // Per-category budget set — same shape as the monthly budget. The
+  // inverse either re-sets the prior amount or removes the row.
+  async function handleSetCategoryBudget(
+    month: string,
+    categoryId: string,
+    amount: number,
+  ): Promise<boolean> {
+    const beforeAmount = categoryBudgetsHook.getFor(month, categoryId)?.amount
+    const ok = await categoryBudgetsHook.set(month, categoryId, amount)
+    if (ok) {
+      undoStack.push({
+        label:
+          beforeAmount === undefined
+            ? 'Set category budget'
+            : 'Changed category budget',
+        inverse: async () => {
+          if (beforeAmount === undefined) {
+            await categoryBudgetsHook.remove(
+              categoryBudgetId(month, categoryId),
+            )
+          } else {
+            await categoryBudgetsHook.set(month, categoryId, beforeAmount)
+          }
+        },
+      })
+    }
+    return ok
+  }
+
+  // Recurring template delete — inverse re-adds via the input shape (fresh id).
+  async function handleRecurringDelete(id: string): Promise<boolean> {
+    const before = recurringHook.templates.find((t) => t.id === id)
+    const ok = await recurringHook.remove(id)
+    if (ok && before) {
+      undoStack.push({
+        label: `Deleted recurring “${before.description}”`,
+        inverse: async () => {
+          await recurringHook.add({
+            description: before.description,
+            amount: before.amount,
+            frequency: before.frequency,
+            dayOfMonth: before.dayOfMonth,
+            categoryId: before.categoryId,
+          })
+        },
+      })
+    }
+    return ok
+  }
+
+  // Recurring template update — inverse reapplies the prior input shape.
+  async function handleRecurringUpdate(
+    existing: RecurringTemplate,
+    input: RecurringTemplateInput,
+  ): Promise<boolean> {
+    const before = existing
+    const ok = await recurringHook.update(existing, input)
+    if (ok) {
+      undoStack.push({
+        label: `Edited recurring “${before.description}”`,
+        inverse: async () => {
+          await recurringHook.update(before, {
+            description: before.description,
+            amount: before.amount,
+            frequency: before.frequency,
+            dayOfMonth: before.dayOfMonth,
+            categoryId: before.categoryId,
+          })
+        },
+      })
+    }
+    return ok
   }
 
   return (
@@ -263,6 +451,13 @@ function App() {
       >
         {errors.length > 0 ? errors.join(' · ') : ''}
       </div>
+      {/* P7.B — single-step undo snackbar. Renders nothing until a
+          reversible mutation pushes an action; auto-dismisses after 6s. */}
+      <UndoToast
+        action={undoStack.pending}
+        onUndo={undoStack.undo}
+        onDismiss={undoStack.dismiss}
+      />
       {loading ? (
         <Spinner size="lg" />
       ) : (
@@ -318,7 +513,7 @@ function App() {
               expenses={visibleExpenses}
               categories={categoriesHook.categories}
               currency={currency}
-              onDelete={expensesHook.remove}
+              onDelete={handleExpenseDelete}
               onEdit={setEditing}
             />
           </section>
@@ -367,7 +562,7 @@ function App() {
               key={selectedMonth}
               month={selectedMonth}
               currentAmount={budgetsHook.getFor(selectedMonth)?.amount}
-              onSubmit={budgetsHook.set}
+              onSubmit={handleSetBudget}
             />
           </section>
           <section
@@ -379,7 +574,7 @@ function App() {
               month={selectedMonth}
               categories={categoriesHook.categories}
               categoryBudgets={categoryBudgetsHook.categoryBudgets}
-              onSet={categoryBudgetsHook.set}
+              onSet={handleSetCategoryBudget}
               onRemove={categoryBudgetsHook.remove}
             />
           </section>
@@ -392,7 +587,7 @@ function App() {
               <CategoryManager
                 categories={categoriesHook.categories}
                 onAdd={categoriesHook.add}
-                onRename={categoriesHook.rename}
+                onRename={handleCategoryRename}
                 onDelete={handleDeleteCategory}
                 getInUseCount={(id) =>
                   expensesHook.expenses.filter((e) => e.categoryId === id).length
@@ -411,7 +606,8 @@ function App() {
                 categories={categoriesHook.categories}
                 onAdd={recurringHook.add}
                 onAddMany={recurringHook.addMany}
-                onDelete={recurringHook.remove}
+                onUpdate={handleRecurringUpdate}
+                onDelete={handleRecurringDelete}
               />
             </Suspense>
           </section>

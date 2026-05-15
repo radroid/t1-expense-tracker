@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import App from './App'
@@ -96,7 +96,11 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /^save$/i }))
 
     expect(await screen.findByText(/Espresso/)).toBeInTheDocument()
-    expect(screen.queryByText(/Coffee/)).not.toBeInTheDocument()
+    // After P7.B the undo toast can transiently surface "Edited "Coffee""
+    // text below the list; scope the assertion to the expense-list rows
+    // so the toast's label doesn't falsely match.
+    const list = document.querySelector('.expense-list') as HTMLElement
+    expect(list.textContent ?? '').not.toMatch(/Coffee/)
   })
 
   it('rejects an invalid edit and keeps the edit form open', async () => {
@@ -622,5 +626,150 @@ describe('App', () => {
     await user.click(screen.getByLabelText('Save budget for Food'))
 
     expect(await screen.findByText(/Current: \$200\.00/)).toBeInTheDocument()
+  })
+
+  // P7.B — single-step undo. The toast is rendered near the top of <main>;
+  // its label shows the action name and clicking the "Undo" button replays
+  // an inverse closure captured at mutation time. These specs cover the
+  // user-visible contract end-to-end through App (the unit-level toast +
+  // hook contracts live in their own files).
+  describe('undo stack (P7.B)', () => {
+    it('shows an Undo toast after deleting an expense, and clicking Undo restores the row', async () => {
+      const user = userEvent.setup()
+      await renderApp()
+      await addExpenseViaForm('15', 'Lunch')
+      await screen.findByText(/Lunch/)
+
+      await user.click(screen.getByRole('button', { name: /delete lunch/i }))
+      // Row is gone …
+      expect(await screen.findByText('No expenses yet')).toBeInTheDocument()
+      // … and the toast shows the action label + Undo button. (The toast
+      // is a div.undo-toast with role="status"; we assert via the label
+      // text + Undo button since `getByRole('status')` would also match
+      // the spinners that share the role.)
+      expect(await screen.findByText(/Deleted “Lunch”/)).toBeInTheDocument()
+      expect(document.querySelector('.undo-toast')).not.toBeNull()
+
+      // Click Undo — Lunch comes back. (Note: re-add mints a fresh id; the
+      // user sees the description in the list, which is what this asserts.)
+      await user.click(screen.getByRole('button', { name: /^undo$/i }))
+      expect(await screen.findByText(/Lunch/)).toBeInTheDocument()
+    })
+
+    it('Undo toast auto-dismisses after the timeout window', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      try {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+        render(<App />)
+        await screen.findByText('No expenses yet')
+        await user.clear(screen.getByLabelText('Amount'))
+        await user.type(screen.getByLabelText('Amount'), '5')
+        await user.clear(screen.getByLabelText('Description'))
+        await user.type(screen.getByLabelText('Description'), 'Snack')
+        await user.click(screen.getByRole('button', { name: /add expense/i }))
+        await screen.findByText(/Snack/)
+        await user.click(screen.getByRole('button', { name: /delete snack/i }))
+        // Toast visible.
+        expect(await screen.findByText(/Deleted “Snack”/)).toBeInTheDocument()
+        // Advance past the default 6s window — toast disappears.
+        await act(async () => {
+          vi.advanceTimersByTime(6500)
+        })
+        expect(screen.queryByText(/Deleted “Snack”/)).not.toBeInTheDocument()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('a new mutation REPLACES the pending undo (single-step)', async () => {
+      const user = userEvent.setup()
+      await renderApp()
+      await addExpenseViaForm('5', 'A')
+      await screen.findByText(/^A$/)
+      await addExpenseViaForm('7', 'B')
+      await screen.findByText(/^B$/)
+
+      await user.click(screen.getByRole('button', { name: /delete a/i }))
+      expect(await screen.findByText(/Deleted “A”/)).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: /delete b/i }))
+      expect(await screen.findByText(/Deleted “B”/)).toBeInTheDocument()
+      // Only one toast at a time — the prior "Deleted A" is gone.
+      expect(screen.queryByText(/Deleted “A”/)).not.toBeInTheDocument()
+    })
+
+    it('Undo toast appears after a category rename and restoring renames back', async () => {
+      const user = userEvent.setup()
+      await renderApp()
+
+      // Default category "Food" is present. Rename → Snacks via the
+      // CategoryManager row's per-category Rename input + Save button.
+      const renameInput = screen.getByLabelText('Rename Food')
+      await user.clear(renameInput)
+      await user.type(renameInput, 'Snacks')
+      await user.click(screen.getByRole('button', { name: 'Save Food' }))
+
+      const inManager = { selector: '.category-manager__name' } as const
+      expect(await screen.findByText('Snacks', inManager)).toBeInTheDocument()
+      expect(
+        await screen.findByText(/Renamed “Food” → “Snacks”/),
+      ).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: /^undo$/i }))
+      expect(await screen.findByText('Food', inManager)).toBeInTheDocument()
+    })
+
+    it('Undo toast appears after setting a budget and restoring removes it', async () => {
+      const user = userEvent.setup()
+      await renderApp()
+
+      await user.clear(screen.getByLabelText('Budget amount'))
+      await user.type(screen.getByLabelText('Budget amount'), '120')
+      await user.click(screen.getByRole('button', { name: /set budget/i }))
+
+      expect(await screen.findByText(/Set budget for/)).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: /^undo$/i }))
+      // No prior budget → inverse removes it; the BudgetVsActual returns
+      // to its empty state.
+      expect(
+        await screen.findByText('No budget set for this month.'),
+      ).toBeInTheDocument()
+    })
+
+    // Regression for iter-034 super-reviewer Critical #1: the inverse for
+    // setting a per-category budget for the first time must remove the row
+    // by the canonical composite id (`${month}|${categoryId}`). An earlier
+    // draft hand-built the id with a colon separator, which silently no-op'd
+    // because nothing in the store matched.
+    it('Undo toast appears after setting a per-category budget and restoring removes it', async () => {
+      const user = userEvent.setup()
+      await renderApp()
+
+      const foodInput = screen.getByLabelText('Budget for Food')
+      await user.clear(foodInput)
+      await user.type(foodInput, '75')
+      await user.click(screen.getByLabelText('Save budget for Food'))
+
+      expect(await screen.findByText(/Current: \$75\.00/)).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: /^undo$/i }))
+      // No prior amount → inverse removes the row; the per-category row
+      // should return to its empty/unset state (no "Current: $..." line).
+      await waitFor(() => {
+        expect(screen.queryByText(/Current: \$75\.00/)).not.toBeInTheDocument()
+      })
+    })
+
+    it('clicking the dismiss button hides the toast WITHOUT restoring the row', async () => {
+      const user = userEvent.setup()
+      await renderApp()
+      await addExpenseViaForm('9', 'Dessert')
+      await screen.findByText(/Dessert/)
+      await user.click(screen.getByRole('button', { name: /delete dessert/i }))
+      expect(await screen.findByText(/Deleted “Dessert”/)).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: /dismiss undo/i }))
+      expect(screen.queryByText(/Deleted “Dessert”/)).not.toBeInTheDocument()
+      // Expense remains deleted.
+      expect(screen.getByText('No expenses yet')).toBeInTheDocument()
+    })
   })
 })

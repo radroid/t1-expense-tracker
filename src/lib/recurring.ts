@@ -69,6 +69,25 @@ export function createRecurringTemplate(
   return { id: crypto.randomUUID(), ...cleaned }
 }
 
+// Applies an edit. Preserves `id` from existing. `frequency` is always
+// 'monthly' (and validated to be so), so functionally the existing value
+// survives. Mirrors `applyExpenseEdit` semantics for optional fields: if the
+// input omits categoryId OR sets it explicitly to undefined, the existing
+// categoryId is preserved. To replace categoryId, pass the new value; to
+// clear it, that must be an explicit upstream branch rather than relying
+// on undefined-equals-clear.
+export function applyRecurringTemplateEdit(
+  existing: RecurringTemplate,
+  input: RecurringTemplateInput,
+): RecurringTemplate {
+  const cleaned = validate(input)
+  const merged: RecurringTemplate = { id: existing.id, ...cleaned }
+  if (cleaned.categoryId === undefined && existing.categoryId !== undefined) {
+    merged.categoryId = existing.categoryId
+  }
+  return merged
+}
+
 // Pure. Returns templates that have no matching expense for `month`. A match
 // requires both sourceTemplateId === template.id AND date in that month (the
 // first seven chars of the YYYY-MM-DD string). Input order preserved.

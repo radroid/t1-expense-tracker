@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import {
+  applyRecurringTemplateEdit,
   createRecurringTemplate,
   type RecurringTemplate,
   type RecurringTemplateInput,
@@ -7,6 +8,7 @@ import {
 import {
   addRecurringTemplate,
   getAllRecurringTemplates,
+  putRecurringTemplate,
   removeRecurringTemplate,
 } from '../db/recurringTemplateStore'
 import { recurringTemplateMessages } from '../lib/errorMessages'
@@ -26,6 +28,10 @@ export interface UseRecurringTemplates {
   loading: boolean
   error: string
   add: (input: RecurringTemplateInput) => Promise<boolean>
+  update: (
+    existing: RecurringTemplate,
+    input: RecurringTemplateInput,
+  ) => Promise<boolean>
   addMany: (
     inputs: RecurringTemplateInput[],
   ) => Promise<RecurringBulkAddResult>
@@ -34,11 +40,10 @@ export interface UseRecurringTemplates {
   refresh: () => Promise<void>
 }
 
-// Persistence-layer hook for recurring templates. Simplest of the four —
-// no update path, just add + remove. Rollover orchestration is NOT here —
-// it sits in App.tsx where the expense hook is also available. The hook
-// stays pure CRUD so it composes cleanly regardless of whether rollover
-// is wired in.
+// Persistence-layer hook for recurring templates. Pure CRUD — add + update
+// + remove + bulk-add. Rollover orchestration is NOT here — it sits in
+// App.tsx where the expense hook is also available. The hook stays pure
+// CRUD so it composes cleanly regardless of whether rollover is wired in.
 export function useRecurringTemplates(): UseRecurringTemplates {
   // Closures rather than direct references so vi.spyOn on the store module
   // works in tests (the spy mutates the namespace; our closures re-resolve
@@ -47,6 +52,7 @@ export function useRecurringTemplates(): UseRecurringTemplates {
     () => ({
       add: (t) => addRecurringTemplate(t),
       getAll: () => getAllRecurringTemplates(),
+      update: (t) => putRecurringTemplate(t),
       remove: (id) => removeRecurringTemplate(id),
     }),
     [],
@@ -58,10 +64,12 @@ export function useRecurringTemplates(): UseRecurringTemplates {
   >({
     store,
     validateAdd: createRecurringTemplate,
+    validateUpdate: applyRecurringTemplateEdit,
     messages: recurringTemplateMessages,
   })
 
-  const { items, loading, error, add, remove, setError, refresh } = collection
+  const { items, loading, error, add, update, remove, setError, refresh } =
+    collection
 
   // Bulk-add recurring templates. Mirrors `useExpenses.addMany`: each input
   // is validated; failures collect their validator messages. Valid rows are
@@ -123,6 +131,7 @@ export function useRecurringTemplates(): UseRecurringTemplates {
     loading,
     error,
     add,
+    update,
     addMany,
     remove,
     refresh,

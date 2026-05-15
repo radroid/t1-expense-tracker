@@ -1,0 +1,85 @@
+/* Bottom-center floating snackbar for single-step undo. Sits above main
+   content via a high z-index; positioned with `position: fixed` so it
+   doesn't scroll with the page. Themes via the existing --app-* tokens. */
+.undo-toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
+  max-width: calc(100% - 32px);
+  background: var(--app-fg);
+  color: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.undo-toast__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-toast__button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  min-width: 56px;
+  padding: 6px 14px;
+  background: var(--app-accent);
+  color: var(--app-accent-fg);
+  border: 1px solid var(--app-accent);
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.undo-toast__button:hover,
+.undo-toast__button:focus-visible {
+  filter: brightness(1.1);
+}
+
+.undo-toast__close {
+  flex: 0 0 auto;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--app-bg);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.undo-toast__close:hover,
+.undo-toast__close:focus-visible {
+  background: var(--app-surface-hover);
+  color: var(--app-fg);
+}
+
+/* On narrow screens stretch full-width minus the 16px gutters and ensure
+   the Undo button satisfies the 44px touch-target minimum. */
+@media (max-width: 480px) {
+  .undo-toast {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    max-width: none;
+  }
+
+  .undo-toast__button,
+  .undo-toast__close {
+    min-height: 44px;
+  }
+}
