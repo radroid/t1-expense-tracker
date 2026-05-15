@@ -1,4 +1,5 @@
 :root {
+  /* ---- Legacy template vars (kept for compatibility) ---- */
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
@@ -15,11 +16,21 @@
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
+  /* ---- App theme custom properties (light defaults) ---- */
+  --app-bg: #ffffff;
+  --app-fg: #1a1a1a;
+  --app-muted-fg: #6b6375;
+  --app-card-bg: #ffffff;
+  --app-border: #e5e4e7;
+  --app-accent: #aa3bff;
+  --app-error: #d32f2f;
+  --app-success: #2e7d32;
+
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--app-fg);
+  background: var(--app-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -30,8 +41,62 @@
   }
 }
 
+/* Explicit light theme — wins over any prefers-color-scheme defaults. */
+[data-theme='light'] {
+  --app-bg: #ffffff;
+  --app-fg: #1a1a1a;
+  --app-muted-fg: #6b6375;
+  --app-card-bg: #ffffff;
+  --app-border: #e5e4e7;
+  --app-accent: #aa3bff;
+  --app-error: #d32f2f;
+  --app-success: #2e7d32;
+
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  color-scheme: light;
+}
+
+/* Dark theme overrides — applied when <html data-theme="dark">. */
+[data-theme='dark'] {
+  --app-bg: #1a1a1a;
+  --app-fg: #e7e7e7;
+  --app-muted-fg: #9ca3af;
+  --app-card-bg: #232329;
+  --app-border: #2e303a;
+  --app-accent: #c084fc;
+  --app-error: #ef5350;
+  --app-success: #66bb6a;
+
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --border: #2e303a;
+  --code-bg: #1f2028;
+  --accent: #c084fc;
+  --accent-bg: rgba(192, 132, 252, 0.15);
+  --accent-border: rgba(192, 132, 252, 0.5);
+  --social-bg: rgba(47, 48, 58, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  color-scheme: dark;
+}
+
+/* Honour OS preference only when the user hasn't picked a theme yet. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
+    --app-bg: #1a1a1a;
+    --app-fg: #e7e7e7;
+    --app-muted-fg: #9ca3af;
+    --app-card-bg: #232329;
+    --app-border: #2e303a;
+    --app-accent: #c084fc;
+    --app-error: #ef5350;
+    --app-success: #66bb6a;
+
     --text: #9ca3af;
     --text-h: #f3f4f6;
     --bg: #16171d;
@@ -45,7 +110,7 @@
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
   }
 
-  #social .button-icon {
+  :root:not([data-theme]) #social .button-icon {
     filter: invert(1) brightness(2);
   }
 }
@@ -55,22 +120,26 @@
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
+  border-inline: 1px solid var(--app-border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: var(--app-bg);
+  color: var(--app-fg);
 }
 
 body {
   margin: 0;
+  background: var(--app-bg);
+  color: var(--app-fg);
 }
 
 h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
+  color: var(--app-fg);
 }
 
 h1 {
@@ -100,7 +169,7 @@ code,
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
-  color: var(--text-h);
+  color: var(--app-fg);
 }
 
 code {

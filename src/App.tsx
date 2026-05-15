@@ -13,6 +13,7 @@ import { BudgetForm } from './components/BudgetForm'
 import { BudgetVsActual } from './components/BudgetVsActual'
 import { SearchBox } from './components/SearchBox'
 import { DateRangeFilter } from './components/DateRangeFilter'
+import { ThemeToggle } from './components/ThemeToggle'
 import { type CategoryFilterValue } from './lib/expenseFilter'
 import { currentMonth } from './lib/month'
 import { totalAmount } from './lib/totals'
@@ -84,6 +85,7 @@ function App() {
     <main className="app">
       <header className="app__header">
         <h1>Expense Tracker</h1>
+        <ThemeToggle />
         <RunningTotal expenses={visibleExpenses} />
         <MonthSwitcher value={selectedMonth} onChange={setSelectedMonth} />
       </header>
