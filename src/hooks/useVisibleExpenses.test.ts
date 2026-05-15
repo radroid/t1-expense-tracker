@@ -94,10 +94,12 @@ describe('useVisibleExpenses', () => {
       { initialProps: { filter: 'all' } },
     )
     const firstMonthly = result.current.monthlyExpenses
+    const firstVisible = result.current.visibleExpenses
 
-    // Switching only the category filter should not change monthlyExpenses identity.
+    // Switching only the category filter should not change monthlyExpenses
+    // identity, but visibleExpenses must be a fresh array (different subset).
     rerender({ filter: food.id })
     expect(result.current.monthlyExpenses).toBe(firstMonthly)
-    expect(result.current.visibleExpenses).not.toBe(firstMonthly)
+    expect(result.current.visibleExpenses).not.toBe(firstVisible)
   })
 })
