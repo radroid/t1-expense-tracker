@@ -10,7 +10,7 @@ interface RecurringManagerProps {
   templates: RecurringTemplate[]
   categories: Category[]
   onAdd: (input: RecurringTemplateInput) => Promise<boolean>
-  onDelete: (id: string) => void | Promise<unknown>
+  onDelete: (id: string) => Promise<boolean>
 }
 
 // Lets the user define monthly recurring templates. Form layout mirrors
