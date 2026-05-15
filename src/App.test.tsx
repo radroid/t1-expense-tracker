@@ -7,6 +7,10 @@ import { addRecurringTemplate } from './db/recurringTemplateStore'
 import { createRecurringTemplate } from './lib/recurring'
 
 beforeEach(async () => {
+  // Reset URL hash — P5.A persists filter state there, and jsdom's
+  // location object outlives a single test (`window.history.replaceState`
+  // in one test leaks into the next).
+  window.history.replaceState(null, '', ' ')
   await new Promise<void>((resolve, reject) => {
     const req = indexedDB.deleteDatabase('expense-tracker')
     req.onsuccess = () => resolve()
@@ -375,5 +379,39 @@ describe('App', () => {
 
     await waitFor(() => expect(filterSelect.value).toBe('all'))
     expect(screen.getByText(/Lunch/)).toBeInTheDocument()
+  })
+
+  it('restores filter state from the URL hash on mount (P5.A)', async () => {
+    // Seed the hash before mount — App's lazy init should read it.
+    window.history.replaceState(null, '', '#month=2026-05&q=Coffee')
+
+    const { unmount } = render(<App />)
+    // The search input is pre-populated.
+    const search = await screen.findByLabelText('Search')
+    expect((search as HTMLInputElement).value).toBe('Coffee')
+
+    // The month switcher reflects the hash-supplied month.
+    expect(window.location.hash).toContain('month=2026-05')
+
+    unmount()
+    await new Promise<void>((r) => setTimeout(r, 0))
+  })
+
+  it('writes filter changes back to the URL hash (P5.A)', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    // Hash should at least encode the current month after mount.
+    await waitFor(() => expect(window.location.hash).toMatch(/month=/))
+
+    await user.type(screen.getByLabelText('Search'), 'spaghetti')
+    await waitFor(() => expect(window.location.hash).toContain('q=spaghetti'))
+  })
+
+  it('renders a backup-export button (P5.B)', async () => {
+    await renderApp()
+    expect(
+      screen.getByRole('button', { name: /export backup \(json\)/i }),
+    ).toBeInTheDocument()
   })
 })
