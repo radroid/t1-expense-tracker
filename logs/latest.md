@@ -1,68 +1,78 @@
 # Latest
 
-Latest: iter-023 — **Phase 5 → Phase 6 mandatory arch pass**. Six
-candidates surfaced; three picked for iter-024 (cleanup-week:
-TD.9 `makeStore<T,K>` factory + TD.11 drop `Expense.recurring` +
-TD.16 delete `formatUSD` shim). No production code shipped this
-iter. Phase 5 stays CLOSED; Phase 6 stub added to GOALS.md
-(themes triaged at iter-025).
+Latest: iter-024 — **cleanup-week shipped (PR #59).** Three pure-
+subtraction items from the iter-023 arch pass landed in one
+coherent PR: **TD.9** (`makeStore<T,K>` factory over 5 domain
+stores), **TD.11** (drop vestigial `Expense.recurring`), **TD.16**
+(delete `formatUSD` shim). Net −150 LOC.
 
-Stage: S3 (Phase 5 closed; cleanup-week pending) — see
+Stage: S3 (post-Phase-5 cleanup done; pre-Phase-6 planning) — see
   `.loop/state.json` (`pr_mode: true`, `pr_size_policy: fat`)
-Next step: iter-024 — **cleanup-week**. Ship TD.9 + TD.11 + TD.16
-  in a single coherent refactor PR (bundle TD.15 backupPipeline
-  barrel IF diff stays under ~600 LOC net; otherwise defer).
-Open first (for iter-024): `src/db/db.ts`; `src/db/expenseStore.ts`,
-  `src/db/categoryStore.ts` (the factory's first 3 callers);
-  `src/lib/expense.ts` (TD.11); `src/lib/currency.ts` +
-  `currency.test.ts` (TD.16); `logs/blocks.md` ## iter-023 section
-  for the candidate rationale + decisions; `logs/iter-023.md`
-  wake-up handoff.
-Open blocks: none open. Arch pass logged under `## iter-023 —
-  Phase-5 → Phase-6 arch pass` with `**Source:** arch-pass`.
+Next step: iter-025 — **Phase 6 PLANNING iter**. Triage the
+  candidate themes from the iter-022 handoff (per-expense
+  currency w/ FX, analytics polish, recurring CSV, a11y audit,
+  perf pass), pick 3-5, write as `P6.A`...`P6.E` in GOALS.md.
+  No code work; thinking-iter.
+Open first (for iter-025): `GOALS.md` Phase 6 stub; `logs/iter-017.md`
+  (previous phase-boundary planning pattern); `logs/blocks.md`
+  ## iter-023 + ## iter-024 sections; `logs/iter-022.md` "Phase 6
+  themes (placeholder)" section for the candidate list.
+Open blocks: none open. iter-024 super-reviewer logged under
+  `## iter-024 — super-reviewer (cleanup-week TD.9 + TD.11 +
+  TD.16)` with APPROVE high-confidence.
 
-Test gate: 527 tests pass (unchanged — thinking iter, no code).
-Push: PR #58 (iter-023 closeout) — see `gh pr view 58` after
-  merge.
+Test gate: 524 tests pass (527 → 524: −5 formatUSD tests + 5 new
+  factory tests + −3 dropped recurring tests). `npm run build`
+  234.21 kB clean. `npm run lint` clean.
+Push: PR #59 (cleanup-week) — squash-merged.
 
-Last-iter shipped: nothing (thinking-iter). Deliverables were:
-  - `logs/blocks.md` ## iter-023 section (6 candidates +
-    deletion-test analysis + decision summary table + iter-017
-    deferral re-evaluation).
-  - `GOALS.md`: TD.9 + TD.11 amended with iter-023-arch-pass
-    pickup markers; TD.13, TD.14, TD.15, TD.16 added; Phase 6
-    stub section appended.
-  - `logs/iter-023.md` (wake-up handoff for iter-024).
-  - `.loop/state.json` bumped to iter 23.
+Last-iter shipped (PR #59):
+- `src/db/store.ts` (new) — `makeStore<T, K>(name)` factory
+  returning `{ add, put, getAll, get, remove }`.
+- `src/db/store.test.ts` (new) — 5 specs against the real
+  fake-indexeddb seam (add+getAll, put-as-upsert, get hit+miss,
+  remove, add-conflict-throws).
+- 5 domain stores rewritten as thin wrappers:
+  `expenseStore`, `categoryStore` (keeps `seedDefaultCategories`),
+  `budgetStore`, `recurringTemplateStore`, `categoryBudgetStore`
+  (keeps `categoryBudgetId` composite-key call).
+- `src/lib/expense.{ts,test.ts}` — `recurring?: boolean` dropped
+  from type + ExpenseInput + validateExpenseInput +
+  applyExpenseEdit preservation branch + 3 tests removed.
+- `src/lib/csv.{ts,test.ts}` — CSV format 5→4 cols (recurring
+  column removed); `parseRecurring` helper deleted; 2 recurring-
+  specific tests removed.
+- `src/lib/currency.{ts,test.ts}` — `formatUSD` shim + its 5
+  pinned tests deleted.
+- `src/components/{ImportButton,MonthlySummary,SpendingChart}.test.tsx`
+  — stale "formatUSD" test descriptions renamed; ImportButton
+  fixtures updated to 4-col CSV form.
 
-Operational notes for iter-024:
-  - **Cadence:** 600s (impl-iter — concrete refactor work).
+Operational notes for iter-025:
+  - **Cadence:** 1500s (plan-iter — Phase 6 triage is thinking
+    work).
   - **Process-fix held**: explicit-path staging on every commit.
     Twelve-iter streak. Keep it up.
   - `vite.config.ts` `fileParallelism: false` still load-bearing.
   - **localStorage shim centralised** in `src/test/setup.ts`.
+  - **NEW seam: `src/db/store.ts`** — the `makeStore<T, K>`
+    factory is now THE IDB seam. Any new entity store should use
+    it; domain helpers stay in `src/lib/<entity>.ts`.
   - **DB version is 5**, backup `BACKUP_SCHEMA_VERSION` is 2,
     `useStoredCollection` is the hook seam, `errorMessages.ts`
-    is the messaging seam, `currency.ts` is the formatter seam
-    — all stable as of the arch pass.
-  - **iter-024 is solo-agent** OR **two parallel sub-agents** at
-    most. TD.9 is the primary; TD.11 + TD.16 are pure
-    subtractions and small. Allowlists must stay disjoint if
-    parallel: TD.9 owns `src/db/*`; TD.11+TD.16 owns
-    `src/lib/expense.ts` + `src/lib/csv.ts` + `src/lib/currency.ts`
-    + their tests + the two stale test-description files.
+    is the messaging seam, `currency.ts` is the formatter seam,
+    `store.ts` is the IDB seam.
 
-Open questions for iter-024:
-  (1) `makeStore<T, K>`: does `categoryBudgetStore` (composite-key
-      `${month}|${categoryId}`) require an override hook on the
-      factory, or does the factory accept the natural store key
-      type as the K type-param and the domain module passes the
-      composite-id-builder result as the key? Lean: type-param
-      only; domain modules build the id; factory stays IDB-thin.
-  (2) Should the `formatUSD`-pinned test in `currency.test.ts`
-      be deleted along with the shim, or retained as a "shim
-      removed" tombstone test? Lean: delete cleanly — the test's
-      reason to exist disappears with the shim.
-  (3) TD.15 bundle decision: gate on diff size after TD.9 +
-      TD.11 + TD.16 land. If under ~600 LOC net, bundle the
-      barrel. If over, defer to a backup-schema-evolution iter.
+Open questions for iter-025 (Phase 6 triage):
+  (1) Per-expense currency w/ FX — externally-fetched conversion
+      rates would add a network dependency to a local-only app.
+      Worth the scope, or out-of-band for this testbed?
+  (2) Analytics polish (trends over time, year view) — needs a
+      time-series aggregation primitive that doesn't exist yet.
+      Net-new lib code vs. extending SpendingChart.
+  (3) Accessibility audit — broad surface, low-individual-LOC.
+      Good fat-iter candidate; would touch many CSS + ARIA spots.
+  (4) Perf pass — Lighthouse measurement + bundle-splitting +
+      code-splitting around RecurringManager / CategoryManager.
+      Measurement work first, then ship.
+  Pick 3-5 themes; expect Phase 6 to be ~5 iters like Phase 5 was.

@@ -159,14 +159,12 @@ TBD by iter-025 planning.
   per-domain message bundles (`expenseMessages`, `categoryMessages`,
   `budgetMessages`, `recurringTemplateMessages`). Bundled with TD.7.
   — iter-018 / PR #48
-- [ ] TD.9 — Generic `makeStore<T, K>` IndexedDB factory — fold the
-  uniform CRUD wrappers in `expenseStore`, `categoryStore`,
-  `budgetStore`, `recurringTemplateStore`, `categoryBudgetStore` into
-  one factory returning `{ add, getAll, update, remove }`. Domain
-  helpers (e.g. `seedDefaultCategories`) stay in their domain module.
-  Sequencing constraint cleared (5 iters of stability on
-  `useStoredCollection`). (iter-017 arch pass) **iter-023 arch pass:
-  pick for iter-024 cleanup-week — primary refactor.**
+- [done] TD.9 — Generic `makeStore<T, K>` IndexedDB factory at
+  `src/db/store.ts` returning `{ add, put, getAll, get, remove }`.
+  Five domain stores collapsed to thin re-export wrappers; domain
+  helpers (`seedDefaultCategories`, `categoryBudgetId`) stay in their
+  modules. +5 factory tests against the real fake-indexeddb seam.
+  — iter-024 / PR #59
 - [ ] TD.10 — Pure `src/lib/expenseVisibility.ts` pipeline — orchestrate
   the 4-stage filter chain + budget-coherence carveout as a pure
   function. `useVisibleExpenses` collapses to a single `useMemo`.
@@ -183,11 +181,10 @@ TBD by iter-025 planning.
   `messages.load` instead. Will change the `Promise<boolean>` contract
   for the storage-flaky case; coordinate with test updates across all
   four hooks before flipping.
-- [ ] TD.11 — Drop vestigial `Expense.recurring?: boolean` — field
-  superseded by `sourceTemplateId` in iter-016 P4.E. Schema-less IDB
-  means leaving the type narrows is safe; first edit on a historical
-  record drops it via `applyExpenseEdit`. (iter-017 arch pass)
-  **iter-023 arch pass: pick for iter-024 cleanup-week.**
+- [done] TD.11 — Vestigial `Expense.recurring?: boolean` dropped from
+  the type + `ExpenseInput` + `validateExpenseInput` + `applyExpenseEdit`
+  preservation branch. CSV format narrowed 5→4 columns. `sourceTemplateId`
+  is the canonical recurring-template marker. — iter-024 / PR #59
 - [ ] TD.13 — `makeDownloadBlob(filename, mime, body)` seam —
   `ExportButton` + `BackupExport` duplicate the Blob+anchor+revoke
   dance. Only 2 consumers today; **deferred** until a 3rd consumer
@@ -204,12 +201,11 @@ TBD by iter-025 planning.
   schema bumps. Bundle into iter-024 IF the cleanup-week diff stays
   small; otherwise defer to a backup-schema-evolution iter.
   (iter-023 arch pass)
-- [ ] TD.16 — Delete `formatUSD` shim from `src/lib/currency.ts` —
-  zero shipping callers as of P5.E (iter-022). Two stale test
-  descriptions in `MonthlySummary.test.tsx` + `SpendingChart.test.tsx`
-  reference the old name but bodies already use `formatCurrency`.
-  Pure subtraction. **iter-023 arch pass: pick for iter-024
-  cleanup-week** (pair with TD.9 + TD.11).
+- [done] TD.16 — `formatUSD` shim deleted from `src/lib/currency.ts`
+  + pinned test block removed from `currency.test.ts`. Two stale
+  test descriptions in `MonthlySummary.test.tsx` +
+  `SpendingChart.test.tsx` renamed `formatUSD`→`formatCurrency`.
+  — iter-024 / PR #59
 
 ## Open dependencies (waiting on user)
 

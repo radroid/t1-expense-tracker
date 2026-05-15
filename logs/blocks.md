@@ -1021,3 +1021,39 @@ additions, and the iter-023 closeout PR.
   Five consumers + five iters since the refactor. No reported
   symptom; behavior preserved by design. Reopen if a real-world case
   surfaces; until then, deferring is fine.
+
+---
+
+## iter-024 — super-reviewer (cleanup-week TD.9 + TD.11 + TD.16)
+
+**Verdict:** APPROVE — confidence: high.
+
+Reviewer audited all 4 contracted invariants and found them held:
+
+- **Public API parity (TD.9):** All 5 domain stores preserve pre-iter
+  function names, argument order, return types. `add` vs `put`
+  semantics correctly honored at the factory (`s.add` throws on
+  conflict; `s.put` upserts) and verified by an explicit conflict
+  test in `src/db/store.test.ts`. `recurringTemplateStore`
+  intentionally does NOT expose `update` — matches prior surface.
+- **Composite-key safety (TD.9):**
+  `getCategoryBudget(month, categoryId)` still builds the composite
+  via `categoryBudgetId(month, categoryId)` before `store.get`.
+  Domain owns id-building; factory stays IDB-thin.
+- **Forbidden-file audit (TD.11):** Zero changes to
+  `src/db/restoreBackup.ts`, `src/lib/backup.ts`,
+  `src/lib/parseBackup.ts`. Backup schema v2 untouched.
+- **Recurring cleanup completeness (TD.11):**
+  `git grep "\.recurring\b" -- src/` returns only CSS class
+  selectors in `RecurringManager.css`. No `Expense.recurring`
+  leftovers anywhere.
+- **CSV format change (TD.11):** Header narrows to 4 cols
+  `'date,amount,description,categoryId'`. All test fixtures
+  migrated.
+- **formatUSD removal (TD.16):** Zero matches in src/. Both
+  stale test descriptions renamed.
+
+No behavioral drift; diff is exactly the contracted pure-subtraction
+/ mechanical-extraction shape. Net −150 LOC.
+
+**Source:** super-reviewer (Class A).
