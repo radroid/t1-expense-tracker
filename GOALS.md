@@ -54,7 +54,12 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] P4.D — CSV import — `ImportButton` parses via `parseExpensesCsv`
   (header-required) and persists via `useExpenses.addMany` (skip-and-report
   policy). Header-error vs row-errors surface separately. — iter-014 / PR #39
-- [ ] P4.E — Recurring expenses — Mark an expense recurring; auto-generate it on month rollover.
+- [done] P4.E — Recurring expenses — Separate `recurringTemplates` store
+  (DB v3→v4, monthly frequency, dayOfMonth 1..28). Idempotent rollover
+  via new optional `Expense.sourceTemplateId` field; `useEffect` in
+  App.tsx fires on mount + selectedMonth change, calls
+  `expensesHook.addMany(generateDueExpenses(due, month))`. New
+  `<RecurringManager>` UI section. — iter-016 / PR #45
 - [done] P4.F — Dark mode — `ThemeToggle` + `src/lib/theme.ts` + CSS custom
   properties; persisted to localStorage; first-paint applied in `main.tsx`.
   Component CSS not yet themable — see P4.I follow-up. — iter-013 / PR #37
@@ -71,6 +76,20 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
   migrated from hard-coded hex/rgb to `var(--app-*)`. 3 new vars added
   (`--app-accent-fg`, `--app-surface-2`, `--app-surface-hover`). Light
   palette preserved; dark palette AA+ on all surfaces. — iter-014 / PR #40
+
+## Phase 5 — (to be defined after iter-017 arch pass)
+
+Phase 4 closed in iter-016. iter-017 MUST start with the mandatory
+phase-boundary architecture pass (`improve-codebase-architecture` skill
+invocation) before any Phase 5 feature work. Phase 5 items will be added
+to this section based on the arch pass output and product direction.
+
+Candidate themes (to be triaged in the arch pass):
+- Per-category budgets (not just monthly total).
+- Multi-currency support.
+- Backup/restore via JSON export (separate from CSV).
+- Search/filter persistence in URL or localStorage.
+- Account/sync (would break the local-only constraint — needs decision).
 
 ## Tech debt
 
