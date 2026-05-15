@@ -1,4 +1,6 @@
 import { buildBackup, formatBackup } from '../lib/backup'
+import { downloadFile } from '../lib/downloadFile'
+import { isoDateToday } from '../lib/month'
 import type { Expense } from '../lib/expense'
 import type { Category } from '../lib/category'
 import type { MonthlyBudget } from '../lib/budget'
@@ -12,14 +14,6 @@ interface BackupExportProps {
   monthlyBudgets: MonthlyBudget[]
   recurringTemplates: RecurringTemplate[]
   categoryBudgets: CategoryBudget[]
-}
-
-function todayIsoDate(): string {
-  const d = new Date()
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
 }
 
 export function BackupExport({
@@ -37,16 +31,11 @@ export function BackupExport({
       recurringTemplates,
       categoryBudgets,
     })
-    const text = formatBackup(snapshot)
-    const blob = new Blob([text], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `backup-${todayIsoDate()}.json`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
+    downloadFile({
+      filename: `backup-${isoDateToday()}.json`,
+      mime: 'application/json',
+      body: formatBackup(snapshot),
+    })
   }
 
   return (
