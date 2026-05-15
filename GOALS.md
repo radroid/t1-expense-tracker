@@ -21,7 +21,7 @@ A feature is a **vertical slice** — it normally touches `src/db/`, `src/lib/`,
 - [done] P2.A — Category model + store — `Category` type (id, name, color) + IndexedDB store; seed a few defaults on first run. — iter-004 / PR #11
 - [done] P2.B — Category management UI — Add / rename / delete categories. — iter-004 / PR #12
 - [done] P2.C — Assign category to expense — Category picker in the add/edit form. — iter-006 / PR #16
-- [ ] P2.D — Filter by category — Filter control above the expense list.
+- [done] P2.D — Filter by category — Filter control above the expense list. — iter-008 / PR #21
 - [done] P2.E — Category badges — Colored category badge on each expense row. — iter-007 / PR #18
 - [done] P2.F — Spending by category — Totals grouped by category. — iter-007 / PR #19
 

@@ -129,4 +129,27 @@ this and SpendingByCategory has an explicit TD.1 acknowledgement comment.
 intentional (grid alignment) but undocumented; P2.F's `.slice().sort()` is redundant
 since the lib already returns a fresh array. Trivial.
 
+## iter-008 — Class A super-reviewer (P2.D)
+
+**Source:** code-review (feature-pr-mode step 8, PR #21)
+**Verdict (first pass):** REQUEST_CHANGES — one real WARNING + three NITs.
+**WARNING (applied):** stale filter after category deletion — deleting the
+filtered-on category left the `<select>` orphan (no matching option), the dropdown
+visually fell back to the first entry while React state still held the now-orphan
+id, producing an empty list + $0 totals. Fix: `handleDeleteCategory` snaps `filter`
+to `'all'` when `filter === id`. Regression test added.
+**NITs:** (1) `CategoryFilterValue` literal-union collapsed to `string` — applied
+`(string & {})` to preserve autocomplete. (2) Filter integration test only asserted
+RunningTotal re-scopes, not SpendingByCategory — extended the test. (3) Ordering of
+"Uncategorized" option — declined as stylistic (adjacent to "All" mixes meta-options
+with the category list; current order is fine).
+**Second pass:** verdict APPROVE implicit — all WARNING + actionable NITs cleared,
+140 tests pass.
+
+## iter-008 — CodeRabbit (P2.D, PR #21)
+
+**Source:** code-review (feature-pr-mode step 5, scoped `--type committed --base main`)
+**Verdict:** No findings ✔ (both passes — first on the original commit, second after
+the super-reviewer WARNING fix landed).
+
 
