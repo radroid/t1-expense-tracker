@@ -23,7 +23,7 @@
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--app-border);
   flex-shrink: 0;
 }
 
@@ -45,6 +45,6 @@
 }
 
 .category-manager__error {
-  color: #c0392b;
+  color: var(--app-error);
   margin: 0;
 }

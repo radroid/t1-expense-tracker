@@ -17,14 +17,15 @@
   min-width: 44px;
   padding: 0.5rem 1rem;
   font-size: 0.95rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--app-border);
   border-radius: 4px;
-  background: #fff;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
   line-height: 1.6;
 }
 
 .import-button__label:hover .import-button__cta {
-  background: #f3f3f3;
+  background: var(--app-surface-hover);
 }
 
 .import-button__input {
@@ -45,7 +46,7 @@
 }
 
 .import-button__result--error {
-  color: #b00020;
+  color: var(--app-error);
 }
 
 .import-button__errors {

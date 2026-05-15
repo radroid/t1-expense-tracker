@@ -23,8 +23,11 @@
   --app-card-bg: #ffffff;
   --app-border: #e5e4e7;
   --app-accent: #aa3bff;
+  --app-accent-fg: #ffffff;
   --app-error: #d32f2f;
   --app-success: #2e7d32;
+  --app-surface-2: #f3f4f6;
+  --app-surface-hover: #e7e7ea;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
@@ -49,8 +52,11 @@
   --app-card-bg: #ffffff;
   --app-border: #e5e4e7;
   --app-accent: #aa3bff;
+  --app-accent-fg: #ffffff;
   --app-error: #d32f2f;
   --app-success: #2e7d32;
+  --app-surface-2: #f3f4f6;
+  --app-surface-hover: #e7e7ea;
 
   --text: #6b6375;
   --text-h: #08060d;
@@ -68,8 +74,11 @@
   --app-card-bg: #232329;
   --app-border: #2e303a;
   --app-accent: #c084fc;
+  --app-accent-fg: #1a1a1a;
   --app-error: #ef5350;
   --app-success: #66bb6a;
+  --app-surface-2: #2a2b33;
+  --app-surface-hover: #34353f;
 
   --text: #9ca3af;
   --text-h: #f3f4f6;
@@ -94,8 +103,11 @@
     --app-card-bg: #232329;
     --app-border: #2e303a;
     --app-accent: #c084fc;
+    --app-accent-fg: #1a1a1a;
     --app-error: #ef5350;
     --app-success: #66bb6a;
+    --app-surface-2: #2a2b33;
+    --app-surface-hover: #34353f;
 
     --text: #9ca3af;
     --text-h: #f3f4f6;

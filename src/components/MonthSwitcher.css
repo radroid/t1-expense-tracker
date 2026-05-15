@@ -13,15 +13,16 @@
   padding: 0.4rem 0.8rem;
   font-size: 1.1rem;
   line-height: 1;
-  background: #fff;
-  border: 1px solid #ccc;
+  background: var(--app-card-bg);
+  color: var(--app-fg);
+  border: 1px solid var(--app-border);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .month-switcher__prev:hover,
 .month-switcher__next:hover {
-  background: #f3f3f3;
+  background: var(--app-surface-hover);
 }
 
 .month-switcher__label {

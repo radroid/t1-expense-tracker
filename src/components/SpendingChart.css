@@ -6,7 +6,7 @@
 }
 
 .spending-chart__bar-bg {
-  fill: #f3f4f6;
+  fill: var(--app-surface-2);
 }
 
 .spending-chart__bar {
@@ -19,12 +19,12 @@
 
 .spending-chart__label {
   font-size: 13px;
-  fill: #111827;
+  fill: var(--app-fg);
 }
 
 .spending-chart__value {
   font-size: 13px;
-  fill: #111827;
+  fill: var(--app-fg);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
@@ -32,5 +32,5 @@
 .spending-chart__empty {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--app-muted-fg);
 }
