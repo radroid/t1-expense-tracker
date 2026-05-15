@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { type Expense, type ExpenseInput } from './lib/expense'
+import { dueTemplatesForMonth, generateDueExpenses } from './lib/recurring'
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { RunningTotal } from './components/RunningTotal'
 import { SpendingByCategory } from './components/SpendingByCategory'
 import { SpendingChart } from './components/SpendingChart'
 import { CategoryManager } from './components/CategoryManager'
+import { RecurringManager } from './components/RecurringManager'
 import { CategoryFilter } from './components/CategoryFilter'
 import { MonthSwitcher } from './components/MonthSwitcher'
 import { MonthlySummary } from './components/MonthlySummary'
@@ -24,6 +26,7 @@ import { computeBudgetStatus } from './lib/budgetStatus'
 import { useExpenses } from './hooks/useExpenses'
 import { useCategories } from './hooks/useCategories'
 import { useMonthlyBudgets } from './hooks/useMonthlyBudgets'
+import { useRecurringTemplates } from './hooks/useRecurringTemplates'
 import { useVisibleExpenses } from './hooks/useVisibleExpenses'
 import './App.css'
 
@@ -31,6 +34,7 @@ function App() {
   const expensesHook = useExpenses()
   const categoriesHook = useCategories()
   const budgetsHook = useMonthlyBudgets()
+  const recurringHook = useRecurringTemplates()
   const [editing, setEditing] = useState<Expense | null>(null)
   const [filter, setFilter] = useState<CategoryFilterValue>('all')
   // Lazy initializer: useState calls `currentMonth` once on mount, so
@@ -62,14 +66,47 @@ function App() {
     totalAmount(monthlyExpenses),
   )
   const loading =
-    expensesHook.loading || categoriesHook.loading || budgetsHook.loading
+    expensesHook.loading ||
+    categoriesHook.loading ||
+    budgetsHook.loading ||
+    recurringHook.loading
   // Each hook owns its own error string; we surface whichever is non-empty
   // (expense first). Note this is a small UX shift from the pre-hooks code,
   // where a single shared error slot was cleared by ANY successful op — now
   // an expense success only clears the expense error, leaving any outstanding
   // category error visible (and vice versa). Errors are domain-scoped.
   const error =
-    expensesHook.error || categoriesHook.error || budgetsHook.error
+    expensesHook.error ||
+    categoriesHook.error ||
+    budgetsHook.error ||
+    recurringHook.error
+
+  // P4.E: rollover recurring templates into actual expenses for the selected
+  // month. Triggers on mount AND any month switch. Idempotency comes from
+  // dueTemplatesForMonth — any template whose generated expense is already in
+  // `expenses` is skipped. Note the dep on `expensesHook.expenses`: after
+  // addMany resolves, the new expenses flow back in and flip the next
+  // recomputation to an empty due-list, so the effect no-ops and doesn't loop.
+  useEffect(() => {
+    if (recurringHook.loading || expensesHook.loading) return
+    const due = dueTemplatesForMonth(
+      recurringHook.templates,
+      expensesHook.expenses,
+      selectedMonth,
+    )
+    if (due.length === 0) return
+    const inputs = generateDueExpenses(due, selectedMonth)
+    void expensesHook.addMany(inputs)
+    // expensesHook.addMany is a stable method reference from a hook; including
+    // it in deps would be noise. Same for expensesHook itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    recurringHook.loading,
+    recurringHook.templates,
+    expensesHook.loading,
+    expensesHook.expenses,
+    selectedMonth,
+  ])
 
   async function handleUpdate(input: ExpenseInput) {
     if (!editing) return
@@ -174,6 +211,15 @@ function App() {
           onAdd={categoriesHook.add}
           onRename={categoriesHook.rename}
           onDelete={handleDeleteCategory}
+        />
+      </section>
+      <section className="app__recurring">
+        <h2>Recurring expenses</h2>
+        <RecurringManager
+          templates={recurringHook.templates}
+          categories={categoriesHook.categories}
+          onAdd={recurringHook.add}
+          onDelete={recurringHook.remove}
         />
       </section>
     </main>

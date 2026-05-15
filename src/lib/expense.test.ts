@@ -39,10 +39,19 @@ describe('createExpense', () => {
     expect(expense.recurring).toBe(true);
   });
 
+  it('passes through optional sourceTemplateId when present', () => {
+    const expense = createExpense({
+      ...validInput,
+      sourceTemplateId: 'tpl-1',
+    });
+    expect(expense.sourceTemplateId).toBe('tpl-1');
+  });
+
   it('omits optional fields when not provided', () => {
     const expense = createExpense(validInput);
     expect(expense.categoryId).toBeUndefined();
     expect(expense.recurring).toBeUndefined();
+    expect(expense.sourceTemplateId).toBeUndefined();
   });
 
   it('throws when amount is zero', () => {
@@ -153,6 +162,38 @@ describe('applyExpenseEdit', () => {
       date: '2026-05-15',
     });
     expect(updated.recurring).toBe(true);
+  });
+
+  it('preserves existing sourceTemplateId when the input omits it', () => {
+    const withTemplate: Expense = { ...existing, sourceTemplateId: 'tpl-1' };
+    const updated = applyExpenseEdit(withTemplate, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+    });
+    expect(updated.sourceTemplateId).toBe('tpl-1');
+  });
+
+  it('replaces sourceTemplateId when the input explicitly supplies one', () => {
+    const withTemplate: Expense = { ...existing, sourceTemplateId: 'tpl-1' };
+    const updated = applyExpenseEdit(withTemplate, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+      sourceTemplateId: 'tpl-2',
+    });
+    expect(updated.sourceTemplateId).toBe('tpl-2');
+  });
+
+  it('treats explicit undefined sourceTemplateId as omission (preserves)', () => {
+    const withTemplate: Expense = { ...existing, sourceTemplateId: 'tpl-1' };
+    const updated = applyExpenseEdit(withTemplate, {
+      amount: 20,
+      description: 'Tea',
+      date: '2026-05-15',
+      sourceTemplateId: undefined,
+    });
+    expect(updated.sourceTemplateId).toBe('tpl-1');
   });
 
   it('treats explicit undefined the same as omission (preserves categoryId)', () => {
