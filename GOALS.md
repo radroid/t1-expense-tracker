@@ -135,13 +135,16 @@ local-only, adding a network dependency violates that charter.
   renders both inline. Creates the 3rd consumer for the deferred
   TD.13 / TD.14 arch seams — Phase-6 → Phase-7 arch pass should
   pick them up. — iter-026 / PR #61
-- [ ] P6.B — Time-series analytics — new `src/lib/trends.ts` exposes
-  `summarizeByMonth(expenses): Array<{month, total, count}>` (sorted
-  ascending). New `<TrendsChart>` component (pure SVG, parallels
-  `SpendingChart` style) + new `<YearSwitcher>` (year-view filter
-  alongside `MonthSwitcher`). Two display modes: month-detail (today)
-  vs. year-summary. The year filter narrows visibleExpenses; budget
-  pipeline still month-scoped (preserve the P4.B carveout pattern).
+- [done] P6.B — Time-series analytics. New `src/lib/trends.ts`
+  (`summarizeByMonth` ascending; `summarizeYear` fixed 12-slot grid).
+  New `src/lib/year.ts` (currentYear/parseYear/prevYear/nextYear/
+  formatYearLabel mirroring `month.ts`). New `<YearSwitcher>` mirrors
+  `<MonthSwitcher>`. New `<TrendsChart>` pure-SVG, abbreviated Jan-Dec
+  x-axis, single accent color via `.trends-chart__bar` (no inline
+  fill), `<title>` tooltips with pluralized counts. App.tsx adds an
+  always-visible Trends section (between insights and budget); reads
+  from full `expensesHook.expenses` so user filters don't collapse
+  the year view. — iter-027 / PR #62
 - [ ] P6.C — Accessibility audit pass — sweep all components. Targets:
   (a) ARIA roles + labels on every interactive element; (b) keyboard
   navigation across all surfaces (Tab order, Escape closes modals,
